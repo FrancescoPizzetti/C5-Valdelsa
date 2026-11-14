@@ -288,6 +288,41 @@ function editTeam(i){
 var t=teams[i];
 var nc=prompt("Colore squadra - attuale "+(t.c||"#facc15"),t.c||"#facc15");
 if(nc) t.c=nc;
+if(confirm("Vuoi CARICARE il logo dal telefono? \nOK = Scegli foto dalla Galleria \nAnnulla = Incolla link")){
+var inp=document.createElement('input');
+inp.type='file';
+inp.accept='image/*';
+inp.onchange=function(e){
+var f=e.target.files[0];
+if(!f) return;
+var reader=new FileReader();
+reader.onload=function(ev){
+var img=new Image();
+img.onload=function(){
+var canvas=document.createElement('canvas');
+var max=200;
+var w=img.width, h=img.height;
+if(w>h){ if(w>max){ h=h*max/w; w=max; } } else { if(h>max){ w=w*max/h; h=max; } }
+canvas.width=w; canvas.height=h;
+canvas.getContext('2d').drawImage(img,0,0,w,h);
+t.logo=canvas.toDataURL('image/jpeg',0.85);
+save();
+alert("Logo caricato! Ora lo vedono tutti.");
+};
+img.src=ev.target.result;
+};
+reader.readAsDataURL(f);
+};
+inp.click();
+} else {
+var nl=prompt("Link logo (vuoto per iniziale)",t.logo||"");
+if(nl!==null) t.logo=nl;
+save();
+}
+}
+var t=teams[i];
+var nc=prompt("Colore squadra - attuale "+(t.c||"#facc15"),t.c||"#facc15");
+if(nc) t.c=nc;
 var nl=prompt("Link logo (vuoto per iniziale)",t.logo||"");
 if(nl!==null) t.logo=nl;
 save();

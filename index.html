@@ -79,6 +79,7 @@ td,th{padding:9px;text-align:left;border-bottom:1px solid #333}
 <div class="card"><h2>📜 Regola Avulsa</h2><input id="fRegola" placeholder="Regola..."><button class="big" onclick="saveRegola()">Salva Regola</button></div>
 <div class="card"><h2>🏆 Aggiungi Competizione</h2><input id="fComp" placeholder="Es: Supercoppa"><button class="big" onclick="addComp()">Aggiungi Competizione</button><div id="compList"></div></div>
 <h3>🏆 Squadre - 14 Serie A + 16 Serie B</h3><p class="small" id="countTeams"></p><input id="fTeam" placeholder="Nome squadra"><select id="fLeague"><option>Serie A</option><option>Serie B</option></select><input id="fTeamColor" type="color" value="#facc15"><input id="fTeamLogo" placeholder="Link logo (facoltativo)"><button class="big" onclick="addTeam()">Aggiungi Squadra</button><div id="teamsList"></div>
+<button class="big" style="background:#22c55e" onclick="resetTeams()">🔄 RIPRISTINA LE 30 SQUADRE VERE</button>
 <h3>⚽ Partita</h3><select id="fCasa"></select><select id="fTras"></select><input id="fData" type="date"><input id="fOra" type="time" value="21:00"><input id="fLuogo" placeholder="Luogo"><input id="fGolC" type="number" placeholder="Gol Casa"><input id="fGolT" type="number" placeholder="Gol Trasferta"><select id="fStato"><option>Programmata</option><option>Giocata</option></select><button class="big" onclick="saveMatch()">Salva Partita</button><div id="matchesList"></div>
 <h3>👤 Giocatore - Scegli la Squadra</h3><input id="fNome" placeholder="Nome"><input id="fRuolo" placeholder="Ruolo"><input id="fGol" type="number" placeholder="Gol"><select id="fPlayerTeam"></select><button class="big" onclick="addPlayer()">Aggiungi Giocatore alla Rosa</button><div id="playersList"></div>
 <h3>🟨 Disciplina</h3><select id="dTeam"></select><button class="big" onclick="addDisc(-2)">-2 Punti</button><button class="big" onclick="addDisc(-5)">-5 Punti</button><button class="big" onclick="addDisc(-10)">-10 Punti</button><div id="discList"></div>
@@ -244,6 +245,43 @@ if(!n){alert("Metti nome");return}
 if(teamNames().indexOf(n)>=0){alert("Esiste gia'");return}
 teams.push({n:n,l:el('fLeague').value,c:el('fTeamColor').value||"#facc15",logo:el('fTeamLogo').value||""});
 el('fTeam').value="";el('fTeamLogo').value="";save();
+}
+function resetTeams(){
+if(!confirm("Vuoi ripristinare le 30 squadre vere? Cancella quelle attuali.")) return;
+teams=[
+{n:"Atletico Madrink F.C.",l:"Serie A",c:"#ef4444",logo:""},
+{n:"Autofficina Calò",l:"Serie A",c:"#f97316",logo:""},
+{n:"Bar Colle",l:"Serie A",c:"#facc15",logo:""},
+{n:"Boca Voglia",l:"Serie A",c:"#3b82f6",logo:""},
+{n:"Compagni di Merende",l:"Serie A",c:"#22c55e",logo:""},
+{n:"Dragon Futsal",l:"Serie A",c:"#ef4444",logo:""},
+{n:"El Dorado",l:"Serie A",c:"#facc15",logo:""},
+{n:"FC Albania",l:"Serie A",c:"#ef4444",logo:""},
+{n:"FC Cabrones",l:"Serie A",c:"#a855f7",logo:""},
+{n:"Golden Eagles",l:"Serie A",c:"#facc15",logo:""},
+{n:"San Gimignano C5",l:"Serie A",c:"#3b82f6",logo:""},
+{n:"Santa Caterina",l:"Serie A",c:"#22c55e",logo:""},
+{n:"Siena C5",l:"Serie A",c:"#111111",logo:""},
+{n:"Zanzobar",l:"Serie A",c:"#f97316",logo:""},
+{n:"Alfa",l:"Serie B",c:"#3b82f6",logo:""},
+{n:"Cobra Calcio",l:"Serie B",c:"#22c55e",logo:""},
+{n:"Dante Futsal",l:"Serie B",c:"#ef4444",logo:""},
+{n:"FC The Wolf",l:"Serie B",c:"#111111",logo:""},
+{n:"FCT",l:"Serie B",c:"#facc15",logo:""},
+{n:"Gladiator",l:"Serie B",c:"#ef4444",logo:""},
+{n:"Inazuma 5ive",l:"Serie B",c:"#3b82f6",logo:""},
+{n:"Iron Fire",l:"Serie B",c:"#f97316",logo:""},
+{n:"Napoli",l:"Serie B",c:"#3b82f6",logo:""},
+{n:"New Team",l:"Serie B",c:"#22c55e",logo:""},
+{n:"Piglia Bene",l:"Serie B",c:"#facc15",logo:""},
+{n:"Pol. Staggia",l:"Serie B",c:"#ef4444",logo:""},
+{n:"Red Onions",l:"Serie B",c:"#a855f7",logo:""},
+{n:"S.S. Borgaccio",l:"Serie B",c:"#ef4444",logo:""},
+{n:"Tornado Team",l:"Serie B",c:"#22c55e",logo:""},
+{n:"Valdelsa Warrior",l:"Serie B",c:"#facc15",logo:""}
+];
+save();
+alert("Fatto! Ora hai 30 squadre!");
 }
 function delTeam(i){if(!confirm("Cancellare?"))return;teams.splice(i,1);save();}
 function editTeam(i){

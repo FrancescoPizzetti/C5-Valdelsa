@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C5 Valdelsa</title>
+<style>
+body{margin:0;font-family:system-ui;background:#0b1220;color:#fff}
+header{background:#111c33;padding:16px;text-align:center}
+header h1{margin:0}
+header p{color:#facc15;margin:4px}
+nav{display:flex;gap:6px;justify-content:center;padding:10px;flex-wrap:wrap}
+nav button{border:0;padding:10px 14px;border-radius:99px;background:#1e293b;color:#fff;font-weight:700}
+nav button.on{background:#facc15;color:#000}
+.wrap{max-width:900px;margin:auto;padding:14px}
+.card{background:#16213a;border-radius:16px;padding:16px;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #2a3a5a;align-items:center}
+input,select{width:100%;padding:12px;border-radius:10px;border:0;margin:6px 0;background:#0b1220;color:#fff;box-sizing:border-box}
+.big{width:100%;padding:13px;border:0;border-radius:12px;background:#facc15;font-weight:800;margin:6px 0}
+.hidden{display:none}
+.small{color:#94a3b8;font-size:13px}
+.badge{background:#facc15;color:#000;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px}
+table{width:100%}td,th{padding:8px;text-align:left;border-bottom:1px solid #2a3a5a}
+.del{background:#ef4444;color:#fff;border:0;padding:6px 10px;border-radius:8px}
+.sync{font-size:12px;color:#4ade80;text-align:center}
+</style>
+</head>
+<body>
+<header><h1>⚽ C5 VALDELSA</h1><p>Calcio a 5 - Stagione 2026/27 - LIVE</p><div class="sync" id="sync">● Collegato in tempo reale</div></header>
+<nav>
+<button onclick="show('home')" id="b-home" class="on">Home</button>
+<button onclick="show('cal')" id="b-cal">Calendario</button>
+<button onclick="show('class')" id="b-class">Classifica</button>
+<button onclick="show('team')" id="b-team">Squadra</button>
+<button onclick="show('admin')" id="b-admin">Admin</button>
+</nav>
+<div class="wrap">
+<div id="home">
+<div class="card"><h2>🔥 Prossima Partita</h2><div id="nextMatch"></div></div>
+<div class="card"><h2>📋 Ultimi Risultati</h2><div id="lastResults"></div></div>
+<div class="card"><h2>🏆 Top 5</h2><div id="top5"></div></div>
+</div>
+<div id="cal" class="hidden"><div class="card"><h2>📅 Calendario</h2><div id="calList"></div></div></div>
+<div id="class" class="hidden"><div class="card"><h2>🏆 Classifica</h2><table><tr><th>#</th><th>Squadra</th><th>Pti</th><th>G</th><th>GF</th><th>GS</th></tr><tbody id="classTable"></tbody></table></div></div>
+<div id="team" class="hidden"><div class="card"><h2>👥 Rosa</h2><div id="teamList"></div></div><div class="card"><h2>⚽ Marcatori</h2><div id="scorers"></div></div></div>
+<div id="admin" class="hidden"><div class="card"><h2>🔒 Admin</h2><p class="small">PIN: 1234</p><input id="pin" type="password" placeholder="PIN"><button class="big" onclick="login()">Entra</button>
+<div id="adminPanel" class="hidden">
+<h3>🏆 Squadra del Campionato</h3><input id="fTeam" placeholder="Nome nuova squadra"><button class="big" onclick="addTeam()">Aggiungi Squadra</button><div id="teamsList"></div>
+<h3>⚽ Partita</h3><select id="fCasa"></select><select id="fTras"></select><input id="fData" type="date"><input id="fOra" type="time" value="21:00"><input id="fLuogo" placeholder="Luogo"><input id="fGolC" type="number" placeholder="Gol Casa"><input id="fGolT" type="number" placeholder="Gol Trasferta"><select id="fStato"><option>Programmata</option><option>Giocata</option></select><button class="big" onclick="saveMatch()">Salva Partita</button><div id="matchesList"></div>
+<h3>👤 Giocatore Valdelsa</h3><input id="fNome" placeholder="Nome"><input id="fRuolo" placeholder="Ruolo"><input id="fGol" type="number" placeholder="Gol"><button class="big" onclick="addPlayer()">Aggiungi Giocatore</button><div id="playersList"></div>
+</div></div></div>
+</div>
+<script>
+const DB="https://c5-valdelsa-default-rtdb.firebaseio.com/valdelsa.json";
+let teams=["C5 Valdelsa","Real Poggibonsi","Futsal Siena","Colle Valdelsa C5","San Gimignano","Monteriggioni C5","Barberino C5","Certaldo Futsal"];
+let matches=[
+{casa:"C5 Valdelsa",tras:"Real Poggibonsi",data:"2026-11-21",ora:"21:00",luogo:"Poggibonsi",golC:"",golT:"",stato:"Programmata"},
+{casa:"Futsal Siena",tras:"C5 Valdelsa",data:"2026-11-28",ora:"21:00",luogo:"Siena",golC:"",golT:"",stato:"Programmata"},
+{casa:"C5 Valdelsa",tras:"Colle Valdelsa C5",data:"2026-11-14",ora:"21:00",luogo:"Poggibonsi",golC:"5",golT:"2",stato:"Giocata"}
+];
+let players=[{n:"Francesco P.",r:"Mister",g:0},{n:"Mario Rossi",r:"Portiere",g:0},{n:"Luca Bianchi",r:"Difensore",g:2},{n:"Alessandro Verdi",r:"Attaccante",g:4}];
+async function load(){try{let r=await fetch(DB);let d=await r.json();if(d){if(d.teams)teams=d.teams;if(d.matches)matches=d.matches;if(d.players)players=d.players;}}catch(e){}render();}
+async function save(){document.getElementById('sync').textContent="● Salvataggio...";await fetch(DB,{method:"PUT",body:JSON.stringify({teams,matches,players})});document.getElementById('sync').textContent="● Collegato in tempo reale - Salvato!";render();}
+function show(id){['home','cal','class','team','admin'].forEach(x=>{document.getElementById(x).classList.toggle('hidden',x!==id);document.getElementById('b-'+x).classList.toggle('on',x===id)});render();}
+function login(){if(document.getElementById('pin').value==="1234"){document.getElementById('adminPanel').classList.remove('hidden');alert("Benvenuto Mister!")}else alert("PIN sbagliato");}
+function saveMatch(){let m={casa:document.getElementById('fCasa').value,tras:document.getElementById('fTras').value,data:document.getElementById('fData').value,ora:document.getElementById('fOra').value,luogo:document.getElementById('fLuogo').value,golC:document.getElementById('fGolC').value,golT:document.getElementById('fGolT').value,stato:document.getElementById('fStato').value};let i=matches.findIndex(x=>x.casa===m.casa&&x.tras===m.tras&&x.data===m.data);if(i>=0)matches[i]=m;else matches.push(m);save();alert("Salvato per tutti!");}
+function addPlayer(){let n=document.getElementById('fNome').value;if(!n)return alert("Metti nome");players.push({n:n,r:document.getElementById('fRuolo').value||"Giocatore",g:parseInt(document.getElementById('fGol').value||0)});document.getElementById('fNome').value="";save();alert("Giocatore aggiunto per tutti!");}
+function addTeam(){let n=document.getElementById('fTeam').value.trim();if(!n)return alert("Metti nome squadra");if(teams.includes(n))return alert("Esiste già");teams.push(n);document.getElementById('fTeam').value="";save();alert("Squadra aggiunta!");}
+function delTeam(i){if(!confirm("Cancellare "+teams[i]+"?"))return;teams.splice(i,1);save();}
+function delMatch(i){if(!confirm("Cancellare partita?"))return;matches.splice(i,1);save();}
+function delPlayer(i){if(!confirm("Cancellare "+players[i].n+"?"))return;players.splice(i,1);save();}
+function calc(){let t={};teams.forEach(x=>t[x]={pti:0,g:0,gf:0,gs:0});matches.filter(m=>m.stato==="Giocata"&&m.golC!=="").forEach(m=>{let a=parseInt(m.golC),b=parseInt(m.golT);if(!t[m.casa])t[m.casa]={pti:0,g:0,gf:0,gs:0};if(!t[m.tras])t[m.tras]={pti:0,g:0,gf:0,gs:0};t[m.casa].g++;t[m.tras].g++;t[m.casa].gf+=a;t[m.casa].gs+=b;t[m.tras].gf+=b;t[m.tras].gs+=a;if(a>b)t[m.casa].pti+=3;else if(b>a)t[m.tras].pti+=3;else{t[m.casa].pti++;t[m.tras].pti++;}});return Object.entries(t).sort((a,b)=>b[1].pti-a[1].pti||(b[1].gf-b[1].gs)-(a[1].gf-a[1].gs));}
+function render(){let next=matches.filter(m=>m.stato==="Programmata").sort((a,b)=>a.data.localeCompare(b.data))[0];document.getElementById('nextMatch').innerHTML=next?`<b>${next.casa} vs ${next.tras}</b><br><span class="small">${next.data} ore ${next.ora} - ${next.luogo}</span>`:"Nessuna";let last=matches.filter(m=>m.stato==="Giocata").slice(-3).reverse();document.getElementById('lastResults').innerHTML=last.map(m=>`<div class="row"><div>${m.casa} - ${m.tras}<br><span class="small">${m.data}</span></div><b>${m.golC} - ${m.golT}</b></div>`).join("")||"Nessun risultato";let cl=calc();document.getElementById('top5').innerHTML=cl.slice(0,5).map((x,i)=>`<div class="row"><div>${i+1}. ${x[0]}</div><b>${x[1].pti} pti</b></div>`).join("");document.getElementById('calList').innerHTML=[...matches].sort((a,b)=>a.data.localeCompare(b.data)).map(m=>`<div class="row"><div><b>${m.casa} vs ${m.tras}</b><br><span class="small">${m.data} ${m.ora} - ${m.luogo}</span></div>${m.stato==="Giocata"?`<b>${m.golC}-${m.golT}</b>`:`<span class="badge">${m.stato}</span>`}</div>`).join("");document.getElementById('classTable').innerHTML=cl.map((x,i)=>`<tr><td>${i+1}</td><td>${x[0]}</td><td><b>${x[1].pti}</b></td><td>${x[1].g}</td><td>${x[1].gf}</td><td>${x[1].gs}</td></tr>`).join("");document.getElementById('teamList').innerHTML=players.map(p=>`<div class="row"><div><b>${p.n}</b><br><span class="small">${p.r}</span></div><span class="badge">${p.g} gol</span></div>`).join("");document.getElementById('scorers').innerHTML=[...players].sort((a,b)=>b.g-a.g).slice(0,5).map(p=>`<div class="row"><div>${p.n}</div><b>${p.g} gol</b></div>`).join("");let o=teams.map(t=>`<option>${t}</option>`).join("");document.getElementById('fCasa').innerHTML=o;document.getElementById('fTras').innerHTML=o;document.getElementById('fData').value=new Date().toISOString().slice(0,10);document.getElementById('teamsList').innerHTML=teams.map((t,i)=>`<div class="row"><div>${t}</div><button class="del" onclick="delTeam(${i})">X</button></div>`).join("");document.getElementById('matchesList').innerHTML=matches.map((m,i)=>`<div class="row"><div><small>${m.data} - ${m.casa} vs ${m.tras} ${m.stato==="Giocata"?m.golC+"-"+m.golT:""}</small></div><button class="del" onclick="delMatch(${i})">X</button></div>`).join("");document.getElementById('playersList').innerHTML=players.map((p,i)=>`<div class="row"><div>${p.n} - ${p.r} (${p.g} gol)</div><button class="del" onclick="delPlayer(${i})">X</button></div>`).join("");}
+load();setInterval(load,10000);
+</script>
+</body>
+</html>

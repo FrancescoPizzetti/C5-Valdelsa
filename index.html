@@ -355,6 +355,29 @@ save();alert("Partita salvata!");
 }
 function delMatch(i){if(!confirm("Cancellare?"))return;matches.splice(i,1);save();}
 function addPlayer(){
+var n=prompt("Nome giocatore? Es: Mario Rossi");
+if(!n) return;
+var r=prompt("Ruolo? Es: Attaccante / Difensore / Portiere / Mister","Giocatore");
+var g=prompt("Gol fatti? Metti 0 se ancora nessuno","0");
+var lista=teamNames().join(", ");
+var t=prompt("In che squadra lo metto? Scrivi il nome esatto:\n"+lista, teamNames()[0]);
+if(!t) return;
+if(teamNames().indexOf(t)<0){ alert("Squadra non trovata! Controlla il nome e riprova."); return; }
+players.push({n:n,r:r||"Giocatore",g:parseInt(g||0),t:t});
+save();
+alert(n+" aggiunto alla rosa "+t+"!");
+}
+function transferPlayer(i){
+var p=players[i];
+var lista=teamNames().join(", ");
+var nuova=prompt(p.n+" ora è in "+p.t+".\nIn che squadra lo trasferisco? Scrivi il nome esatto:\n"+lista, p.t);
+if(!nuova) return;
+if(teamNames().indexOf(nuova)<0){ alert("Squadra non trovata!"); return; }
+if(!confirm("Confermi trasferimento:\n"+p.n+"\nDa: "+p.t+"\nA: "+nuova+" ?")) return;
+p.t=nuova;
+save();
+alert("Trasferito! Ora "+p.n+" gioca in "+nuova);
+}
 var n=el('fNome').value;
 if(!n){alert("Metti nome");return}
 players.push({n:n,r:el('fRuolo').value||"Giocatore",g:parseInt(el('fGol').value||0),t:el('fPlayerTeam').value||teamNames()[0]});

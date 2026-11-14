@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C5 Valdelsa</title>
+<style>
+body{margin:0;font-family:system-ui,sans-serif;background:#0a0a0f;color:#fff}
+header{text-align:center;padding:28px 16px}
+header img{width:120px;height:120px;object-fit:cover;border-radius:50%;border:3px solid #facc15;background:#000}
+header h1{font-size:32px}header h1 span{color:#facc15}
+nav{position:sticky;top:0;display:flex;gap:8px;justify-content:center;padding:12px;flex-wrap:wrap;background:#111;border-bottom:1px solid #333}
+nav button{border:1px solid #333;padding:12px 18px;border-radius:99px;background:#222;color:#fff;font-weight:700;cursor:pointer;font-size:15px}
+nav button.on{background:#facc15;color:#000}
+.wrap{max-width:920px;margin:auto;padding:18px}
+.card{background:#1a1a22;border:1px solid #333;border-radius:24px;padding:20px;margin-bottom:16px}
+.row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #333;align-items:center;gap:10px}
+input,select,textarea{width:100%;padding:14px;border-radius:14px;border:1px solid #444;margin:6px 0;background:#000;color:#fff}
+.big{width:100%;padding:14px;border:0;border-radius:14px;background:#facc15;color:#000;font-weight:900;margin:8px 0;cursor:pointer;font-size:15px}
+.hidden{display:none}.small{color:#a1a1aa;font-size:13px}
+.badge{background:#facc15;color:#000;padding:6px 12px;border-radius:99px;font-weight:800;font-size:13px}
+table{width:100%;border-collapse:collapse}td,th{padding:11px;text-align:left;border-bottom:1px solid #333}
+.del{background:#ef4444;color:#fff;border:0;padding:7px 11px;border-radius:9px}
+.hero{background:#facc15;border-radius:24px;padding:20px;color:#000}
+.competizioni{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center}
+.competizioni div{background:#222;border:1px solid #333;border-radius:20px;padding:16px 8px;cursor:pointer}
+.competizioni img{width:100%;max-width:100px;height:100px;object-fit:contain;border-radius:14px;background:#000}
+.competizioni b{display:block;margin-top:10px;font-size:13px}
+.teamLogo{width:36px;height:36px;object-fit:cover;border-radius:50%;background:#fff}
+.teamCell{display:flex;align-items:center;gap:10px}
+.previewLogo{width:70px;height:70px;object-fit:cover;border-radius:50%;border:2px solid #facc15;background:#000}
+.fileLabel{display:block;background:#333;padding:12px;border-radius:12px;text-align:center;margin:6px 0;cursor:pointer}
+.discInput{width:90px!important;text-align:center;font-weight:800}
+.tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.tabs button{padding:9px 14px;border-radius:99px;border:1px solid #444;background:#222;color:#fff;cursor:pointer}.tabs button.on{background:#facc15;color:#000;font-weight:800}
+.note{background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.4);border-radius:14px;padding:12px;font-size:13px}
+.minusBtn{background:#ef4444;color:#fff;border:0;padding:10px 12px;border-radius:10px;font-weight:800;cursor:pointer}
+.logoBig{width:130px;height:130px;object-fit:contain;background:#000;border-radius:20px;padding:8px}
+</style>
+</head>
+<body>
+<header><img src="logo-campionato.png"><h1>C5 <span>VALDELSA</span></h1><p>Lega Calcio a 5 Val d'Elsa - 2026/27</p><div id="sync">● LIVE</div></header>
+<nav>
+<button onclick="show('home')" id="b-home" class="on">Home</button>
+<button onclick="show('cal')" id="b-cal">Calendario</button>
+<button onclick="show('class')" id="b-class">Classifica</button>
+<button onclick="show('coppe')" id="b-coppe">Coppe</button>
+<button onclick="show('team')" id="b-team">Squadra</button>
+<button onclick="show('contatti')" id="b-contatti">Contatti</button>
+<button onclick="show('admin')" id="b-admin">Admin</button>
+</nav>
+<div class="wrap">
+<div id="home">
+<div class="card"><h2>🏆 Le Competizioni - 6</h2><div class="competizioni">
+<div onclick="show('class')"><img src="logo-seriea.png"><b>Serie A</b><div class="small">Campionato</div></div>
+<div onclick="show('class');showClass('b1')"><img src="logo-serieb.png"><b>Serie B</b><div class="small">B1 - B2</div></div>
+<div onclick="show('coppe')"><img src="logo-super.png"><b>Supercoppa Champions League</b><div class="small">Supercoppa</div></div>
+<div onclick="show('coppe')"><img src="logo-coppa.png"><b>Coppa di Lega</b><div class="small">Coppa</div></div>
+<div onclick="show('coppe')"><img src="logo-mitropa.png"><b>Coppa Mitropa</b><div class="small">Coppa</div></div>
+<div onclick="show('coppe')"><img src="logo-conf.png"><b>Conference Cup</b><div class="small">Coppa</div></div>
+</div></div>
+<div class="card hero"><h2>🔥 Prossima Partita Serie A</h2><div id="nextMatch">Caricamento...</div></div>
+<div class="card"><h2>📋 Ultimi Risultati Serie A</h2><div id="lastResults"></div></div>
+<div class="card"><h2>🏆 Top 5 Serie A</h2><div id="top5"></div></div>
+<div class="card" style="text-align:center"><button class="big" onclick="show('contatti')">Vedi Contatti →</button></div>
+</div>
+<div id="cal" class="hidden"><div class="card"><h2>📅 Calendario</h2><div class="tabs"><button onclick="showCal('a')" id="cal-a" class="on">Serie A</button><button onclick="showCal('b1')" id="cal-b1">Serie B1</button><button onclick="showCal('b2')" id="cal-b2">Serie B2</button></div><div id="calList"></div></div></div>
+<div id="class" class="hidden">
+<div class="card" style="text-align:center"><img src="logo-seriea.png" class="logoBig"><h2>🏆 Classifiche</h2><div class="note">⚖️ <b>Disciplina è colonna della classifica:</b> Pti, G, GF, GS, <b>Disc.</b> Si parte da 50. A pari punti, se differenza Disc. &gt; 10 passa avanti chi ha PIU Disc.</div></div>
+<div class="tabs"><button onclick="showClass('a')" id="tab-a" class="on">Serie A</button><button onclick="showClass('b1')" id="tab-b1">Serie B1</button><button onclick="showClass('b2')" id="tab-b2">Serie B2</button></div>
+<div id="class-a" class="card"><h2>Serie A</h2><table><tr><th>#</th><th>Squadra</th><th>Pti</th><th>G</th><th>GF</th><th>GS</th><th>Disc.</th></tr><tbody id="classTableA"></tbody></table></div>
+<div id="class-b1" class="card hidden"><h2>Serie B1</h2><table><tr><th>#</th><th>Squadra</th><th>Pti</th><th>G</th><th>GF</th><th>GS</th><th>Disc.</th></tr><tbody id="classTableB1"></tbody></table></div>
+<div id="class-b2" class="card hidden"><h2>Serie B2</h2><table><tr><th>#</th><th>Squadra</th><th>Pti</th><th>G</th><th>GF</th><th>GS</th><th>Disc.</th></tr><tbody id="classTableB2"></tbody></table></div>
+</div>
+<div id="coppe" class="hidden"><div class="card" style="text-align:center"><h2>🏆 Le Coppe - 4</h2><div class="competizioni">
+<div><img src="logo-super.png"><b>Supercoppa Champions League</b></div>
+<div><img src="logo-coppa.png"><b>Coppa di Lega</b></div>
+<div><img src="logo-mitropa.png"><b>Coppa Mitropa</b></div>
+<div><img src="logo-conf.png"><b>Conference Cup</b

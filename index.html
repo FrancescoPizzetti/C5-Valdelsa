@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width,initial-scale=1">
+<title>C5 Valdelsa</title>
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#0a0a0f;
+color:#fff
+}
+header{
+text-align:center;
+padding:24px 12px
+}
+header h1{
+font-size:30px;
+margin:10px 0 4px
+}
+header h1 span{color:#facc15}
+header p{
+color:#aaa;
+font-size:12px;
+margin:0
+}
+nav{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+justify-content:center;
+padding:10px;
+background:#111;
+position:sticky;
+top:0;
+z-index:10
+}
+nav button{
+padding:10px 14px;
+border-radius:99px;
+border:1px solid #333;
+background:#222;
+color:#fff;
+font-weight:700;
+cursor:pointer
+}
+nav button.on{
+background:#facc15;
+color:#000
+}
+.wrap{
+max-width:900px;
+margin:auto;
+padding:14px
+}
+.card{
+background:#1a1a22;
+border:1px solid #333;
+border-radius:18px;
+padding:16px;
+margin-bottom:14px
+}input,select{
+width:100%;
+padding:12px;
+border-radius:12px;
+border:1px solid #444;
+margin:5px 0;
+background:#000;
+color:#fff
+}
+.big{
+width:100%;
+padding:13px;
+border:0;
+border-radius:12px;
+background:#facc15;
+color:#000;
+font-weight:900;
+margin:7px 0;
+cursor:pointer
+}
+.hidden{display:none}
+.small{color:#aaa;font-size:12px}
+.badge{
+background:#facc15;
+color:#000;
+padding:5px 10px;
+border-radius:99px;
+font-weight:800;
+font-size:12px
+}
+table{width:100%;border-collapse:collapse}
+td,th{
+padding:9px;
+text-align:left;
+border-bottom:1px solid #333
+}
+.del{
+background:#ef4444;
+color:#fff;
+border:0;
+padding:6px 10px;
+border-radius:8px;
+cursor:pointer
+}
+.hero{
+background:#facc15;
+color:#000;
+border-radius:18px;
+padding:16px
+}
+</style>
+</head>
+<body>
+<header>
+<h1>C5 <span>VALDELSA</span></h1>
+<p id="hdrSub">LEGA CALCIO A 5 VAL D'ELSA 2026/27</p>
+<p id="sync" style="color:#4ade80">● LIVE</p>
+</header>
+<nav>
+<button id="b-home" class="on"
+onclick="show('home')">Home</button>
+<button id="b-cal"
+onclick="show('cal')">Calendario</button>
+<button id="b-class"
+onclick="show('class')">Classifica</button>
+<button id="b-coppe"
+onclick="show('coppe')">Coppe</button>
+<button id="b-team"
+onclick="show('team')">Squadra</button>
+<button id="b-contatti"
+onclick="show('contatti')">Contatti</button>
+<button id="b-admin"
+onclick="show('admin')">Admin</button>
+</nav>
+.row{
+display:flex;
+justify-content:space-between;
+gap:10px;
+padding:10px 0;
+border-bottom:1px solid #333;
+align-items:center
+}<div class="wrap">
+<div id="home">
+<div class="card">
+<h2>🏆 Le Competizioni</h2>
+<div id="compHome"></div>
+</div>
+<div class="card hero">
+<h2>🔥 Prossima Partita</h2>
+<div id="nextMatch">Caricamento...</div>
+</div>
+<div class="card">
+<h2>📋 Ultimi Risultati</h2>
+<div id="lastResults"></div>
+</div>
+<div class="card">
+<h2>🏆 Top 5</h2>
+<div id="top5"></div>
+</div>
+</div>
+<div id="cal" class="hidden">
+<div class="card">
+<h2>📅 Calendario</h2>
+<div id="calList"></div>
+</div>
+</div>
+<div id="class" class="hidden">
+<div class="card">
+<h2>🏆 Classifica - Serie A</h2>
+<p class="small" id="regolaView"></p>
+</div>
+<div class="card">
+<table>
+<tr>
+<th>#</th><th>Squadra</th><th>Pti</th>
+<th>G</th><th>GF</th><th>GS</th><th>Disc.</th>
+</tr>
+<tbody id="classTable"></tbody>
+</table>
+</div>
+</div>
+<div id="coppe" class="hidden">
+<div class="card">
+<h2>🏆 Le Coppe</h2>
+<div id="coppeList"></div>
+</div>
+</div>
+<div id="team" class="hidden">
+<div class="card">
+<h2>👥 Rosa</h2>
+<div id="teamList"></div>
+</div>
+<div class="card">
+<h2>⚽ Marcatori</h2>
+<div id="scorers"></div>
+</div>
+</div>
+<div id="contatti" class="hidden">
+<div class="card">
+<h2>📞 Contatti</h2>
+<div id="contattiList"></div>
+</div>
+</div><div id="admin" class="hidden">
+<div class="card">
+<h2>🔒 Admin</h2>
+<div id="loginBox">
+<p class="small">Inserisci password per entrare.</p>
+<input id="pw" type="password"
+placeholder="Password Admin">
+<button class="big"
+onclick="login()">Entra come Admin</button>
+</div>
+<div id="adminPanel" class="hidden">
+<button class="big"
+style="background:#ef4444;color:#fff"
+onclick="logout()">🚪 Esci / Logout</button>
+<div class="card">
+<h2>🎨 Grafica</h2>
+<p>Titolo</p>
+<input id="sTitle">
+<p>Sottotitolo</p>
+<input id="sSub">
+<p>Colore</p>
+<select id="sColor">
+<option value="#facc15">Giallo</option>
+<option value="#ef4444">Rosso</option>
+<option value="#3b82f6">Blu</option>
+<option value="#22c55e">Verde</option>
+<option value="#a855f7">Viola</option>
+<option value="#f97316">Arancione</option>
+</select>
+<button class="big"
+onclick="saveSettings()">SALVA GRAFICA</button>
+</div>
+<div class="card">
+<h2>🔑 Cambia Password</h2>
+<input id="newPw" type="password"
+placeholder="Nuova password">
+<input id="newPw2" type="password"
+placeholder="Ripeti nuova password">
+<button class="big"
+onclick="changePw()">Cambia Password</button>
+</div>
+<div class="card">
+<h2>📜 Regola Avulsa</h2>
+<input id="fRegola"
+placeholder="Regola...">
+<button class="big"
+onclick="saveRegola()">Salva Regola</button>
+</div><div class="card">
+<h2>🏆 Aggiungi Competizione</h2>
+<input id="fComp" placeholder="Es: Supercoppa">
+<button class="big"
+onclick="addComp()">Aggiungi Competizione</button>
+<div id="compList"></div>
+</div>
+<h3>🏆 Squadre</h3>
+<input id="fTeam" placeholder="Nome squadra">
+<button class="big"
+onclick="addTeam()">Aggiungi Squadra</button>
+<div id="teamsList"></div>
+<h3>⚽ Partita</h3>
+<select id="fCasa"></select>
+<select id="fTras"></select>
+<input id="fData" type="date">
+<input id="fOra" type="time" value="21:00">
+<input id="fLuogo" placeholder="Luogo">
+<input id="fGolC" type="number" placeholder="Gol Casa">
+<input id="fGolT" type="number" placeholder="Gol Trasferta">
+<select id="fStato">
+<option>Programmata</option>
+<option>Giocata</option>
+</select>
+<button class="big"
+onclick="saveMatch()">Salva Partita</button>
+<div id="matchesList"></div>
+<h3>👤 Giocatore</h3>
+<input id="fNome" placeholder="Nome">
+<input id="fRuolo" placeholder="Ruolo">
+<input id="fGol" type="number" placeholder="Gol">
+<button class="big"
+onclick="addPlayer()">Aggiungi Giocatore</button>
+<div id="playersList"></div>
+<h3>🟨 Disciplina</h3>
+<select id="dTeam"></select>
+<button class="big" onclick="addDisc(-2)">-2 Punti</button>
+<button class="big" onclick="addDisc(-5)">-5 Punti</button>
+<button class="big" onclick="addDisc(-10)">-10 Punti</button>
+<div id="discList"></div>
+<h3>📞 Contatto</h3>
+<input id="cNome" placeholder="Nome">
+<input id="cTel" placeholder="Telefono">
+<input id="cRuolo" placeholder="Ruolo">
+<button class="big"
+onclick="addContatto()">+ Aggiungi Contatto</button>
+<div id="contattiAdminList"></div>
+</div>
+</div>
+</div>
+</div><script>
+function show(id){
+var ids=['home','cal','class','coppe','team','contatti','admin'];
+for(var i=0;i<ids.length;i++){
+var el=document.getElementById(ids[i]);
+if(el){
+if(ids[i]===id) el.classList.remove('hidden');
+else el.classList.add('hidden');
+}
+var b=document.getElementById('b-'+ids[i]);
+if(b){
+if(ids[i]===id) b.classList.add('on');
+else b.classList.remove('on');
+}
+}
+}
+var DB="https://c5-valdelsa-default-rtdb.firebaseio.com/valdelsa.json";
+var teams=["C5 Valdelsa","Real Poggibonsi",
+"Futsal Siena","Colle Valdelsa C5",
+"San Gimignano","Monteriggioni C5",
+"Barberino C5","Certaldo Futsal"];
+var matches=[
+{casa:"C5 Valdelsa",tras:"Real Poggibonsi",
+data:"2026-11-21",[STRIPPED]
+];var players=[
+{n:"Francesco P.",r:"Mister",g:0},
+{n:"Mario Rossi",r:"Portiere",g:0},
+{n:"Luca Bianchi",r:"Difensore",g:2}
+];
+var contacts=[
+{n:"Mister Francesco",tel:"3331234567",ruolo:"Mister"}
+];
+var comps=["Serie A","Coppa di Lega","Coppa Mitropa"];
+var disciplina={};
+var settings={
+title:"C5 VALDELSA",
+sub:"LEGA CALCIO A 5 VAL D'ELSA 2026/27",
+color:"#facc15",
+regola:"In caso di parita' conta prima la differenza reti, poi i gol fatti.",
+adminHash:740322054
+};
+var isAdmin=false;
+function hashPw(v){
+var h=0;
+for(var i=0;i<v.length;i++){h=(h*31+v.charCodeAt(i))|0}
+return h
+}
+function el(id){return document.getElementById(id)}async function load(){
+try{
+var r=await fetch(DB);
+var d=await r.json();
+if(d){
+if(d.teams)teams=d.teams;
+if(d.matches)matches=d.matches;
+if(d.players)players=d.players;
+if(d.contacts)contacts=d.contacts;
+if(d.comps)comps=d.comps;
+if(d.disciplina)disciplina=d.disciplina;
+if(d.settings)settings=Object.assign(settings,d.settings);
+}
+}catch(e){}
+try{applySettings()}catch(e){}
+try{render()}catch(e){}
+}
+async function save(){
+try{
+if(el('sync')) el('sync').textContent="● Salvataggio...";
+await fetch(DB,{method:"PUT",
+body:JSON.stringify({teams:teams,matches:matches,
+players:players,contacts:contacts,comps:comps,
+disciplina:disciplina,settings:settings})});
+if(el('sync')) el('sync').textContent="● LIVE - Salvato!";
+}catch(e){alert("Errore salvataggio, riprova")}
+render()
+}
+function applySettings(){
+if(el('hdrSub')) el('hdrSub').textContent=settings.sub;
+if(el('sTitle')) el('sTitle').value=settings.title;
+if(el('sSub')) el('sSub').value=settings.sub;
+if(el('sColor')) el('sColor').value=settings.color;
+if(el('fRegola')) el('fRegola').value=settings.regola||"";
+if(el('regolaView')) el('regolaView').textContent=settings.regola||"";
+  }function login(){
+var v=el('pw').value;
+if(hashPw(v)===settings.adminHash){
+isAdmin=true;
+el('loginBox').classList.add('hidden');
+el('adminPanel').classList.remove('hidden');
+alert("Benvenuto Mister!");
+}else{alert("Password sbagliata!")}
+}
+function logout(){
+isAdmin=false;
+el('loginBox').classList.remove('hidden');
+el('adminPanel').classList.add('hidden');
+el('pw').value="";
+show('home');
+}
+function changePw(){
+var a=el('newPw').value;
+var b=el('newPw2').value;
+if(!a||a.length<4){alert("Password troppo corta");return}
+if(a!==b){alert("Le 2 password non sono uguali!");return}
+settings.adminHash=hashPw(a);
+el('newPw').value="";
+el('newPw2').value="";
+save();
+alert("Password cambiata!");
+}
+function saveRegola(){
+settings.regola=el('fRegola').value;
+save();
+alert("Regola salvata!");
+}
+function saveSettings(){
+settings.title=el('sTitle').value||"C5 VALDELSA";
+settings.sub=el('sSub').value||settings.sub;
+settings.color=el('sColor').value;
+applySettings();
+save();
+alert("Grafica salvata!");
+}function addComp(){
+var n=el('fComp').value.trim();
+if(!n){alert("Scrivi nome");return}
+if(comps.indexOf(n)>=0){alert("Esiste gia'");return}
+comps.push(n);
+el('fComp').value="";
+save();
+}
+function delComp(i){
+if(!confirm("Cancellare?"))return;
+comps.splice(i,1);
+save();
+}
+function addTeam(){
+var n=el('fTeam').value.trim();
+if(!n){alert("Metti nome");return}
+if(teams.indexOf(n)>=0){alert("Esiste gia'");return}
+teams.push(n);
+el('fTeam').value="";
+save();
+}
+function delTeam(i){
+if(!confirm("Cancellare?"))return;
+teams.splice(i,1);
+save();
+}
+function saveMatch(){
+var m={
+casa:el('fCasa').value,
+tras:el('fTras').value,
+data:el('fData').value,
+[STRIPPED]
+var idx=-1;
+for(var i=0;i<matches.length;i++){
+if(matches[i].casa===m.casa&&matches[i].tras===m.tras&&matches[i].data===m.data) idx=i;
+}
+if(idx>=0) matches[idx]=m;
+else matches.push(m);
+save();
+alert("Partita salvata!");
+}
+function delMatch(i){
+if(!confirm("Cancellare?"))return;
+matches.splice(i,1);
+save();
+}
+function addPlayer(){
+var n=el('fNome').value;
+if(!n){alert("Metti nome");return}
+players.push({n:n,r:el('fRuolo').value||"Giocatore",
+g:parseInt(el('fGol').value||0)});
+el('fNome').value="";
+save();
+}
+function delPlayer(i){
+if(!confirm("Cancellare?"))return;
+players.splice(i,1);
+save();
+}
+function addDisc(p){
+var t=el('dTeam').value;
+disciplina[t]=(disciplina[t]||0)+p;
+save();
+alert(t+" "+p);
+}
+function addContatto(){
+var n=el('cNome').value.trim();
+var tel=el('cTel').value.trim();
+if(!n||!tel){alert("Metti nome e telefono");return}
+contacts.push({n:n,tel:tel,ruolo:el('cRuolo').value||""});
+el('cNome').value="";
+el('cTel').value="";
+el('cRuolo').value="";
+save();
+alert("Contatto aggiunto!");
+}
+function delContatto(i){
+if(!confirm("Cancellare?"))return;
+contacts.splice(i,1);
+save();
+  }function calc(){
+var t={};
+for(var i=0;i<teams.length;i++){
+t[teams[i]]={pti:0,g:0,gf:0,gs:0};
+}
+for(var j=0;j<matches.length;j++){
+var m=matches[j];
+if(m.stato!=="Giocata") continue;
+if(m.golC===""||m.golC===undefined) continue;
+var a=parseInt(m.golC);
+var b=parseInt(m.golT);
+if(!t[m.casa]) t[m.casa]={pti:0,g:0,gf:0,gs:0};
+if(!t[m.tras]) t[m.tras]={pti:0,g:0,gf:0,gs:0};
+t[m.casa].g++; t[m.tras].g++;
+t[m.casa].gf+=a; t[m.casa].gs+=b;
+t[m.tras].gf+=b; t[m.tras].gs+=a;
+if(a>b) t[m.casa].pti+=3;
+else if(b>a) t[m.tras].pti+=3;
+else{t[m.casa].pti++; t[m.tras].pti++;}
+}
+for(var k in disciplina){
+if(t[k]) t[k].pti+=disciplina[k];
+}
+var arr=[];
+for(var key in t){arr.push([key,t[key]])}
+arr.sort(function(x,y){
+if(y[1].pti!==x[1].pti) return y[1].pti-x[1].pti;
+return (y[1].gf-y[1].gs)-(x[1].gf-x[1].gs);
+});
+return arr;
+}function render(){
+try{
+var next=null;
+for(var i=0;i<matches.length;i++){
+if(matches[i].stato==="Programmata"){next=matches[i];break}
+}
+if(el('nextMatch')){
+el('nextMatch').innerHTML=next?
+"<b>"+next.casa+" vs "+next.tras+"</b><br>"+
+next.data+" ore "+next.ora+" - "+next.luogo
+:"Nessuna partita";
+}
+var last=matches.filter(function(m){return m.stato==="Giocata"}).slice(-3).reverse();
+if(el('lastResults')){
+el('lastResults').innerHTML=last.map(function(m){
+return "<div class='row'><div>"+m.casa+" - "+m.tras+
+"<br><span class='small'>"+m.data+"</span></div><b>"+
+m.golC+" - "+m.golT+"</b></div>"
+}).join("")||"Nessun risultato";
+}
+var cl=calc();
+if(el('top5')){
+el('top5').innerHTML=cl.slice(0,5).map(function(x,i){
+return "<div class='row'><div>"+(i+1)+". "+x[0]+
+"</div><b>"+x[1].pti+" pti</b></div>"
+}).join("");
+}
+if(el('compHome')){
+el('compHome').innerHTML=comps.map(function(c){
+return "<div class='row'><div><b>"+c+"</b></div></div>"
+}).join("");
+}
+if(el('coppeList')){
+el('coppeList').innerHTML=comps.map(function(c){
+return "<div class='row'><div><b>"+c+"</b></div>"+
+"<span class='badge'>Competizione</span></div>"
+}).join("");
+}
+if(el('compList')){
+el('compList').innerHTML=comps.map(function(c,i){
+return "<div class='row'><div>"+c+"</div>"+
+"<button class='del' onclick='delComp("+i+")'>X</button></div>"
+}).join("");
+}
+if(el('calList')){
+var sorted=matches.slice().sort(function(a,b){
+return a.data.localeCompare(b.data)
+});
+el('calList').innerHTML=sorted.map(function(m){
+return "<div class='row'><div><b>"+m.casa+" vs "+m.tras+
+"</b><br><span class='small'>"+m.data+" "+m.ora+" - "+m.luogo+
+"</span></div>"+(m.stato==="Giocata"?"<b>"+m.golC+"-"+m.golT+"</b>":
+"<span class='badge'>"+m.stato+"</span>")+"</div>"
+}).join("");
+}
+if(el('classTable')){
+el('classTable').innerHTML=cl.map(function(x,i){
+return "<tr><td>"+(i+1)+"</td><td>"+x[0]+"</td><td><b>"+
+x[1].pti+"</b></td><td>"+x[1].g+"</td><td>"+x[1].gf+
+"</td><td>"+x[1].gs+"</td><td>"+(disciplina[x[0]]||0)+"</td></tr>"
+}).join("");
+}
+if(el('teamList')){
+el('teamList').innerHTML=players.map(function(p){
+return "<div class='row'><div><b>"+p.n+"</b><br>"+
+"<span class='small'>"+p.r+"</span></div>"+
+"<span class='badge'>"+p.g+" gol</span></div>"
+}).join("");
+}
+if(el('scorers')){
+var s=players.slice().sort(function(a,b){return b.g-a.g}).slice(0,5);
+el('scorers').innerHTML=s.map(function(p){
+return "<div class='row'><div>"+p.n+"</div><b>"+p.g+" gol</b></div>"
+}).join("");
+}
+if(el('contattiList')){
+el('contattiList').innerHTML=contacts.length?
+contacts.map(function(c){
+return "<div class='row'><div><b>"+c.n+"</b><br>"+
+"<span class='small'>"+c.ruolo+"</span></div>"+
+"<a href='tel:"+c.tel+"' style='color:#facc15;font-weight:800'>📞 "+c.tel+"</a></div>"
+}).join(""):"Nessun contatto";
+}
+if(el('contattiAdminList')){
+el('contattiAdminList').innerHTML=contacts.map(function(c,i){
+return "<div class='row'><div>"+c.n+" - "+c.tel+"</div>"+
+"<button class='del' onclick='delContatto("+i+")'>X</button></div>"
+}).join("");
+}
+var o=teams.map(function(t){return "<option>"+t+"</option>"}).join("");
+if(el('fCasa')) el('fCasa').innerHTML=o;
+if(el('fTras')) el('fTras').innerHTML=o;
+if(el('dTeam')) el('dTeam').innerHTML=o;
+if(el('fData')) el('fData').value=new Date().toISOString().slice(0,10);
+if(el('teamsList')){
+el('teamsList').innerHTML=teams.map(function(t,i){
+return "<div class='row'><div>"+t+"</div>"+
+"<button class='del' onclick='delTeam("+i+")'>X</button></div>"
+}).join("");
+}
+if(el('matchesList')){
+el('matchesList').innerHTML=matches.map(function(m,i){
+return "<div class='row'><div><small>"+m.data+" - "+m.casa+" vs "+m.tras+
+"</small></div><button class='del' onclick='delMatch("+i+")'>X</button></div>"
+}).join("");
+}
+if(el('playersList')){
+el('playersList').innerHTML=players.map(function(p,i){
+return "<div class='row'><div>"+p.n+" - "+p.r+"</div>"+
+"<button class='del' onclick='delPlayer("+i+")'>X</button></div>"
+}).join("");
+}
+if(el('discList')){
+var dl="";
+for(var k in disciplina){dl+="<div class='row'><div>"+k+"</div><b>"+disciplina[k]+"</b></div>"}
+el('discList').innerHTML=dl||"Nessuna penalita'";
+}
+}catch(e){console.log("render error",e)}
+}
+load();
+</script>
+</body>
+</html>

@@ -328,10 +328,10 @@ input[type=checkbox]{width:22px;height:22px;accent-color:#facc15;margin:0}
 <div id="discList"></div>
 </div>
 <div id="adminSec-giocatori" style="display:none">
-<h3>👤 Giocatore - Mettili in rosa uno per uno, poi appariranno nel menù Marcatori</h3>
+<h3>👤 Inserisci i giocatori nella rispettiva squadra</h3>
 <div class="card" style="border-color:#facc15">
 <div class="label">👤 NOME GIOCATORE</div><input id="fPlayerNome" placeholder="Es: Milvatti S.">
-<div class="label">🎯 RUOLO</div><select id="fPlayerRuolo"><option>Giocatore</option><option>Attaccante</option><option>Centrocampista</option><option>Difensore</option><option>Portiere</option><option>Mister</option></select>
+<div class="label">🎯 RUOLO</div><select id="fPlayerRuolo"><option>Attaccante</option><option>Laterale</option><option>Difensore</option><option>Portiere</option><option>Accompagnatore</option><option>Mister</option></select>
 <div class="label">⚽ GOL FATTI IN QUESTA STAGIONE - Se è nuovo metti 0</div><input id="fPlayerGol" type="number" value="0" min="0">
 <div class="label">👥 SQUADRA - Scegli con un click, non scrivere</div><select id="fPlayerTeam"></select>
 <button class="big" type="button" onclick="addPlayerNew()">+ Aggiungi Giocatore alla Rosa</button>
@@ -1420,7 +1420,8 @@ if(el('teamInfo')){
 el('teamInfo').innerHTML="<p><b>"+selTeam+"</b> - <span class='badge'>"+teamLeague(selTeam)+"</span> - Disciplina: <b>"+discVal(selTeam)+"</b></p>";
 }
 if(el('teamList')){
-var rp=players.filter(function(p){return (p.t||names[0])===selTeam;});
+var ordineRuoli={"Mister":0,"Accompagnatore":1,"Portiere":2,"Portieri":2,"Difensore":3,"Difensori":3,"Laterale":4,"Laterali":4,"Pivot":5,"Attaccante":6,"Giocatore":7};
+var rp=players.filter(function(p){return (p.t||names[0])===selTeam;}).slice().sort(function(a,b){return (ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99)-(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99);});;
 var tlH="";
 for(var tli=0;tli<rp.length;tli++){tlH+="<div class='row'><div><b>"+rp[tli].n+"</b><br><span class='small'>"+rp[tli].r+"</span></div><span class='badge'>"+rp[tli].g+" gol</span></div>";}
 el('teamList').innerHTML=tlH||"<p class='small'>Nessun giocatore.</p>";

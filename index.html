@@ -2128,6 +2128,7 @@ el('allTeams').innerHTML=hat2;
 }
 if(el('scorers')){
 var s=players.filter(function(p){return p.t===selTeam;});
+s=s.filter(function(p){return p.r!=="Mister"&&p.r!=="Accompagnatore"&&p.r!=="Presidente";});
 s.sort(function(a,b){return b.g-a.g;});
 s=s.slice(0,10);
 var hsc="";

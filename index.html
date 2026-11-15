@@ -1775,6 +1775,7 @@ el('pastMatches').innerHTML=hp;
 }
 function topScorersHtml(league){
 var list=players.filter(function(p){return teamLeague(p.t||"")==league;});
+list=list.filter(function(p){return p.r!=="Mister"&&p.r!=="Accompagnatore"&&p.r!=="Presidente";});
 list.sort(function(a,b){return b.g-a.g;});
 list=list.slice(0,3);
 if(!list.length)return "<p class='small'>Ancora nessun gol.</p>";

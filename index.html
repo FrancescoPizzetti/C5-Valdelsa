@@ -2094,14 +2094,14 @@ if(curT)el('teamFilter').value=curT;
 selTeam=el('teamFilter').value;
 }
 if(el('teamInfo')){
-el('teamInfo').innerHTML="<p><b>"+selTeam+"</b> - "+teamLeague(selTeam)+" - Disc: <b>"+discVal(selTeam)+"</b></p>";
+var presN="Non indicato"; for(var pr=0;pr<players.length;pr++){if(players[pr].t===selTeam&&(players[pr].r==="Presidente"||players[pr].r==="Presidenti")){presN=players[pr].n;break;}} el('teamInfo').innerHTML="<p><b>"+selTeam+"</b> - "+teamLeague(selTeam)+" - Presidente: <b>"+presN+"</b></p>";
 }
 if(el('teamList')){
 var rp=players.filter(function(p){return p.t===selTeam;});
 var ordineRuoli={"Mister":0,"Accompagnatore":1,"Portiere":2,"Portieri":2,"Difensore":3,"Difensori":3,"Laterale":4,"Laterali":4,"Attaccante":5,"Attaccanti":5,"Centrocampista":4,"Giocatore":6}; rp.sort(function(a,b){return (ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99)-(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99)||(a.n||"").localeCompare(b.n||"");});
 var htl="";
 for(var rpI=0;rpI<rp.length;rpI++){
-htl+="<div class='row'><div><b>"+rp[rpI].n+"</b><br><span class='small'>"+rp[rpI].r+"</span></div><span class='badge'>"+rp[rpI].g+" gol</span></div>";
+htl+="<div class='row'><div><b>"+rp[rpI].n+"</b><br><span class='small'>"+rp[rpI].r+"</span></div>"+((rp[rpI].r==="Mister"||rp[rpI].r==="Accompagnatore"||rp[rpI].r==="Presidente")?"":"<span class='badge'>"+rp[rpI].g+" gol</span>")+"</div>";
 }
 if(!htl)htl="<p class='small'>Nessun giocatore in rosa.</p>";
 el('teamList').innerHTML=htl;

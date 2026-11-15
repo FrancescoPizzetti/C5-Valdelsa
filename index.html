@@ -2344,7 +2344,6 @@ el('alboIndAdminList').innerHTML=hai2;
 }if(el('playersList')){
 var hpl="";
 var ordineRuoli={"Mister":0,"Accompagnatore":1,"Portiere":2,"Portieri":2,"Difensore":3,"Difensori":3,"Laterale":4,"Laterali":4,"Attaccante":5,"Attaccanti":5,"Centrocampista":4,"Giocatore":6};
-var optsF="<option value='Tutte'>Tutte le squadre</option>"+oGrouped; if(window.filtroAdminSquadra && window.filtroAdminSquadra!=="Tutte"){optsF=optsF.split("value='"+window.filtroAdminSquadra+"'").join("value='"+window.filtroAdminSquadra+"' selected");}
 for(var pi=0;pi<players.length;pi++){ if(window.filtroAdminSquadra && window.filtroAdminSquadra!=="Tutte" && players[pi].t!==window.filtroAdminSquadra){continue;}
 hpl+="<div class='row'><div><b>";
 hpl+=players[pi].n;

@@ -1102,6 +1102,29 @@ if(el('alboYearFilter')) el('alboYearFilter').value=curAlboYear;
 if(el('alboYearFilterInd')) el('alboYearFilterInd').value=curAlboYearInd;
 }catch(e){console.log("render error",e)}
 }
+function fillYears(){
+var annoOra=new Date().getFullYear();
+var ids=['alboYearFilter','alboYearFilterInd','fAlboAnno','fIndAnno'];
+for(var k=0;k<ids.length;k++){
+var s=el(ids[k]);
+if(!s) continue;
+var cur=s.value;
+var html="";
+if(ids[k]==='alboYearFilter'||ids[k]==='alboYearFilterInd'){
+html+="<option value=''>Tutti gli anni</option>";
+}
+for(var y=annoOra;y>=2010;y--){
+html+="<option value='"+y+"'>"+y+"</option>";
+}
+s.innerHTML=html;
+if(cur) s.value=cur;
+}
+if(el('alboYearFilter')) el('alboYearFilter').value=curAlboYear;
+if(el('alboYearFilterInd')) el('alboYearFilterInd').value=curAlboYearInd;
+}
+fillYears();
+load();
+</script>
 load();
 </script>
 </body>

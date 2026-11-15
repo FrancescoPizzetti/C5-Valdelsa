@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b3d1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="C5 Valdelsa">
+<title>C5 Valdelsa</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:#fff;background:#0b3d1e;background-image:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.65)),url('https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=1200&q=80');background-size:cover;background-position:center;background-attachment:fixed}
+header{text-align:center;padding:18px 12px 10px;position:relative}
+header h1{font-size:32px;margin:10px 0 4px;text-shadow:0 2px 10px #000}
+header h1 span{color:#facc15}
+header p{color:#ddd;font-size:12px;margin:0;text-shadow:0 1px 5px #000}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(0,0,0,0.55);position:sticky;top:0;z-index:30;backdrop-filter:blur(8px)}
+.burger{font-size:26px;background:#facc15;color:#000;border:0;width:46px;height:46px;border-radius:12px;cursor:pointer;font-weight:900}
+.topbarTitle{font-weight:900;letter-spacing:1px;font-size:15px}
+.topLive{font-size:12px;color:#4ade80;font-weight:800}
+nav{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:16px 12px}
+nav button{padding:13px 20px;border-radius:99px;border:1px solid rgba(255,255,255,0.25);background:rgba(0,0,0,0.55);color:#fff;font-weight:800;cursor:pointer;font-size:14px}
+nav button.on{background:#facc15;color:#000;border-color:#facc15}
+.drawer{position:fixed;top:0;left:-300px;width:280px;height:100%;background:#111827;z-index:50;transition:0.3s;padding:18px;box-shadow:5px 0 30px #000;overflow-y:auto}
+.drawer.open{left:0}
+.drawer h3{margin:0 0 14px;color:#facc15}
+.drawer button{display:block;width:100%;text-align:left;padding:14px 12px;margin:6px 0;border:0;border-radius:12px;background:#1f2937;color:#fff;font-weight:800;cursor:pointer;font-size:15px}
+.drawer button:hover{background:#facc15;color:#000}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:40;display:none}
+.overlay.show{display:block}
+.wrap{max-width:920px;margin:auto;padding:10px 14px 20px}
+.card{background:rgba(20,20,28,0.92);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:16px;margin-bottom:16px;box-shadow:0 8px 25px rgba(0,0,0,0.4)}
+.card.smallPad{padding:10px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #333;align-items:center}
+input,select{width:100%;padding:12px;border-radius:12px;border:1px solid #444;margin:5px 0;background:#000;color:#fff}
+.big{width:100%;padding:13px;border:0;border-radius:12px;background:#facc15;color:#000;font-weight:900;margin:7px 0;cursor:pointer}
+.hidden{display:none!important}
+.small{color:#bbb;font-size:12px}
+.badge{background:#facc15;color:#000;padding:5px 10px;border-radius:99px;font-weight:800;font-size:12px}
+.badge2{background:#3b82f6;color:#fff;padding:5px 10px;border-radius:99px;font-weight:800;font-size:12px}
+.tableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tableWrap table{width:100%;border-collapse:collapse;min-width:340px;font-size:13px}
+.tableWrap td,.tableWrap th{padding:6px 4px;text-align:left;border-bottom:1px solid #333;font-size:13px;white-space:nowrap}
+.tableWrap th{font-size:11px;color:#aaa;letter-spacing:0.5px}
+.tableWrap .teamName{white-space:normal;font-size:13px;line-height:1.2;max-width:120px}
+.del{background:#ef4444;color:#fff;border:0;padding:6px 10px;border-radius:8px;cursor:pointer}
+.hero{background:#facc15;color:#000;border-radius:20px;padding:16px}
+.logo{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;flex-shrink:0;font-size:13px;overflow:hidden}
+.logo img{width:100%;height:100%;object-fit:cover}
+.teamline{display:flex;align-items:center;gap:6px}
+.homeLogo{width:90px;height:90px;border-radius:18px;background:rgba(0,0,0,0.5);border:2px solid #facc15;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.homeLogo img{width:100%;height:100%;object-fit:contain}
+.homeLogosRow{display:flex;justify-content:center;gap:16px;align-items:center;margin:8px 0}
+.subnav{display:flex;gap:10px;justify-content:center;margin:10px 0}
+.subnav button{flex:1;padding:13px;border-radius:12px;border:1px solid #444;background:#222;color:#fff;font-weight:900;cursor:pointer}
+.subnav button.on{background:#facc15;color:#000;border-color:#facc15}
+.giornataTitle{background:#facc15;color:#000;padding:8px 12px;border-radius:10px;font-weight:900;margin:14px 0 6px}
+.resWin{color:#22c55e;font-weight:900}
+.resDraw{color:#facc15;font-weight:900}
+.label{font-size:11px;letter-spacing:1px;color:#facc15;font-weight:900;margin:12px 0 2px}
+.posCeleste{background:#38bdf8;color:#000;font-weight:900;text-align:center;border-radius:8px;width:24px;height:24px;line-height:24px;font-size:13px}
+.posGiallo{background:#facc15;color:#000;font-weight:900;text-align:center;border-radius:8px;width:24px;height:24px;line-height:24px;font-size:13px}
+.posRosso{background:#ef4444;color:#fff;font-weight:900;text-align:center;border-radius:8px;width:24px;height:24px;line-height:24px;font-size:13px}
+.legendRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.legendItem{display:flex;align-items:center;gap:6px;background:#222;padding:8px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.dot{width:16px;height:16px;border-radius:50%;flex-shrink:0}
+.faseTitle{background:#22c55e;color:#000;padding:8px 12px;border-radius:10px;font-weight:900;margin:14px 0 6px}
+.qualBox{background:#1e3a2a;border:1px solid #22c55e;border-radius:12px;padding:12px;margin:10px 0}
+.trophyRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.trophyPill{background:#facc15;color:#000;padding:5px 9px;border-radius:99px;font-size:11px;font-weight:800}
+.versionFooter{text-align:center;color:rgba(255,255,255,0.55);font-size:11px;padding:14px 0 8px;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="topbar">
+<button class="burger" type="button" onclick="toggleDrawer()">☰</button>
+<div class="topbarTitle">C5 VALDELSA ⚽</div>
+<div class="topLive" id="sync">● LIVE</div>
+</div>
+<div class="overlay" id="overlay" onclick="toggleDrawer()"></div>
+<div class="drawer" id="drawer">
+<h3>☰ MENÙ LEGA</h3>
+<button type="button" onclick="goMenu('home')">🏠 Home</button>
+<button type="button" onclick="goMenu('cal')">📅 Calendario</button>
+<button type="button" onclick="goMenu('ris')">📋 Risultati</button>
+<button type="button" onclick="goMenu('class')">🏆 Classifica</button>
+<button type="button" onclick="goMenu('coppe')">🏆 Coppe</button>
+<button type="button" onclick="goMenu('team')">👥 Squadre e Rose</button>
+<button type="button" onclick="goMenu('albo')">🏆 Albo d'Oro</button>
+<button type="button" onclick="goMenu('contatti')">📞 Contatti</button>
+<button type="button" onclick="goMenu('admin')">🔒 Admin</button>
+<p class="small" style="margin-top:16px">Premi ☰ in alto a sinistra per aprire / chiudere questo menù.</p>
+<p class="small" style="text-align:center;margin-top:18px;opacity:0.6">Versione 1.01</p>
+</div>
+<header>
+<div class="homeLogosRow">
+<div class="homeLogo" id="headerLogo1"><span style="font-size:28px">🏆</span></div>
+<h1 style="margin:0">C5 <span>VALDELSA</span></h1>
+<div class="homeLogo" id="headerLogo2"><span style="font-size:28px">⚽</span></div>
+</div>
+<p id="hdrSub">LEGA CALCIO A 5 VAL D'ELSA 2026/27 - 14 SERIE A + 16 SERIE B</p>
+</header>
+<nav>
+<button type="button" id="b-home" class="on" onclick="show('home')">🏠 Home</button>
+<button type="button" id="b-cal" onclick="show('cal')">📅 Calendario</button>
+<button type="button" id="b-ris" onclick="show('ris')">📋 Risultati</button>
+<button type="button" id="b-class" onclick="show('class')">🏆 Classifica</button>
+</nav>
+<div class="wrap">
+<div id="home">
+<div class="card" style="background:#facc15;color:#000"><h2 style="margin:0 0 8px">📱 Metti C5 Valdelsa sul tuo telefono</h2><p style="margin:0 0 10px;font-size:13px">Come un'app! Si apre in 1 tocco dalla schermata Home, senza aprire il browser.</p><button class="big" type="button" style="background:#000;color:#facc15" onclick="installApp()">📱 AGGIUNGI ALLA SCHERMATA HOME</button><p class="small" style="color:#333" id="installHint">Premi il bottone e segui le istruzioni.</p></div>
+<div class="card"><h2>🏆 Le Competizioni</h2><div id="compHome"></div></div>
+<div class="card hero"><h2>🔥 Prossima Partita</h2><div id="nextMatch">Caricamento...</div></div>
+<div class="card"><h2>📅 Partite in Programma</h2><p class="small">Dal Calendario creato dall'Admin - le prossime da giocare.</p><div id="upcomingMatches"></div></div>
+<div class="card"><h2>✅ Partite Trascorse</h2><p class="small">Già giocate, con risultato finale.</p><div id="pastMatches"></div></div>
+<div class="card"><h2>🥇 Top 3 Capocannonieri - Serie A</h2><div id="topScorersA"></div></div>
+<div class="card"><h2>🥇 Top 3 Capocannonieri - Serie B</h2><div id="topScorersB"></div></div>
+<div class="card"><h2>🏆 Top 5 Serie A</h2><div id="top5"></div></div>
+<div class="card"><h2>🏆 Top 5 Serie B</h2><div id="top5B"></div></div>
+<div class="card"><h2>🏆 Albo d'Oro - Top 5 Squadre più titolate</h2><div id="alboPreview"></div><button class="big" type="button" onclick="show('albo')">Vedi tutto l'Albo d'Oro →</button></div>
+<div class="versionFooter">Versione 1.01 • C5 Valdelsa</div>
+</div>
+<div id="cal" class="hidden"><div class="card"><h2>📅 Calendario - Campionato</h2><p class="small">Il Calendario lo crea l'Admin. Prima le partite sono Programmata, poi diventano Risultato.</p><select id="calFilter" onchange="render()"><option value="">Tutte le Leghe</option><option>Serie A</option><option>Serie B</option></select><div id="calList"></div></div></div>
+<div id="ris" class="hidden">
+<div class="card"><h2>📋 Risultati - Dalla 1ª all'Ultima Giornata</h2><p class="small">Divisi per Lega. Scegli Serie A o Serie B in alto. I risultati arrivano dal Calendario creato dall'Admin.</p>
+<div class="subnav">
+<button type="button" id="btnRisA" class="on" onclick="showRis('A')">🏆 SERIE A</button>
+<button type="button" id="btnRisB" onclick="showRis('B')">🏆 SERIE B</button>
+</div>
+<select id="risGiornata" onchange="render()"><option value="">Tutte le Giornate</option></select>
+<div id="risList"></div>
+</div>
+</div>
+<div id="class" class="hidden">
+<div class="card"><h2>🏆 Classifica</h2><p class="small" id="regolaView"></p>
+<div class="subnav">
+<button type="button" id="btnClassA" class="on" onclick="showClass('A')">🏆 SERIE A (14)</button>
+<button type="button" id="btnClassB" onclick="showClass('B')">🏆 SERIE B (16)</button>
+</div>
+</div>
+<div id="classABox">
+<div class="card"><h2>🏆 Classifica - Serie A (14)</h2><p class="small">I colori si aggiornano da soli in base alla posizione. Disciplina: tutte partono da 50.</p></div>
+<div class="card smallPad"><div class="tableWrap"><table><tr><th>#</th><th>Squadra</th><th>Pti</th><th>G</th><th>GF</th><th>GS</th><th>Disc.</th></tr><tbody id="classTableA"></tbody></table></div>
+<div class="legendRow">
+<div class="legendItem"><div class="dot" style="background:#38bdf8"></div> CELESTE 1ª-6ª = Coppa Campioni</div>
+<div class="legendItem"><div class="dot" style="background:#facc15"></div> GIALLO 7ª-10ª = Mitropa</div>
+<div class="legendItem"><div class="dot" style="background:#ef4444"></div> ROSSO 11ª-14ª = Playout</div>
+</div>
+</div>
+</div>
+<div id="classBBox" class="hidden">
+<div class="card"><h2>🏆 Classifica - Serie B (16)</h2><p class="small">Disciplina: tutte partono da 50.</p></div>
+<div class="card smallPad"><div class="tableWrap"><table><tr><th>#</th><th>Squadra</th><th>Pti</th><th>G</th><th>GF</th><th>GS</th><th>Disc.</th></tr><tbody id="classTableB"></tbody></table></div></div>
+</div>
+</div><div id="coppe" class="hidden">
+<div class="card"><h2>🏆 Le Coppe</h2><p class="small">Coppa di Lega: parte dai Sedicesimi (30 squadre). Il sito calcola chi passa il turno. Altre Coppe: le crea l'Admin a mano.</p>
+<div class="subnav">
+<button type="button" id="btnCoppaLega" class="on" onclick="showCoppa('Coppa di Lega')">🏆 COPPA DI LEGA</button>
+<button type="button" id="btnCoppaMitropa" onclick="showCoppa('Coppa Mitropa')">🏆 COPPA MITROPA</button>
+<button type="button" id="btnCoppaAltre" onclick="showCoppa('Altre')">🏆 ALTRE COPPE</button>
+</div>
+<div id="coppeList"></div>
+<div id="coppaQualificate"></div>
+</div>
+</div>
+<div id="albo" class="hidden">
+<div class="card"><h2>🏆 Albo d'Oro</h2><p class="small">La storia della Lega. Prima vedi la classifica dei club più titolati, poi scegli l'anno per vedere chi ha vinto cosa.</p>
+<div class="subnav">
+<button type="button" id="btnAlboTeam" class="on" onclick="showAlbo('team')">🏆 CLUB</button>
+<button type="button" id="btnAlboInd" onclick="showAlbo('ind')">⭐ INDIVIDUALI</button>
+</div>
+</div>
+<div id="alboTeamBox">
+<div class="card"><h2>🏆 Classifica Club più titolati - Top 5</h2><p class="small">In automatico dalla più titolata alla meno titolata. Solo le prime 5 con trofei.</p><div id="alboTeams"></div></div>
+<div class="card"><h2>📅 Vincitori per Anno</h2><p class="small">Seleziona l'anno per vedere chi ha vinto i trofei in quell'anno.</p>
+<div class="label">📅 SELEZIONA ANNO - Dal 2010 a oggi</div><select id="alboYearFilter" onchange="changeAlboYear()"><option value="">Tutti gli anni</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option><option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option><option value="2010">2010</option></select>
+<div id="alboByYear"></div>
+<div id="alboByYearInd"></div>
+</div>
+</div>
+<div id="alboIndBox" class="hidden">
+<div class="card"><h2>⭐ Trofei Individuali</h2><p class="small">Assegnati dall'Admin con anno di conquista. Seleziona l'anno anche qui.</p>
+<div class="label">📅 SELEZIONA ANNO - Dal 2010 a oggi</div><select id="alboYearFilterInd" onchange="changeAlboYearInd()"><option value="">Tutti gli anni</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option><option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option><option value="2010">2010</option></select>
+<div id="alboInds"></div>
+</div>
+</div>
+</div>
+<div id="team" class="hidden">
+<div class="card"><h2>👥 Scegli Squadra per vedere la Rosa</h2><select id="teamFilter" onchange="render()"></select><div id="teamInfo"></div><div id="teamList"></div></div>
+<div class="card"><h2>⚽ Marcatori</h2><div id="scorers"></div></div>
+<div class="card"><h2>📋 Tutte le 30 Squadre</h2><div id="allTeams"></div></div>
+<div class="card"><h2>🟨 Classifica Disciplina - Tutte partono da 50</h2><div id="discTable"></div></div>
+</div>
+<div id="contatti" class="hidden">
+<div class="card"><h2>📞 Contatti Lega</h2>
+<div class="row"><div>
+<div style="font-size:11px;color:#aaa;letter-spacing:1px">PRESIDENTE DI LEGA</div>
+<div style="font-size:18px;font-weight:900;margin:4px 0">FRANCESCO PIZZETTI</div>
+<div style="font-size:14px">+39 366 265 2005</div>
+</div><a href="https://wa.me/393662652005?text=Ciao%20Presidente" target="_blank" style="background:#25D366;color:#fff;padding:10px 14px;border-radius:99px;text-decoration:none;font-weight:800;white-space:nowrap">💬 WhatsApp</a></div>
+<div class="row"><div>
+<div style="font-size:11px;color:#aaa;letter-spacing:1px">RESPONSABILE DEGLI ARBITRI</div>
+<div style="font-size:18px;font-weight:900;margin:4px 0">MICHELE CACIACCIOLA</div>
+<div style="font-size:14px">320 466 9219</div>
+<div style="font-size:11px;color:#facc15;margin-top:3px">SOLO MESSAGGI WHATSAPP</div>
+</div><a href="https://wa.me/393204669219?text=Ciao%20Michele" target="_blank" style="background:#25D366;color:#fff;padding:10px 14px;border-radius:99px;text-decoration:none;font-weight:800;white-space:nowrap">💬 WhatsApp</a></div>
+<div class="row"><div>
+<div style="font-size:11px;color:#aaa;letter-spacing:1px">SEGRETERIA</div>
+<div style="font-size:18px;font-weight:900;margin:4px 0">MICHAEL CUBATTOLI</div>
+<div style="font-size:14px">345 064 7424</div>
+</div><a href="https://wa.me/393450647424?text=Ciao%20Michael" target="_blank" style="background:#25D366;color:#fff;padding:10px 14px;border-radius:99px;text-decoration:none;font-weight:800;white-space:nowrap">💬 WhatsApp</a></div>
+</div></div>
+<div id="admin" class="hidden">
+<div class="card"><h2>🔒 Admin</h2>
+<div id="loginBox"><p class="small">Inserisci password per entrare.</p><input id="pw" type="password" placeholder="Password Admin"><button class="big" type="button" onclick="login()">Entra come Admin</button></div>
+<div id="adminPanel" class="hidden">
+<button class="big" type="button" style="background:#ef4444;color:#fff" onclick="logout()">🚪 Esci / Logout</button>
+<div class="card"><h2>🖼️ Loghi Home - 2 Slot</h2>
+<div class="row"><div><b>Logo 1 - Sinistra</b><br><span class="small" id="adminLogo1Text">Nessun logo</span></div><button class="big" type="button" style="width:auto;padding:10px 14px;margin:0" onclick="uploadHomeLogo(1)">📸 Carica Logo 1</button></div>
+<div class="row"><div><b>Logo 2 - Destra</b><br><span class="small" id="adminLogo2Text">Nessun logo</span></div><button class="big" type="button" style="width:auto;padding:10px 14px;margin:0" onclick="uploadHomeLogo(2)">📸 Carica Logo 2</button></div>
+<div class="row"><div><b>Azzerare</b></div><button class="del" type="button" onclick="clearHomeLogos()">Rimuovi Loghi</button></div>
+</div>
+<div class="card"><h2>🎨 Grafica</h2><p>Titolo</p><input id="sTitle"><p>Sottotitolo</p><input id="sSub"><p>Colore</p><select id="sColor"><option value="#facc15">Giallo</option><option value="#ef4444">Rosso</option><option value="#3b82f6">Blu</option><option value="#22c55e">Verde</option><option value="#a855f7">Viola</option><option value="#f97316">Arancione</option></select><button class="big" type="button" onclick="saveSettings()">SALVA GRAFICA</button></div>
+<div class="card"><h2>🔑 Cambia Password</h2><input id="newPw" type="password" placeholder="Nuova password"><input id="newPw2" type="password" placeholder="Ripeti nuova password"><button class="big" type="button" onclick="changePw()">Cambia Password</button></div>
+<div class="card"><h2>📜 Regola Avulsa</h2><input id="fRegola" placeholder="Regola..."><button class="big" type="button" onclick="saveRegola()">Salva Regola</button></div>
+<div class="card"><h2>🏆 Aggiungi Competizione</h2><input id="fComp" placeholder="Es: Supercoppa"><button class="big" type="button" onclick="addComp()">Aggiungi Competizione</button><div id="compList"></div></div>
+<h3>🏆 Squadre - 14 Serie A + 16 Serie B</h3><p class="small" id="countTeams"></p>
+<button class="big" type="button" style="background:#22c55e" onclick="resetTeams()">🔄 RIPRISTINA LE 30 SQUADRE VERE</button>
+<input id="fTeam" placeholder="Nome squadra"><select id="fLeague"><option>Serie A</option><option>Serie B</option></select><input id="fTeamColor" type="color" value="#facc15"><input id="fTeamLogo" placeholder="Link logo (facoltativo)"><button class="big" type="button" onclick="addTeam()">Aggiungi Squadra</button><div id="teamsList"></div>
+<h3>🏆 ALBO D'ORO - Titoli di Squadra</h3><p class="small">Inserisci la squadra vincitrice mettendo l'anno. Es: Bar Colle - Serie A - 2010. Poi in Albo d'Oro la classifica si aggiorna da sola, e scegliendo l'anno 2010 vedi chi ha vinto.</p>
+<div class="label">👥 SQUADRA</div><select id="fAlboTeam"></select>
+<div class="label">🏆 TROFEO</div><select id="fAlboTrofeo"><option>Coppa di Lega</option><option>Coppa Campioni</option><option>Mitropa Cup</option><option>Serie A</option><option>Serie B</option><option>Conference</option></select>
+<div class="label">📅 ANNO DI CONQUISTA - Dal 2010 a oggi</div><select id="fAlboAnno"><option>2026</option><option>2025</option><option>2024</option><option>2023</option><option>2022</option><option>2021</option><option>2020</option><option>2019</option><option>2018</option><option>2017</option><option>2016</option><option>2015</option><option>2014</option><option>2013</option><option>2012</option><option>2011</option><option>2010</option></select>
+<button class="big" type="button" onclick="saveTeamTitle()">🏆 Assegna Titolo di Squadra</button><div id="alboAdminList"></div>
+<h3>⭐ ALBO D'ORO - Trofei Individuali</h3><p class="small">Assegna un trofeo individuale con anno. Es: Mario Rossi - Capocannoniere Serie A - 2010.</p>
+<div class="label">👤 NOME - Giocatore o Mister</div><input id="fIndNome" placeholder="Es: Mario Rossi">
+<div class="label">👥 SQUADRA (facoltativo)</div><select id="fIndTeam"></select>
+<div class="label">⭐ TROFEO INDIVIDUALE</div><select id="fIndTrofeo"><option>Panchina d'Oro</option><option>Capocannoniere Serie A</option><option>Capocannoniere Serie B</option><option>Miglior Giocatore Serie A</option><option>Miglior Giocatore Serie B</option><option>Miglior Portiere Serie A</option><option>Miglior Portiere Serie B</option></select>
+<div class="label">📅 ANNO DI CONQUISTA - Dal 2010 a oggi</div><select id="fIndAnno"><option>2026</option><option>2025</option><option>2024</option><option>2023</option><option>2022</option><option>2021</option><option>2020</option><option>2019</option><option>2018</option><option>2017</option><option>2016</option><option>2015</option><option>2014</option><option>2013</option><option>2012</option><option>2011</option><option>2010</option></select>
+<button class="big" type="button" style="background:#38bdf8" onclick="saveIndTitle()">⭐ Assegna Trofeo Individuale</button><div id="alboIndAdminList"></div>
+<h3>📅 PASSO 1 - Calendario Campionato: Crea le Partite</h3>
+<div class="label">🏠 SQUADRA DI CASA</div><select id="fCasa"></select>
+<div class="label">✈️ SQUADRA TRASFERTA</div><select id="fTras"></select>
+<div class="label">📋 GIORNATA - Es: 3 = Terza Giornata</div><input id="fGiornata" type="number" placeholder="Giornata" value="3">
+<div class="label">📅 DATA</div><input id="fData" type="date">
+<div class="label">🕘 ORA</div><input id="fOra" type="time" value="21:00">
+<div class="label">📍 LUOGO</div><input id="fLuogo" placeholder="Luogo">
+<button class="big" type="button" onclick="saveMatchCal()">+ Aggiungi Partita al Calendario</button>
+<h3>📋 PASSO 2 - Risultato Campionato</h3>
+<div class="label">📋 SCEGLI LA PARTITA DAL CALENDARIO</div><select id="fMatchSelect"></select>
+<div style="display:flex;gap:8px"><div style="flex:1"><div class="label">⚽ GOL CASA</div><input id="fResGolC" type="number" placeholder="Gol Casa"></div><div style="flex:1"><div class="label">⚽ GOL TRASFERTA</div><input id="fResGolT" type="number" placeholder="Gol Trasferta"></div></div><button class="big" type="button" style="background:#22c55e" onclick="saveResultFromCal()">✅ SALVA RISULTATO</button><div id="matchesList"></div>
+<h3>🏆 CALENDARIO COPPE - Coppa di Lega dai Sedicesimi</h3><p class="small">Coppa di Lega: 30 squadre, si parte dai Sedicesimi a settembre. Metti i Sedicesimi, il sito calcola chi passa agli Ottavi. Poi crei Ottavi, Quarti, Semifinali e Finale scegliendo tra le qualificate. Altre Coppe: le crei tutte a mano.</p>
+<div class="label">🏆 COPPA</div><select id="fCoppa"><option>Coppa di Lega</option><option>Coppa Mitropa</option><option>Coppa Campioni</option><option>Supercoppa</option></select>
+<div class="label">📋 TURNO / FASE - Coppa di Lega parte dai Sedicesimi</div><select id="fFase"><option>Sedicesimi di Finale</option><option>Ottavi di Finale</option><option>Quarti di Finale</option><option>Semifinale</option><option>Finale</option><option>Girone</option></select>
+<div class="label">🏠 SQUADRA CASA</div><select id="fCoppaCasa"></select>
+<div class="label">✈️ SQUADRA TRASFERTA</div><select id="fCoppaTras"></select>
+<div class="label">📅 DATA</div><input id="fCoppaData" type="date">
+<div class="label">🕘 ORA</div><input id="fCoppaOra" type="time" value="21:00">
+<div class="label">📍 LUOGO</div><input id="fCoppaLuogo" placeholder="Luogo">
+<div class="label">⚽ RISULTATO - Lascia vuoto se da giocare</div><div style="display:flex;gap:8px"><input id="fCoppaGolC" type="number" placeholder="Gol Casa"><input id="fCoppaGolT" type="number" placeholder="Gol Trasferta"></div>
+<select id="fCoppaStato"><option>Programmata</option><option>Giocata</option></select>
+<button class="big" type="button" onclick="saveCoppaMatch()">🏆 Salva Partita di Coppa</button><div id="coppaAdminList"></div>
+<h3>🟨 DISCIPLINA - Tutte partono da 50 punti</h3><p class="small">Scegli squadra, scrivi quanti punti vuoi aggiungere o togliere, premi il bottone. Es: se togli 2, da 50 va a 48. Se aggiungi 5, da 50 va a 55.</p>
+<div class="label">👥 SQUADRA</div><select id="dTeam" onchange="showDiscCurrent()"></select>
+<div class="label">🔢 PUNTI ATTUALI</div><div id="discCurrent" style="background:#222;padding:12px;border-radius:12px;font-weight:900;font-size:20px;text-align:center">50</div>
+<div class="label">✏️ QUANTI PUNTI? - Scrivi il numero</div><input id="dVal" type="number" placeholder="Es: 2" value="2">
+<div style="display:flex;gap:8px"><button class="big" type="button" style="background:#22c55e" onclick="addDiscVal(1)">➕ AGGIUNGI PUNTI</button><button class="big" type="button" style="background:#ef4444" onclick="addDiscVal(-1)">➖ TOGLI PUNTI</button></div>
+<div style="display:flex;gap:8px"><button class="big" type="button" style="background:#3b82f6" onclick="setDiscTo(50)">🔄 Rimetti a 50</button><button class="big" type="button" style="background:#f97316" onclick="setDiscCustom()">✏️ Imposta valore esatto</button></div>
+<button class="big" type="button" style="background:#ef4444" onclick="resetAllDisc()">⚠️ Rimetti TUTTE a 50</button>
+<div id="discList"></div>
+<h3>👤 Giocatore - Aggiungi / Trasferisci / Elimina</h3><button class="big" type="button" onclick="addPlayer()">+ Aggiungi Giocatore alla Rosa</button><div id="playersList"></div>
+</div></div></div>
+</div><script>
+// TASTI - definiti subito, prima di tutto, così non si rompono mai
+function el(id){return document.getElementById(id)}
+function toggleDrawer(){
+try{
+var d=el('drawer');var o=el('overlay');
+if(!d) return;
+d.classList.toggle('open');
+if(o) o.classList.toggle('show');
+}catch(e){}
+}
+function show(id){
+try{
+var ids=['home','cal','ris','class','coppe','team','albo','contatti','admin'];
+for(var i=0;i<ids.length;i++){
+var e=el(ids[i]);
+if(e){if(ids[i]===id) e.classList.remove('hidden'); else e.classList.add('hidden');}
+var b=el('b-'+ids[i]);
+if(b){if(ids[i]===id) b.classList.add('on'); else b.classList.remove('on');}
+}
+window.scrollTo(0,0);
+// chiudi drawer se aperto
+var d=el('drawer');if(d) d.classList.remove('open');
+var o=el('overlay');if(o) o.classList.remove('show');
+}catch(e){}
+}
+function goMenu(id){toggleDrawer();setTimeout(function(){show(id)},80);}
+function showClass(which){
+try{
+var a=el('classABox');var b=el('classBBox');
+var ba=el('btnClassA');var bb=el('btnClassB');
+if(which==='A'){
+if(a) a.classList.remove('hidden');if(b) b.classList.add('hidden');
+if(ba) ba.classList.add('on');if(bb) bb.classList.remove('on');
+}else{
+if(a) a.classList.add('hidden');if(b) b.classList.remove('hidden');
+if(ba) ba.classList.remove('on');if(bb) bb.classList.add('on');
+}
+}catch(e){}
+}
+function showRis(which){curRis=which;try{var a=el('btnRisA');var b=el('btnRisB');if(a) a.classList.toggle('on',which==='A');if(b) b.classList.toggle('on',which==='B');}catch(e){} render();}
+function showCoppa(which){curCoppa=which;try{var a=el('btnCoppaLega');var b=el('btnCoppaMitropa');var c=el('btnCoppaAltre');if(a) a.classList.toggle('on',which==='Coppa di Lega');if(b) b.classList.toggle('on',which==='Coppa Mitropa');if(c) c.classList.toggle('on',which==='Altre');}catch(e){} render();}
+function showAlbo(which){curAlbo=which;try{var a=el('btnAlboTeam');var b=el('btnAlboInd');var ta=el('alboTeamBox');var tb=el('alboIndBox');if(a) a.classList.toggle('on',which==='team');if(b) b.classList.toggle('on',which==='ind');if(ta) ta.classList.toggle('hidden',which!=='team');if(tb) tb.classList.toggle('hidden',which!=='ind');}catch(e){}}
+function changeAlboYear(){try{curAlboYear=el('alboYearFilter')?el('alboYearFilter').value:"";}catch(e){} render();}
+function changeAlboYearInd(){try{curAlboYearInd=el('alboYearFilterInd')?el('alboYearFilterInd').value:"";}catch(e){} render();}
+// espone le funzioni al browser
+window.show=show;window.goMenu=goMenu;window.toggleDrawer=toggleDrawer;window.showClass=showClass;window.showRis=showRis;window.showCoppa=showCoppa;window.showAlbo=showAlbo;window.changeAlboYear=changeAlboYear;window.changeAlboYearInd=changeAlboYearInd;
+var curRis='A';
+var curCoppa='Coppa di Lega';
+var curAlbo='team';
+var curAlboYear='';
+var curAlboYearInd='';
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;if(el('installHint')) el('installHint').textContent="Pronto! Premi il bottone per installare.";});
+function installApp(){
+if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(function(r){if(r.outcome==='accepted'){alert("Fatto! Ora trovi C5 Valdelsa sulla schermata Home.");}deferredPrompt=null;});return;}
+var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+if(isIOS){alert("SU IPHONE:\n\n1. Premi il tasto Condividi in basso (il quadrato con freccia)\n2. Scorri e premi 'Aggiungi a schermata Home'\n3. Premi 'Aggiungi' in alto a destra\n\nFatto! Avrai l'icona C5 Valdelsa sul desktop.");}
+else{alert("SU ANDROID:\n\n1. Premi i 3 puntini in alto a destra nel browser\n2. Premi 'Aggiungi a schermata Home' oppure 'Installa app'\n3. Premi 'Aggiungi' / 'Installa'\n\nFatto! Avrai l'icona C5 Valdelsa sul desktop.");}
+}
+var DB="https://c5-valdelsa-default-rtdb.firebaseio.com/valdelsa.json";
+var teams=[
+{n:"Atletico Madrink F.C.",l:"Serie A",c:"#ef4444",logo:""},
+{n:"Autofficina Calò",l:"Serie A",c:"#f97316",logo:""},
+{n:"Bar Colle",l:"Serie A",c:"#facc15",logo:""},
+{n:"Boca Voglia",l:"Serie A",c:"#3b82f6",logo:""},
+{n:"Compagni di Merende",l:"Serie A",c:"#22c55e",logo:""},
+{n:"Dragon Futsal",l:"Serie A",c:"#ef4444",logo:""},
+{n:"El Dorado",l:"Serie A",c:"#facc15",logo:""},
+{n:"FC Albania",l:"Serie A",c:"#ef4444",logo:""},
+{n:"FC Cabrones",l:"Serie A",c:"#a855f7",logo:""},
+{n:"Golden Eagles",l:"Serie A",c:"#facc15",logo:""},
+{n:"San Gimignano C5",l:"Serie A",c:"#3b82f6",logo:""},
+{n:"Santa Caterina",l:"Serie A",c:"#22c55e",logo:""},
+{n:"Siena C5",l:"Serie A",c:"#111111",logo:""},
+{n:"Zanzobar",l:"Serie A",c:"#f97316",logo:""},
+{n:"Alfa",l:"Serie B",c:"#3b82f6",logo:""},
+{n:"Cobra Calcio",l:"Serie B",c:"#22c55e",logo:""},
+{n:"Dante Futsal",l:"Serie B",c:"#ef4444",logo:""},
+{n:"FC The Wolf",l:"Serie B",c:"#111111",logo:""},
+{n:"FCT",l:"Serie B",c:"#facc15",logo:""},
+{n:"Gladiator",l:"Serie B",c:"#ef4444",logo:""},
+{n:"Inazuma 5ive",l:"Serie B",c:"#3b82f6",logo:""},
+{n:"Iron Fire",l:"Serie B",c:"#f97316",logo:""},
+{n:"Napoli",l:"Serie B",c:"#3b82f6",logo:""},
+{n:"New Team",l:"Serie B",c:"#22c55e",logo:""},
+{n:"Piglia Bene",l:"Serie B",c:"#facc15",logo:""},
+{n:"Pol. Staggia",l:"Serie B",c:"#ef4444",logo:""},
+{n:"Red Onions",l:"Serie B",c:"#a855f7",logo:""},
+{n:"S.S. Borgaccio",l:"Serie B",c:"#ef4444",logo:""},
+{n:"Tornado Team",l:"Serie B",c:"#22c55e",logo:""},
+{n:"Valdelsa Warrior",l:"Serie B",c:"#facc15",logo:""}
+];
+var matches=[];
+var coppaMatches=[];
+var teamTitles=[];
+var indTitles=[];
+var players=[{n:"Francesco P.",r:"Mister",g:0,t:"Atletico Madrink F.C."}];
+var contacts=[];
+var comps=["Serie A","Serie B","Coppa di Lega","Coppa Mitropa"];
+var disciplina={};
+var settings={title:"C5 VALDELSA",sub:"LEGA CALCIO A 5 VAL D'ELSA 2026/27 - 14 SERIE A + 16 SERIE B",color:"#facc15",regola:"In caso di parita' conta prima la differenza reti, poi i gol fatti.",adminHash:740322054,homeLogo1:"",homeLogo2:""};
+function hashPw(v){var h=0;for(var i=0;i<v.length;i++){h=(h*31+v.charCodeAt(i))|0}return h}
+function teamNames(){return teams.map(function(x){return typeof x==="string"?x:x.n})}
+function teamObj(name){
+for(var i=0;i<teams.length;i++){
+var t=teams[i];
+var nm=typeof t==="string"?t:t.n;
+if(nm===name) return typeof t==="string"?{n:nm,l:"Serie A",c:"#facc15",logo:""}:t;
+}
+return {n:name,l:"Serie A",c:"#facc15",logo:""}
+}
+function teamLeague(name){return teamObj(name).l}
+function discVal(name){
+if(disciplina[name]===undefined||disciplina[name]===null) return 50;
+return disciplina[name];
+}
+function logoHtml(name){
+var t=teamObj(name);
+if(t.logo) return "<div class='logo'><img src='"+t.logo+"'></div>";
+return "<div class='logo' style='background:"+(t.c||"#facc15")+"'>"+name.charAt(0)+"</div>";
+}
+function fixTeams(){
+for(var i=0;i<teams.length;i++){
+if(typeof teams[i]==="string") teams[i]={n:teams[i],l:"Serie A",c:"#facc15",logo:""};
+if(!teams[i].c) teams[i].c="#facc15";
+if(teams[i].logo===undefined) teams[i].logo="";
+}
+}
+function resetTeams(){
+if(!confirm("Ripristinare le 30 squadre vere?")) return;
+var t2=[
+{n:"Atletico Madrink F.C.",l:"Serie A",c:"#ef4444",logo:""},
+{n:"Autofficina Calò",l:"Serie A",c:"#f97316",logo:""},
+{n:"Bar Colle",l:"Serie A",c:"#facc15",logo:""},
+{n:"Boca Voglia",l:"Serie A",c:"#3b82f6",logo:""},
+{n:"Compagni di Merende",l:"Serie A",c:"#22c55e",logo:""},
+{n:"Dragon Futsal",l:"Serie A",c:"#ef4444",logo:""},
+{n:"El Dorado",l:"Serie A",c:"#facc15",logo:""},
+{n:"FC Albania",l:"Serie A",c:"#ef4444",logo:""},
+{n:"FC Cabrones",l:"Serie A",c:"#a855f7",logo:""},
+{n:"Golden Eagles",l:"Serie A",c:"#facc15",logo:""},
+{n:"San Gimignano C5",l:"Serie A",c:"#3b82f6",logo:""},
+{n:"Santa Caterina",l:"Serie A",c:"#22c55e",logo:""},
+{n:"Siena C5",l:"Serie A",c:"#111111",logo:""},
+{n:"Zanzobar",l:"Serie A",c:"#f97316",logo:""},
+{n:"Alfa",l:"Serie B",c:"#3b82f6",logo:""},
+{n:"Cobra Calcio",l:"Serie B",c:"#22c55e",logo:""},
+{n:"Dante Futsal",l:"Serie B",c:"#ef4444",logo:""},
+{n:"FC The Wolf",l:"Serie B",c:"#111111",logo:""},
+{n:"FCT",l:"Serie B",c:"#facc15",logo:""},
+{n:"Gladiator",l:"Serie B",c:"#ef4444",logo:""},
+{n:"Inazuma 5ive",l:"Serie B",c:"#3b82f6",logo:""},
+{n:"Iron Fire",l:"Serie B",c:"#f97316",logo:""},
+{n:"Napoli",l:"Serie B",c:"#3b82f6",logo:""},
+{n:"New Team",l:"Serie B",c:"#22c55e",logo:""},
+{n:"Piglia Bene",l:"Serie B",c:"#facc15",logo:""},
+{n:"Pol. Staggia",l:"Serie B",c:"#ef4444",logo:""},
+{n:"Red Onions",l:"Serie B",c:"#a855f7",logo:""},
+{n:"S.S. Borgaccio",l:"Serie B",c:"#ef4444",logo:""},
+{n:"Tornado Team",l:"Serie B",c:"#22c55e",logo:""},
+{n:"Valdelsa Warrior",l:"Serie B",c:"#facc15",logo:""}
+];
+teams=t2;
+save();
+alert("Fatto! 30 squadre ripristinate");
+}
+function coppaWinner(m){
+if(m.stato!=="Giocata") return "";
+if(m.golC===""||m.golC===undefined) return "";
+var a=parseInt(m.golC), b=parseInt(m.golT);
+if(a>b) return m.casa;
+if(b>a) return m.tras;
+return "Pareggio - Rigori da definire";
+}
+function coppaWinners(coppa,fase){
+var list=[];
+for(var i=0;i<coppaMatches.length;i++){
+var m=coppaMatches[i];
+if(m.coppa===coppa&&m.fase===fase){
+var w=coppaWinner(m);
+if(w&&w.indexOf("Pareggio")<0) list.push(w);
+}
+}
+return list;
+}
+function showDiscCurrent(){
+try{
+var t=el('dTeam')?el('dTeam').value:"";
+if(!t) return;
+if(el('discCurrent')) el('discCurrent').textContent=discVal(t)+" punti - "+t;
+}catch(e){}
+}
+function addDiscVal(dir){
+var t=el('dTeam').value;
+var v=parseInt(el('dVal').value||0);
+if(isNaN(v)){alert("Scrivi un numero! Es: 2");return}
+var cur=discVal(t);
+var nuovo=cur + (dir*v);
+disciplina[t]=nuovo;
+save();
+showDiscCurrent();
+alert(t+": disciplina da "+cur+" a "+nuovo+" ("+(dir>0?"+"+v:"-"+v)+")");
+}
+function setDiscTo(val){
+var t=el('dTeam').value;
+disciplina[t]=val;
+save();
+showDiscCurrent();
+alert(t+" rimessa a "+val+" punti disciplina.");
+}
+function setDiscCustom(){
+var t=el('dTeam').value;
+var v=prompt("Imposta punti disciplina per "+t+"\nAttuale: "+discVal(t)+"\nScrivi il nuovo valore esatto:", discVal(t));
+if(v===null) return;
+v=parseInt(v);
+if(isNaN(v)){alert("Metti un numero!");return}
+disciplina[t]=v;
+save();
+showDiscCurrent();
+alert(t+" ora ha "+v+" punti disciplina.");
+}
+function resetAllDisc(){
+if(!confirm("Rimettere TUTTE le 30 squadre a 50 punti disciplina?")) return;
+disciplina={};
+var names=teamNames();
+for(var i=0;i<names.length;i++){disciplina[names[i]]=50;}
+save();
+showDiscCurrent();
+alert("Fatto! Tutte a 50.");
+}
+function addDisc(p){
+var t=el('dTeam').value;
+disciplina[t]=discVal(t)+p;
+save();
+showDiscCurrent();
+alert(t+" "+p);
+}
+function saveTeamTitle(){
+var team=el('fAlboTeam').value;
+var trofeo=el('fAlboTrofeo').value;
+var anno=parseInt(el('fAlboAnno').value);
+if(!anno){alert("Metti l'anno! Es: 2025");return}
+for(var i=0;i<teamTitles.length;i++){
+if(teamTitles[i].team===team&&teamTitles[i].trofeo===trofeo&&teamTitles[i].anno===anno){alert("Questo titolo esiste già!");return}
+}
+teamTitles.push({team:team,trofeo:trofeo,anno:anno});
+save();
+alert("Titolo assegnato!\n"+team+" - "+trofeo+" "+anno+"\nOra in Albo d'Oro scegli anno "+anno+" e lo vedi.");
+}
+function delTeamTitle(i){if(!confirm("Cancellare questo titolo?"))return;teamTitles.splice(i,1);save();}
+function saveIndTitle(){
+var nome=el('fIndNome').value.trim();
+if(!nome){alert("Scrivi il nome!");return}
+var trofeo=el('fIndTrofeo').value;
+var anno=parseInt(el('fIndAnno').value);
+var team=el('fIndTeam').value;
+if(!anno){alert("Metti l'anno!");return}
+indTitles.push({nome:nome,trofeo:trofeo,anno:anno,team:team});
+el('fIndNome').value="";
+save();
+alert("Trofeo individuale assegnato!\n"+nome+" - "+trofeo+" "+anno);
+}
+function delIndTitle(i){if(!confirm("Cancellare questo trofeo?"))return;indTitles.splice(i,1);save();}
+function calcAlbo(){
+var counts={};
+for(var i=0;i<teamTitles.length;i++){
+var t=teamTitles[i].team;
+if(!counts[t]) counts[t]=[];
+counts[t].push(teamTitles[i]);
+}
+var arr=[];
+for(var k in counts){
+counts[k].sort(function(a,b){return b.anno-a.anno});
+arr.push({team:k,titles:counts[k],n:counts[k].length});
+}
+arr.sort(function(a,b){return b.n-a.n});
+return arr;
+}async function load(){
+try{
+var r=await fetch(DB);
+var d=await r.json();
+if(d){
+if(d.teams) teams=d.teams;
+if(d.matches) matches=d.matches;
+if(d.coppaMatches) coppaMatches=d.coppaMatches;
+if(d.teamTitles) teamTitles=d.teamTitles;
+if(d.indTitles) indTitles=d.indTitles;
+if(d.players) players=d.players;
+if(d.comps) comps=d.comps;
+if(d.disciplina) disciplina=d.disciplina;
+if(d.settings) settings=Object.assign(settings,d.settings);
+}
+}catch(e){}
+try{fixTeams();}catch(e){}
+if(!disciplina||Object.keys(disciplina).length===0){
+var nn=teamNames();
+for(var i=0;i<nn.length;i++){if(disciplina[nn[i]]===undefined) disciplina[nn[i]]=50;}
+}
+try{applySettings()}catch(e){}
+try{render()}catch(e){}
+}
+async function save(){
+try{
+if(el('sync')) el('sync').textContent="● Salvataggio...";
+await fetch(DB,{method:"PUT",body:JSON.stringify({teams:teams,matches:matches,coppaMatches:coppaMatches,teamTitles:teamTitles,indTitles:indTitles,players:players,contacts:contacts,comps:comps,disciplina:disciplina,settings:settings})});
+if(el('sync')) el('sync').textContent="● LIVE";
+}catch(e){alert("Errore salvataggio, riprova")}
+render();
+}
+function applySettings(){
+try{
+if(el('hdrSub')) el('hdrSub').textContent=settings.sub;
+if(el('sTitle')) el('sTitle').value=settings.title;
+if(el('sSub')) el('sSub').value=settings.sub;
+if(el('sColor')) el('sColor').value=settings.color;
+if(el('fRegola')) el('fRegola').value=settings.regola||"";
+if(el('regolaView')) el('regolaView').textContent=settings.regola||"";
+if(el('headerLogo1')){
+if(settings.homeLogo1) el('headerLogo1').innerHTML="<img src='"+settings.homeLogo1+"'>";
+else el('headerLogo1').innerHTML="<span style='font-size:28px'>🏆</span>";
+}
+if(el('headerLogo2')){
+if(settings.homeLogo2) el('headerLogo2').innerHTML="<img src='"+settings.homeLogo2+"'>";
+else el('headerLogo2').innerHTML="<span style='font-size:28px'>⚽</span>";
+}
+if(el('adminLogo1Text')) el('adminLogo1Text').textContent=settings.homeLogo1?"Caricato ✅ - premi per cambiarlo":"Nessun logo";
+if(el('adminLogo2Text')) el('adminLogo2Text').textContent=settings.homeLogo2?"Caricato ✅ - premi per cambiarlo":"Nessun logo";
+}catch(e){}
+}
+function uploadHomeLogo(slot){
+var inp=document.createElement('input');
+inp.type='file';
+inp.accept='image/*';
+inp.onchange=function(e){
+var f=e.target.files[0];
+if(!f) return;
+var reader=new FileReader();
+reader.onload=function(ev){
+var img=new Image();
+img.onload=function(){
+var canvas=document.createElement('canvas');
+var max=300;
+var w=img.width, h=img.height;
+if(w>h){if(w>max){h=h*max/w;w=max;}}else{if(h>max){w=w*max/h;h=max;}}
+canvas.width=w;canvas.height=h;
+canvas.getContext('2d').drawImage(img,0,0,w,h);
+var data=canvas.toDataURL('image/jpeg',0.85);
+if(slot===1) settings.homeLogo1=data; else settings.homeLogo2=data;
+save();
+alert("Logo "+slot+" caricato! Lo vedono tutti in Home.");
+};
+img.src=ev.target.result;
+};
+reader.readAsDataURL(f);
+};
+inp.click();
+}
+function clearHomeLogos(){
+if(!confirm("Rimuovere i 2 loghi Home?")) return;
+settings.homeLogo1="";
+settings.homeLogo2="";
+save();
+alert("Loghi rimossi");
+}
+function login(){
+var v=el('pw').value;
+if(hashPw(v)===settings.adminHash){
+el('loginBox').classList.add('hidden');
+el('adminPanel').classList.remove('hidden');
+alert("Benvenuto Mister!");
+}else{alert("Password sbagliata!")}
+}
+function logout(){
+el('loginBox').classList.remove('hidden');
+el('adminPanel').classList.add('hidden');
+el('pw').value="";
+show('home');
+}
+function changePw(){
+var a=el('newPw').value;
+var b=el('newPw2').value;
+if(!a||a.length<4){alert("Password troppo corta");return}
+if(a!==b){alert("Le 2 password non sono uguali!");return}
+settings.adminHash=hashPw(a);
+el('newPw').value="";
+el('newPw2').value="";
+save();
+alert("Password cambiata!");
+}
+function saveRegola(){settings.regola=el('fRegola').value;save();alert("Regola salvata!");}
+function saveSettings(){
+settings.title=el('sTitle').value||"C5 VALDELSA";
+settings.sub=el('sSub').value||settings.sub;
+settings.color=el('sColor').value;
+applySettings();
+save();
+alert("Grafica salvata!");
+}
+function addComp(){
+var n=el('fComp').value.trim();
+if(!n){alert("Scrivi nome");return}
+if(comps.indexOf(n)>=0){alert("Esiste gia'");return}
+comps.push(n);el('fComp').value="";save();
+}
+function delComp(i){if(!confirm("Cancellare?"))return;comps.splice(i,1);save();}
+function addTeam(){
+var n=el('fTeam').value.trim();
+if(!n){alert("Metti nome");return}
+if(teamNames().indexOf(n)>=0){alert("Esiste gia'");return}
+teams.push({n:n,l:el('fLeague').value,c:el('fTeamColor').value||"#facc15",logo:el('fTeamLogo').value||""});
+disciplina[n]=50;
+el('fTeam').value="";el('fTeamLogo').value="";save();
+}
+function renameTeam(i){
+var vecchio=teams[i].n;
+var nuovo=prompt("Rinomina squadra:\nVecchio nome: "+vecchio+"\nScrivi il nuovo nome:",vecchio);
+if(!nuovo) return;
+nuovo=nuovo.trim();
+if(!nuovo){alert("Nome vuoto");return}
+if(nuovo===vecchio) return;
+if(teamNames().indexOf(nuovo)>=0){alert("Esiste già una squadra con questo nome!");return}
+if(!confirm("Confermi?\n"+vecchio+" -> "+nuovo+"\nVerranno aggiornati anche risultati e giocatori.")) return;
+teams[i].n=nuovo;
+for(var j=0;j<matches.length;j++){
+if(matches[j].casa===vecchio) matches[j].casa=nuovo;
+if(matches[j].tras===vecchio) matches[j].tras=nuovo;
+}
+for(var k=0;k<coppaMatches.length;k++){
+if(coppaMatches[k].casa===vecchio) coppaMatches[k].casa=nuovo;
+if(coppaMatches[k].tras===vecchio) coppaMatches[k].tras=nuovo;
+}
+for(var k2=0;k2<players.length;k2++){
+if(players[k2].t===vecchio) players[k2].t=nuovo;
+}
+for(var k3=0;k3<teamTitles.length;k3++){
+if(teamTitles[k3].team===vecchio) teamTitles[k3].team=nuovo;
+}
+for(var k4=0;k4<indTitles.length;k4++){
+if(indTitles[k4].team===vecchio) indTitles[k4].team=nuovo;
+}
+if(disciplina[vecchio]!==undefined){disciplina[nuovo]=disciplina[vecchio];delete disciplina[vecchio];}
+save();
+alert("Rinominata! Ora è "+nuovo);
+}
+function delTeam(i){if(!confirm("Cancellare?"))return;var nm=teams[i].n;teams.splice(i,1);if(disciplina[nm]!==undefined) delete disciplina[nm];save();}
+function editTeam(i){
+var t=teams[i];
+var nc=prompt("Colore squadra - attuale "+(t.c||"#facc15"),t.c||"#facc15");
+if(nc) t.c=nc;
+if(confirm("Vuoi CARICARE il logo dal telefono? OK = Galleria, Annulla = Link")){
+var inp=document.createElement('input');
+inp.type='file';
+inp.accept='image/*';
+inp.onchange=function(e){
+var f=e.target.files[0];
+if(!f) return;
+var reader=new FileReader();
+reader.onload=function(ev){
+var img=new Image();
+img.onload=function(){
+var canvas=document.createElement('canvas');
+var max=200;
+var w=img.width, h=img.height;
+if(w>h){if(w>max){h=h*max/w;w=max;}}else{if(h>max){w=w*max/h;h=max;}}
+canvas.width=w;canvas.height=h;
+canvas.getContext('2d').drawImage(img,0,0,w,h);
+t.logo=canvas.toDataURL('image/jpeg',0.85);
+save();
+alert("Logo caricato!");
+};
+img.src=ev.target.result;
+};
+reader.readAsDataURL(f);
+};
+inp.click();
+}else{
+var nl=prompt("Link logo (vuoto per iniziale)",t.logo||"");
+if(nl!==null) t.logo=nl;
+save();
+}
+  }function saveMatchCal(){
+var casa=el('fCasa').value;
+var tras=el('fTras').value;
+if(casa===tras){alert("Casa e Trasferta non possono essere uguali!");return}
+var m={};
+m.casa=casa;
+m.tras=tras;
+m.giornata=parseInt(el('fGiornata').value||3);
+m.data=el('fData').value;
+m.ora=el('fOra').value;
+m.luogo=el('fLuogo').value;
+m.golC="";
+m.golT="";
+m.stato="Programmata";
+for(var i=0;i<matches.length;i++){
+if(matches[i].casa===casa&&matches[i].tras===tras&&matches[i].data===m.data){alert("Questa partita è già nel Calendario!");return}
+}
+matches.push(m);
+save();
+alert("Partita aggiunta al Calendario!\n"+casa+" vs "+tras+"\nGiornata "+m.giornata+" - "+teamLeague(casa));
+}
+function saveResultFromCal(){
+var idx=el('fMatchSelect')?parseInt(el('fMatchSelect').value):-1;
+if(isNaN(idx)||idx<0||!matches[idx]){alert("Scegli prima una partita dal Calendario!");return}
+var gc=el('fResGolC').value;
+var gt=el('fResGolT').value;
+if(gc===""||gt===""){alert("Metti i gol! Es: Casa 3 - Trasferta 2");return}
+var m=matches[idx];
+m.golC=gc;m.golT=gt;m.stato="Giocata";
+save();
+var a=parseInt(gc), b=parseInt(gt);
+var msg="";
+if(a>b) msg=m.casa+" VINCE +3 punti, "+a+" gol fatti, "+b+" subiti.\n"+m.tras+" sconfitta, "+b+" fatti, "+a+" subiti.";
+else if(b>a) msg=m.tras+" VINCE +3 punti, "+b+" gol fatti, "+a+" subiti.\n"+m.casa+" sconfitta, "+a+" fatti, "+b+" subiti.";
+else msg="PAREGGIO! +1 punto a testa. "+a+"-"+b;
+alert("Risultato salvato!\n"+m.casa+" "+a+" - "+b+" "+m.tras+"\n"+msg);
+el('fResGolC').value="";el('fResGolT').value="";
+}
+function delMatch(i){if(!confirm("Cancellare questa partita dal Calendario?"))return;matches.splice(i,1);save();}
+function saveCoppaMatch(){
+var coppa=el('fCoppa').value;
+var fase=el('fFase').value;
+var casa=el('fCoppaCasa').value;
+var tras=el('fCoppaTras').value;
+if(casa===tras){alert("Casa e Trasferta non possono essere uguali!");return}
+var m={};
+m.coppa=coppa;
+m.fase=fase;
+m.casa=casa;
+m.tras=tras;
+m.data=el('fCoppaData').value;
+m.ora=el('fCoppaOra').value;
+m.luogo=el('fCoppaLuogo').value;
+m.golC=el('fCoppaGolC').value;
+m.golT=el('fCoppaGolT').value;
+m.stato=el('fCoppaStato').value;
+if(m.stato==="Giocata"&&(m.golC===""||m.golT==="")){alert("Se è Giocata metti il risultato!");return}
+if(m.stato==="Programmata"){m.golC="";m.golT="";}
+coppaMatches.push(m);
+save();
+if(m.stato==="Giocata"){
+var w=coppaWinner(m);
+alert("Partita di Coppa salvata!\n"+m.coppa+" - "+m.fase+"\n"+casa+" "+m.golC+" - "+m.golT+" "+tras+"\nPassa il turno: "+w);
+}else{
+alert("Partita di Coppa salvata!\n"+m.coppa+" - "+m.fase+"\n"+casa+" vs "+tras+"\n"+m.data+" "+m.ora+" - "+m.luogo);
+}
+if(el('fCoppaGolC')) el('fCoppaGolC').value="";
+if(el('fCoppaGolT')) el('fCoppaGolT').value="";
+}
+function delCoppaMatch(i){if(!confirm("Cancellare questa partita di Coppa?"))return;coppaMatches.splice(i,1);save();}
+function addPlayer(){
+var n=prompt("Nome giocatore? Es: Mario Rossi");
+if(!n) return;
+var r=prompt("Ruolo? Es: Attaccante / Difensore / Portiere","Giocatore");
+var g=prompt("Gol fatti? Metti 0 se ancora nessuno","0");
+var lista=teamNames().join(", ");
+var t=prompt("In che squadra lo metto? Scrivi il nome esatto:\n"+lista, teamNames()[0]);
+if(!t) return;
+if(teamNames().indexOf(t)<0){ alert("Squadra non trovata! Controlla il nome e riprova."); return; }
+players.push({n:n,r:r||"Giocatore",g:parseInt(g||0),t:t});
+save();
+alert(n+" aggiunto alla rosa "+t+"!");
+}
+function transferPlayer(i){
+var p=players[i];
+var lista=teamNames().join(", ");
+var nuova=prompt(p.n+" ora e' in "+p.t+".\nIn che squadra lo trasferisco? Scrivi il nome esatto:\n"+lista, p.t);
+if(!nuova) return;
+if(teamNames().indexOf(nuova)<0){ alert("Squadra non trovata!"); return; }
+if(!confirm("Confermi trasferimento:\n"+p.n+"\nDa: "+p.t+"\nA: "+nuova+" ?")) return;
+p.t=nuova;
+save();
+alert("Trasferito! Ora "+p.n+" gioca in "+nuova);
+}
+function delPlayer(i){if(!confirm("Cancellare questo giocatore?"))return;players.splice(i,1);save();}
+function calc(){
+var t={};
+var names=teamNames();
+for(var i=0;i<names.length;i++){t[names[i]]={pti:0,g:0,v:0,n:0,p:0,gf:0,gs:0};}
+for(var j=0;j<matches.length;j++){
+var m=matches[j];
+if(m.stato!=="Giocata") continue;
+if(m.golC===""||m.golC===undefined) continue;
+var a=parseInt(m.golC);var b=parseInt(m.golT);
+if(!t[m.casa]) t[m.casa]={pti:0,g:0,v:0,n:0,p:0,gf:0,gs:0};
+if(!t[m.tras]) t[m.tras]={pti:0,g:0,v:0,n:0,p:0,gf:0,gs:0};
+t[m.casa].g++;t[m.tras].g++;
+t[m.casa].gf+=a;t[m.casa].gs+=b;
+t[m.tras].gf+=b;t[m.tras].gs+=a;
+if(a>b){t[m.casa].pti+=3;t[m.casa].v++;t[m.tras].p++;}
+else if(b>a){t[m.tras].pti+=3;t[m.tras].v++;t[m.casa].p++;}
+else{t[m.casa].pti++;t[m.tras].pti++;t[m.casa].n++;t[m.tras].n++;}
+}
+var arr=[];
+for(var key in t){arr.push([key,t[key]])}
+arr.sort(function(x,y){
+if(y[1].pti!==x[1].pti) return y[1].pti-x[1].pti;
+return (y[1].gf-y[1].gs)-(x[1].gf-x[1].gs);
+});
+return arr;
+}
+function resultLabel(m){
+if(m.stato!=="Giocata") return "<span class='badge'>Da giocare</span>";
+var a=parseInt(m.golC), b=parseInt(m.golT);
+if(a>b) return "<b>"+a+" - "+b+"</b> <span class='resWin'>Casa Vince</span>";
+if(b>a) return "<b>"+a+" - "+b+"</b> <span class='resWin'>Trasferta Vince</span>";
+return "<b>"+a+" - "+b+"</b> <span class='resDraw'>Pareggio</span>";
+  }function render(){
+try{
+fixTeams();
+applySettings();
+showDiscCurrent();
+var prog=matches.filter(function(m){return m.stato==="Programmata"}).slice().sort(function(a,b){return (a.giornata||99)-(b.giornata||99) || (a.data||"").localeCompare(b.data||"")});
+var gioc=matches.filter(function(m){return m.stato==="Giocata"}).slice().sort(function(a,b){return (b.giornata||0)-(a.giornata||0)}).slice(0,6);
+if(el('nextMatch')){
+var next=prog[0];
+el('nextMatch').innerHTML=next?"<div class='teamline'>"+logoHtml(next.casa)+"<b>"+next.casa+" vs "+next.tras+"</b>"+logoHtml(next.tras)+"</div>"+next.data+" ore "+next.ora+" - "+next.luogo+" - Giornata "+(next.giornata||1):"Nessuna partita in programma";
+}
+if(el('upcomingMatches')){
+el('upcomingMatches').innerHTML=prog.slice(0,6).map(function(m){return "<div class='row'><div class='teamline'>"+logoHtml(m.casa)+"<div><b>"+m.casa+" vs "+m.tras+"</b><br><span class='small'>Giornata "+(m.giornata||1)+" - "+m.data+" "+m.ora+" - "+m.luogo+" - "+teamLeague(m.casa)+"</span></div></div><span class='badge'>Da giocare</span></div>"}).join("")||"<p class='small'>Nessuna partita in programma. L'Admin deve creare il Calendario.</p>";
+}
+if(el('pastMatches')){
+el('pastMatches').innerHTML=gioc.map(function(m){return "<div class='row'><div class='teamline'>"+logoHtml(m.casa)+"<div><b>"+m.casa+" vs "+m.tras+"</b><br><span class='small'>Giornata "+(m.giornata||1)+" - "+m.data+" - "+teamLeague(m.casa)+"</span></div></div>"+resultLabel(m)+"</div>"}).join("")||"<p class='small'>Ancora nessuna partita giocata.</p>";
+}
+function topScorersHtml(league){
+var list=players.filter(function(p){return teamLeague(p.t||"")==league}).slice().sort(function(a,b){return b.g-a.g}).slice(0,3);
+if(!list.length) return "<p class='small'>Ancora nessun gol in "+league+". Aggiungi i giocatori da Admin.</p>";
+return list.map(function(p,i){return "<div class='row'><div><b>"+(i+1)+". "+p.n+"</b><br><span class='small'>"+(p.t||"")+" - "+p.r+"</span></div><span class='badge'>"+p.g+" gol</span></div>"}).join("");
+}
+if(el('topScorersA')) el('topScorersA').innerHTML=topScorersHtml("Serie A");
+if(el('topScorersB')) el('topScorersB').innerHTML=topScorersHtml("Serie B");
+var cl=calc();
+var clA=cl.filter(function(x){return teamLeague(x[0])==="Serie A"});
+var clB=cl.filter(function(x){return teamLeague(x[0])==="Serie B"});
+if(el('top5')){el('top5').innerHTML=clA.slice(0,5).map(function(x,i){return "<div class='row'><div class='teamline'>"+logoHtml(x[0])+"<div>"+(i+1)+". "+x[0]+"</div></div><b>"+x[1].pti+" pti</b></div>"}).join("");}
+if(el('top5B')){el('top5B').innerHTML=clB.slice(0,5).map(function(x,i){return "<div class='row'><div class='teamline'>"+logoHtml(x[0])+"<div>"+(i+1)+". "+x[0]+"</div></div><b>"+x[1].pti+" pti</b></div>"}).join("");}
+if(el('compHome')){el('compHome').innerHTML=comps.map(function(c){return "<div class='row'><div><b>"+c+"</b></div></div>"}).join("");}
+var albo=calcAlbo();
+if(el('alboPreview')){
+el('alboPreview').innerHTML=albo.slice(0,5).map(function(x,i){return "<div class='row'><div class='teamline'>"+logoHtml(x.team)+"<div><b>"+(i+1)+". "+x.team+"</b><br><span class='small'>"+x.titles.map(function(t){return t.trofeo+" "+t.anno}).join(" • ")+"</span></div></div><span class='badge'>"+x.n+" 🏆</span></div>"}).join("")||"<p class='small'>Ancora nessun titolo assegnato. L'Admin li assegna da Admin > Albo d'Oro.</p>";
+}
+if(el('alboTeams')){
+el('alboTeams').innerHTML=albo.slice(0,5).map(function(x,i){
+var medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".";
+return "<div class='row' style='align-items:flex-start'><div class='teamline'>"+logoHtml(x.team)+"<div><b>"+medal+" "+x.team+"</b><div class='trophyRow'>"+x.titles.map(function(t){return "<span class='trophyPill'>🏆 "+t.trofeo+" "+t.anno+"</span>"}).join("")+"</div></div></div><span class='badge' style='white-space:nowrap'>"+x.n+" titoli</span></div>";
+}).join("")||"<p class='small'>Ancora nessun titolo. L'Admin li assegna da Admin > Albo d'Oro.</p>";
+}
+if(el('alboByYear')){
+var listY=teamTitles.slice();
+if(curAlboYear) listY=listY.filter(function(t){return String(t.anno)===String(curAlboYear)});
+listY.sort(function(a,b){return b.anno-a.anno || a.trofeo.localeCompare(b.trofeo)});
+if(!curAlboYear){
+var byYear={};
+for(var yi=0;yi<listY.length;yi++){var tt=listY[yi];if(!byYear[tt.anno]) byYear[tt.anno]=[];byYear[tt.anno].push(tt);}
+var years=Object.keys(byYear).sort(function(a,b){return b-a});
+el('alboByYear').innerHTML=years.map(function(y){
+return "<div class='faseTitle'>📅 Anno "+y+"</div>"+byYear[y].map(function(t){return "<div class='row'><div class='teamline'>"+logoHtml(t.team)+"<div><b>"+t.team+"</b><br><span class='small'>"+t.trofeo+"</span></div></div><span class='badge'>"+y+"</span></div>"}).join("");
+}).join("")||"<p class='small'>Nessun titolo ancora. L'Admin li inserisce con anno.</p>";
+}else{
+el('alboByYear').innerHTML="<div class='faseTitle'>📅 Vincitori "+curAlboYear+"</div>"+(listY.length?listY.map(function(t){return "<div class='row'><div class='teamline'>"+logoHtml(t.team)+"<div><b>"+t.team+"</b><br><span class='small'>"+t.trofeo+"</span></div></div><span class='badge'>"+t.anno+"</span></div>"}).join(""):"<p class='small'>Nessun titolo in "+curAlboYear+" ancora.</p>");
+}
+}
+if(el('alboByYearInd')){
+var listI=indTitles.slice();
+if(curAlboYear) listI=listI.filter(function(t){return String(t.anno)===String(curAlboYear)});
+listI.sort(function(a,b){return b.anno-a.anno});
+el('alboByYearInd').innerHTML=listI.length?"<div class='faseTitle'>⭐ Trofei Individuali "+(curAlboYear?curAlboYear:"- Tutti gli anni")+"</div>"+listI.map(function(t){return "<div class='row'><div><b>"+t.nome+"</b><br><span class='small'>"+t.trofeo+" - "+(t.team||"")+"</span></div><span class='badge'>"+t.anno+"</span></div>"}).join(""):"";
+}
+if(el('alboInds')){
+var listInd=indTitles.slice();
+if(curAlboYearInd) listInd=listInd.filter(function(t){return String(t.anno)===String(curAlboYearInd)});
+var groups={};
+for(var ii=0;ii<listInd.length;ii++){var it=listInd[ii];if(!groups[it.trofeo]) groups[it.trofeo]=[];groups[it.trofeo].push(it);}
+var order=["Panchina d'Oro","Capocannoniere Serie A","Capocannoniere Serie B","Miglior Giocatore Serie A","Miglior Giocatore Serie B","Miglior Portiere Serie A","Miglior Portiere Serie B"];
+var htmlInd="";
+if(curAlboYearInd) htmlInd+="<div class='faseTitle'>📅 Anno "+curAlboYearInd+"</div>";
+for(var oi=0;oi<order.length;oi++){
+var tr=order[oi];
+var ll=groups[tr]||[];
+if(!ll.length) continue;
+ll.sort(function(a,b){return b.anno-a.anno});
+htmlInd+="<div class='faseTitle'>⭐ "+tr+"</div>"+ll.map(function(t){return "<div class='row'><div><b>"+t.nome+"</b><br><span class='small'>"+(t.team||"")+"</span></div><span class='badge'>"+t.anno+"</span></div>"}).join("");
+}
+for(var gk in groups){if(order.indexOf(gk)<0){var gl=groups[gk].sort(function(a,b){return b.anno-a.anno});htmlInd+="<div class='faseTitle'>⭐ "+gk+"</div>"+gl.map(function(t){return "<div class='row'><div><b>"+t.nome+"</b><br><span class='small'>"+(t.team||"")+"</span></div><span class='badge'>"+t.anno+"</span></div>"}).join("");}}
+el('alboInds').innerHTML=htmlInd||"<p class='small'>Ancora nessun trofeo individuale. L'Admin li assegna con anno.</p>";
+}
+if(el('coppeList')){
+var list=[];
+if(curCoppa==='Altre'){
+list=coppaMatches.filter(function(m){return m.coppa!=="Coppa di Lega"&&m.coppa!=="Coppa Mitropa"});
+}else{
+list=coppaMatches.filter(function(m){return m.coppa===curCoppa});
+}
+var fasi=["Sedicesimi di Finale","Ottavi di Finale","Quarti di Finale","Semifinale","Finale","Girone"];
+var html="";
+for(var fi=0;fi<fasi.length;fi++){
+var f=fasi[fi];
+var fm=list.filter(function(m){return m.fase===f});
+if(!fm.length) continue;
+html+="<div class='faseTitle'>"+f+" - "+(curCoppa==='Altre'?"Tutte le Coppe":curCoppa)+"</div>";
+html+=fm.map(function(m){
+var w=coppaWinner(m);
+return "<div class='row'><div class='teamline'>"+logoHtml(m.casa)+"<div><b>"+m.casa+" vs "+m.tras+"</b><br><span class='small'>"+m.data+" "+m.ora+" - "+m.luogo+" - "+m.coppa+"</span><br>"+(w?"<span class='small' style='color:#22c55e;font-weight:800'>✅ Passa: "+w+"</span>":"")+"</div></div><div style='text-align:right'>"+(m.stato==="Giocata"?"<b>"+m.golC+"-"+m.golT+"</b>":"<span class='badge'>Da giocare</span>")+"</div></div>";
+}).join("");
+}
+el('coppeList').innerHTML=html||"<p class='small'>Ancora nessuna partita di questa Coppa. L'Admin le crea da Admin > Calendario Coppe. Coppa di Lega parte dai Sedicesimi.</p>";
+}
+if(el('coppaQualificate')){
+if(curCoppa==='Coppa di Lega'){
+var qSed=coppaWinners("Coppa di Lega","Sedicesimi di Finale");
+var qOtt=coppaWinners("Coppa di Lega","Ottavi di Finale");
+var qQua=coppaWinners("Coppa di Lega","Quarti di Finale");
+var qSem=coppaWinners("Coppa di Lega","Semifinale");
+var qFin=coppaWinners("Coppa di Lega","Finale");
+var qhtml="";
+if(qSed.length) qhtml+="<div class='qualBox'><b>✅ Qualificate agli Ottavi di Finale (da Sedicesimi):</b><br>"+qSed.map(function(n){return "🏆 "+n}).join("<br>")+"</div>";
+if(qOtt.length) qhtml+="<div class='qualBox'><b>✅ Qualificate ai Quarti di Finale (da Ottavi):</b><br>"+qOtt.map(function(n){return "🏆 "+n}).join("<br>")+"</div>";
+if(qQua.length) qhtml+="<div class='qualBox'><b>✅ Qualificate alle Semifinali (da Quarti):</b><br>"+qQua.map(function(n){return "🏆 "+n}).join("<br>")+"</div>";
+if(qSem.length) qhtml+="<div class='qualBox'><b>✅ Qualificate alla Finale (da Semifinali):</b><br>"+qSem.map(function(n){return "🏆 "+n}).join("<br>")+"</div>";
+if(qFin.length) qhtml+="<div class='qualBox' style='background:#facc15;color:#000'><b>🏆 VINCITRICE COPPA DI LEGA: "+qFin[0]+"</b></div>";
+el('coppaQualificate').innerHTML=qhtml||"<p class='small'>Quando metti i risultati dei Sedicesimi, qui appariranno in automatico le qualificate agli Ottavi.</p>";
+}else if(curCoppa==='Coppa Mitropa'){
+el('coppaQualificate').innerHTML="<p class='small'>Coppa Mitropa: l'Admin crea tutte le partite a mano, perché dipende da chi si classifica in Serie A (7ª-10ª) e dai risultati.</p>";
+}else{
+el('coppaQualificate').innerHTML="<p class='small'>Altre Coppe: l'Admin crea tutto a mano.</p>";
+}
+}
+if(el('compList')){el('compList').innerHTML=comps.map(function(c,i){return "<div class='row'><div>"+c+"</div><button class='del' type='button' onclick='delComp("+i+")'>X</button></div>"}).join("");}
+if(el('calList')){
+var cf=el('calFilter')?el('calFilter').value:"";
+var sorted=matches.slice().sort(function(a,b){return (a.giornata||99)-(b.giornata||99) || (a.data||"").localeCompare(b.data||"")});
+if(cf) sorted=sorted.filter(function(m){return teamLeague(m.casa)===cf});
+el('calList').innerHTML=sorted.map(function(m){return "<div class='row'><div class='teamline'>"+logoHtml(m.casa)+"<div><b>"+m.casa+" vs "+m.tras+"</b><br><span class='small'>"+(m.giornata?"Giornata "+m.giornata+" - ":"")+m.data+" "+m.ora+" - "+m.luogo+" - "+teamLeague(m.casa)+"</span></div></div>"+(m.stato==="Giocata"?"<b>"+m.golC+"-"+m.golT+"</b>":"<span class='badge'>"+m.stato+"</span>")+"</div>"}).join("");
+}
+if(el('risGiornata')){
+var curG=el('risGiornata').value;
+var giornate=[];
+for(var gi=0;gi<matches.length;gi++){var gg=matches[gi].giornata||1;if(giornate.indexOf(gg)<0) giornate.push(gg)}
+giornate.sort(function(a,b){return a-b});
+el('risGiornata').innerHTML="<option value=''>Tutte le Giornate</option>"+giornate.map(function(g){return "<option "+(String(g)===String(curG)?"selected":"")+" value='"+g+"'>Giornata "+g+"</option>"}).join("");
+}
+if(el('risList')){
+var selG=el('risGiornata')?el('risGiornata').value:"";
+var list=matches.slice().sort(function(a,b){return (a.giornata||1)-(b.giornata||1) || (a.data||"").localeCompare(b.data||"")});
+if(curRis==='A') list=list.filter(function(m){return teamLeague(m.casa)==="Serie A"});
+if(curRis==='B') list=list.filter(function(m){return teamLeague(m.casa)==="Serie B"});
+if(selG) list=list.filter(function(m){return String(m.giornata||1)===String(selG)});
+var html2="";
+var lastG=-1;
+for(var ri=0;ri<list.length;ri++){
+var m=list[ri];
+var g=m.giornata||1;
+if(g!==lastG){html2+="<div class='giornataTitle'>📋 GIORNATA "+g+" - "+(curRis==='A'?"SERIE A":"SERIE B")+"</div>";lastG=g;}
+html2+="<div class='row'><div class='teamline'>"+logoHtml(m.casa)+"<div><b>"+m.casa+" vs "+m.tras+"</b><br><span class='small'>"+m.data+" "+m.ora+" - "+m.luogo+"</span></div></div><div style='text-align:right'>"+resultLabel(m)+"</div></div>";
+}
+el('risList').innerHTML=html2||"<p class='small'>Nessuna partita ancora in questa Lega.</p>";
+}
+function rowClassA(x,i){
+var pos=i+1;
+var cls="";
+if(pos<=6){cls="posCeleste";}
+else if(pos<=10){cls="posGiallo";}
+else{cls="posRosso";}
+return "<tr><td><div class='"+cls+"'>"+pos+"</div></td><td><div class='teamline'>"+logoHtml(x[0])+"<div class='teamName'>"+x[0]+"</div></div></td><td><b>"+x[1].pti+"</b></td><td>"+x[1].g+"</td><td>"+x[1].gf+"</td><td>"+x[1].gs+"</td><td><b>"+discVal(x[0])+"</b></td></tr>"
+}
+function rowClassB(x,i){return "<tr><td>"+(i+1)+"</td><td><div class='teamline'>"+logoHtml(x[0])+"<div class='teamName'>"+x[0]+"</div></div></td><td><b>"+x[1].pti+"</b></td><td>"+x[1].g+"</td><td>"+x[1].gf+"</td><td>"+x[1].gs+"</td><td><b>"+discVal(x[0])+"</b></td></tr>"}
+if(el('classTableA')){el('classTableA').innerHTML=clA.map(rowClassA).join("");}
+if(el('classTableB')){el('classTableB').innerHTML=clB.map(rowClassB).join("");}
+var names=teamNames();
+var selTeam=el('teamFilter')?el('teamFilter').value:names[0];
+if(!selTeam) selTeam=names[0];
+if(el('teamFilter')){
+var cur=el('teamFilter').value;
+el('teamFilter').innerHTML=names.map(function(n){return "<option "+(n===cur?"selected":"")+">"+n+"</option>"}).join("");
+if(!cur&&names[0]) el('teamFilter').value=names[0];
+selTeam=el('teamFilter').value;
+}
+if(el('teamInfo')){el('teamInfo').innerHTML="<p><div class='teamline'>"+logoHtml(selTeam)+"<b>"+selTeam+"</b></div> - <span class='badge'>"+teamLeague(selTeam)+"</span> - "+players.filter(function(p){return (p.t||names[0])===selTeam}).length+" giocatori in rosa - Disciplina: <b>"+discVal(selTeam)+"</b></p>";}
+if(el('teamList')){
+var rp=players.filter(function(p){return (p.t||names[0])===selTeam});
+el('teamList').innerHTML=rp.length?rp.map(function(p){return "<div class='row'><div><b>"+p.n+"</b><br><span class='small'>"+p.r+" - "+(p.t||"")+"</span></div><span class='badge'>"+p.g+" gol</span></div>"}).join(""):"<p class='small'>Nessun giocatore in questa rosa. Aggiungilo da Admin.</p>";
+}
+if(el('discTable')){
+var allD=teamNames().map(function(n){return {n:n,d:discVal(n),l:teamLeague(n)}}).sort(function(a,b){return b.d-a.d});
+el('discTable').innerHTML=allD.map(function(x,i){return "<div class='row'><div class='teamline'>"+logoHtml(x.n)+"<div><b>"+(i+1)+". "+x.n+"</b><br><span class='small'>"+x.l+"</span></div></div><b>"+x.d+" pti</b></div>"}).join("");
+}
+if(el('allTeams')){
+el('allTeams').innerHTML="<p><b>Serie A ("+teams.filter(function(t){return t.l==="Serie A"}).length+")</b></p>"+teams.filter(function(t){return t.l==="Serie A"}).map(function(t){return "<div class='row'><div class='teamline'>"+logoHtml(t.n)+t.n+"</div><span class='badge'>Serie A</span></div>"}).join("")+"<p><b>Serie B ("+teams.filter(function(t){return t.l==="Serie B"}).length+")</b></p>"+teams.filter(function(t){return t.l==="Serie B"}).map(function(t){return "<div class='row'><div class='teamline'>"+logoHtml(t.n)+t.n+"</div><span class='badge2'>Serie B</span></div>"}).join("");
+}
+if(el('scorers')){
+var s=players.slice().sort(function(a,b){return b.g-a.g}).slice(0,10);
+el('scorers').innerHTML=s.map(function(p){return "<div class='row'><div>"+p.n+"<br><span class='small'>"+(p.t||"")+"</span></div><b>"+p.g+" gol</b></div>"}).join("");
+}
+var o=names.map(function(t){return "<option>"+t+"</option>"}).join("");
+if(el('fCasa')) el('fCasa').innerHTML=o;
+if(el('fTras')) el('fTras').innerHTML=o;
+if(el('fCoppaCasa')) el('fCoppaCasa').innerHTML=o;
+if(el('fCoppaTras')) el('fCoppaTras').innerHTML=o;
+if(el('fAlboTeam')) el('fAlboTeam').innerHTML=o;
+if(el('fIndTeam')){var curIT=el('fIndTeam').value;el('fIndTeam').innerHTML="<option value=''>Nessuna / Libero</option>"+o;if(curIT) el('fIndTeam').value=curIT;}
+if(el('dTeam')){
+var curD=el('dTeam').value;
+el('dTeam').innerHTML=o;
+if(curD) el('dTeam').value=curD;
+}
+if(el('fPlayerTeam')) el('fPlayerTeam').innerHTML=o;
+if(el('fMatchSelect')){
+var curM=el('fMatchSelect').value;
+var prog2=matches.map(function(m,i){return {m:m,i:i}}).filter(function(x){return x.m.stato==="Programmata"}).sort(function(a,b){return (a.m.giornata||1)-(b.m.giornata||1)});
+el('fMatchSelect').innerHTML=prog2.length?prog2.map(function(x){return "<option value='"+x.i+"'>Giornata "+(x.m.giornata||1)+" - "+x.m.casa+" vs "+x.m.tras+" - "+x.m.data+" ("+teamLeague(x.m.casa)+")</option>"}).join(""):"<option value=''>Nessuna partita da giocare - Crea prima il Calendario</option>";
+if(curM) el('fMatchSelect').value=curM;
+}
+if(el('fData')){try{el('fData').value=new Date().toISOString().slice(0,10);}catch(e){}}
+if(el('fCoppaData')){try{el('fCoppaData').value=new Date().toISOString().slice(0,10);}catch(e){}}
+if(el('countTeams')){el('countTeams').textContent="Hai "+teams.length+" squadre: "+teams.filter(function(t){return t.l==="Serie A"}).length+" in Serie A e "+teams.filter(function(t){return t.l==="Serie B"}).length+" in Serie B";}
+if(el('teamsList')){el('teamsList').innerHTML=teams.map(function(t,i){return "<div class='row'><div class='teamline'>"+logoHtml(t.n)+"<div>"+t.n+" <span class='small'>"+t.l+" - Disc: "+discVal(t.n)+"</span></div></div><div><button type='button' style='background:#facc15;color:#000;border:0;padding:6px 10px;border-radius:8px' onclick='renameTeam("+i+")'>✏️ Rinomina</button> <button class='big' type='button' style='width:auto;padding:6px 10px;margin:0' onclick='editTeam("+i+")'>🎨 Logo</button> <button class='del' type='button' onclick='delTeam("+i+")'>X</button></div></div>"}).join("");}
+if(el('matchesList')){el('matchesList').innerHTML=matches.map(function(m,i){return "<div class='row'><div><small>Giornata "+(m.giornata||1)+" - "+m.data+" - "+m.casa+" vs "+m.tras+" "+(m.stato==="Giocata"?"("+m.golC+"-"+m.golT+")":"(Da giocare)")+" - "+teamLeague(m.casa)+"</small></div><button class='del' type='button' onclick='delMatch("+i+")'>X</button></div>"}).join("");}
+if(el('coppaAdminList')){el('coppaAdminList').innerHTML=coppaMatches.map(function(m,i){return "<div class='row'><div><small>"+m.coppa+" - "+m.fase+" - "+m.data+" - "+m.casa+" vs "+m.tras+" "+(m.stato==="Giocata"?"("+m.golC+"-"+m.golT+" - Passa: "+coppaWinner(m)+")":"(Da giocare)")+"</small></div><button class='del' type='button' onclick='delCoppaMatch("+i+")'>X</button></div>"}).join("");}
+if(el('alboAdminList')){el('alboAdminList').innerHTML=teamTitles.map(function(t,i){return "<div class='row'><div><small>"+t.team+" - "+t.trofeo+" "+t.anno+"</small></div><button class='del' type='button' onclick='delTeamTitle("+i+")'>X</button></div>"}).join("");}
+if(el('alboIndAdminList')){el('alboIndAdminList').innerHTML=indTitles.map(function(t,i){return "<div class='row'><div><small>"+t.nome+" - "+t.trofeo+" "+t.anno+" ("+(t.team||"")+ ")</small></div><button class='del' type='button' onclick='delIndTitle("+i+")'>X</button></div>"}).join("");}
+if(el('playersList')){el('playersList').innerHTML=players.map(function(p,i){return "<div class='row'><div><b>"+p.n+"</b><br><span class='small'>"+p.r+" - "+(p.t||"")+" - "+p.g+" gol</span></div><div><button type='button' style='background:#3b82f6;color:#fff;border:0;padding:6px 10px;border-radius:8px' onclick='transferPlayer("+i+")'>Trasferisci</button> <button class='del' type='button' onclick='delPlayer("+i+")'>Elimina</button></div></div>"}).join("");}
+if(el('discList')){
+var dl="";
+var names2=teamNames();
+for(var di=0;di<names2.length;di++){var nn2=names2[di];dl+="<div class='row'><div class='teamline'>"+logoHtml(nn2)+nn2+" <span class='small'>"+teamLeague(nn2)+"</span></div><b>"+discVal(nn2)+" pti</b></div>"}
+el('discList').innerHTML=dl;
+}
+if(el('alboYearFilter')) el('alboYearFilter').value=curAlboYear;
+if(el('alboYearFilterInd')) el('alboYearFilterInd').value=curAlboYearInd;
+}catch(e){console.log("render error",e)}
+}
+load();
+</script>
+</body>
+</html>

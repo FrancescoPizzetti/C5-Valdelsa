@@ -2098,6 +2098,7 @@ el('teamInfo').innerHTML="<p><b>"+selTeam+"</b> - "+teamLeague(selTeam)+" - Disc
 }
 if(el('teamList')){
 var rp=players.filter(function(p){return p.t===selTeam;});
+var ordineRuoli={"Mister":0,"Accompagnatore":1,"Portiere":2,"Portieri":2,"Difensore":3,"Difensori":3,"Laterale":4,"Laterali":4,"Attaccante":5,"Attaccanti":5,"Centrocampista":4,"Giocatore":6}; rp.sort(function(a,b){return (ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99)-(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99)||(a.n||"").localeCompare(b.n||"");});
 var htl="";
 for(var rpI=0;rpI<rp.length;rpI++){
 htl+="<div class='row'><div><b>"+rp[rpI].n+"</b><br><span class='small'>"+rp[rpI].r+"</span></div><span class='badge'>"+rp[rpI].g+" gol</span></div>";

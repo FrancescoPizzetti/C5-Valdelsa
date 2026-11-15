@@ -2342,6 +2342,7 @@ if(!hai2)hai2="<p class='small'>Nessun individuale</p>";
 el('alboIndAdminList').innerHTML=hai2;
 }if(el('playersList')){
 var hpl="";
+var ordineRuoli={"Mister":0,"Accompagnatore":1,"Portiere":2,"Difensore":3,"Laterale":4,"Attaccante":5,"Centrocampista":4,"Giocatore":6}; players.sort(function(a,b){return (ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99)-(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99)||(a.n||"").localeCompare(b.n||"");});
 for(var pi=0;pi<players.length;pi++){
 hpl+="<div class='row'><div><b>";
 hpl+=players[pi].n;

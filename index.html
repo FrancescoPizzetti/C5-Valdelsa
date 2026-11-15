@@ -2127,7 +2127,7 @@ if(teams[at3].l!=="Serie A")hat2+="<div class='row'><div>"+teams[at3].n+"</div><
 el('allTeams').innerHTML=hat2;
 }
 if(el('scorers')){
-var s=players.slice();
+var s=players.filter(function(p){return p.t===selTeam;});
 s.sort(function(a,b){return b.g-a.g;});
 s=s.slice(0,10);
 var hsc="";

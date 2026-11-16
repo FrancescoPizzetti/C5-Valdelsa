@@ -958,6 +958,26 @@ nuovoStorico.capA=capAName;
 nuovoStorico.capB=capBName;
 nuovoStorico.coppa=vincCoppa;
 storico.unshift(nuovoStorico);
+// PEZZO 8 - Playout A e Playoff B
+function nomeSquadraTeam(t){return t.n||t.nome||t.name||t.squadra||"";}
+function vincPerdFinale(nomeCoppa){
+var fin=null; var semi=[];
+for(var i=0;i<coppaMatches.length;i++){var m=coppaMatches[i]; if(m.coppa!==nomeCoppa)continue; if(m.stato!=="Disputata"&&m.stato!=="Giocata")continue; if(m.golC===""||m.golT===""||m.golC==null||m.golT==null)continue; var gc=parseInt(m.golC); var gt=parseInt(m.golT); if(isNaN(gc)||isNaN(gt))continue; if(gc===gt)continue; var vinc=gc>gt?m.casa:m.tras; var perd=gc>gt?m.tras:m.casa; if(m.fase==="Finale")fin={vinc:vinc,perd:perd}; if(m.fase==="Semifinale")semi.push({vinc:vinc,perd:perd});}
+return {fin:fin,semi:semi};
+}
+var pl= vincPerdFinale("Playout Serie A");
+var retrocessi=[];
+if(pl.fin){retrocessi.push(pl.fin.perd);}
+else{for(var r=0;r<pl.semi.length;r++){retrocessi.push(pl.semi[r].perd);}}
+var pb= vincPerdFinale("Playoff Serie B");
+var promossi=[];
+if(pb.fin){promossi.push(pb.fin.vinc);}
+for(var ti2=0;ti2<teams.length;ti2++){
+var nm=nomeSquadraTeam(teams[ti2]);
+if(retrocessi.indexOf(nm)!==-1 && teams[ti2].l==="Serie A"){teams[ti2].l="Serie B";}
+if(promossi.indexOf(nm)!==-1 && (teams[ti2].l==="Serie B"||teams[ti2].l==="Serie B1"||teams[ti2].l==="Serie B2")){teams[ti2].l="Serie A";}
+}
+if(retrocessi.length||promossi.length){alert("Playout / Playoff: Retrocesse: "+retrocessi.join(", ")+" - Promosse: "+promossi.join(", "));}
 matches=[];
 coppaMatches=[];
 disciplina={};

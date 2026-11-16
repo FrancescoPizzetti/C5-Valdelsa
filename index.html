@@ -1938,6 +1938,11 @@ coppaMatches=[];
 save();
 alert("Coppe svuotate!");
 }
+function _leggiRigoriDaForm(){
+  var r = document.getElementById("fCoppaRigori").value;
+  var v = document.getElementById("fCoppaVincRigori").value;
+  return {rigori:r, vincRigori:v};
+}
 function saveCoppaMatch(){
 var coppa=el('fCoppa').value;
 var fase=el('fFase').value;
@@ -1945,6 +1950,8 @@ var casa=el('fCoppaCasa').value;
 var tras=el('fCoppaTras').value;
 if(casa===tras){alert("Casa e Trasferta uguali!");return;}
 var m={};
+var _rig = _leggiRigoriDaForm();
+m.rigori = _rig.rigori; m.vincRigori = _rig.vincRigori;
 m.coppa=coppa;
 m.fase=fase;
 m.casa=casa;

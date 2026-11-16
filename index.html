@@ -2755,6 +2755,28 @@ if(el('alboYearFilter'))el('alboYearFilter').value=curAlboYear;
 if(el('alboYearFilterInd'))el('alboYearFilterInd').value=curAlboYearInd;
 refreshScorerPlayers();
 }
+function selectTeamStrip(n){
+  var s=document.getElementById('teamFilter');
+  if(s) s.value=n;
+  render();
+  var info=document.getElementById('teamInfo');
+  if(info) info.scrollIntoView({behavior:'smooth'});
+}
+function renderStrips(){
+  var a=document.getElementById('stripA');
+  var b=document.getElementById('stripB');
+  if(!a||!b) return;
+  var cur=document.getElementById('teamFilter')?document.getElementById('teamFilter').value:'';
+  function htmlFor(league){
+    return teams.filter(function(t){return t.l===league})
+    .sort(function(x,y){return x.n.localeCompare(y.n)})
+    .map(function(t){
+      return "<div class='teamBox "+(t.n===cur?"on":"")+"' onclick=\"selectTeamStrip('"+t.n.replace(/'/g,"\\'")+"')\">"+logoHtml(t.n)+"<div class='teamBoxName'>"+t.n+"</div></div>";
+    }).join("");
+  }
+  a.innerHTML=htmlFor('Serie A');
+  b.innerHTML=htmlFor('Serie B');
+}
 load();
 </script>
 </body>

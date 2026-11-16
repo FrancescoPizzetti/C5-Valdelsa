@@ -1002,7 +1002,85 @@ if(!confirm("Cancellare questo storico?"))return;
 storico.splice(i,1);
 save();
 }
-function generaSecondaFaseB(){
+function creaGironeCoppa(coppa,squadre){
+var n=squadre.length;var arr=squadre.slice();
+for(var g=0;g<n-1;g++){
+for(var k=0;k<n/2;k++){
+var casa=arr[k];var tras=arr[n-1-k];
+if(g%2===1){var tmp2=casa;casa=tras;tras=tmp2;}
+var m={};m.coppa=coppa;m.fase="Girone";m.casa=casa;m.tras=tras;m.data="";m.ora="";m.luogo="";m.golC="";m.golT="";m.stato="Programmata";coppaMatches.push(m);
+}
+var ultimo2=arr.pop();arr.splice(1,0,ultimo2);
+}
+}
+function coppaGiaEsiste(coppa,fase){
+for(var i=0;i<coppaMatches.length;i++){if(coppaMatches[i].coppa===coppa&&coppaMatches[i].fase===fase)return true;}
+return false;
+}
+function coppaGironeWinner(coppa){
+var pts={};var diff={};var gf={};
+for(var i=0;i<coppaMatches.length;i++){var m=coppaMatches[i];if(m.coppa!==coppa||m.fase!=="Girone"||m.stato!=="Giocata")continue;var a=parseInt(m.golC);var b=parseInt(m.golT);if(isNaN(a)||isNaN(b))continue;if(!pts[m.casa]){pts[m.casa]=0;diff[m.casa]=0;gf[m.casa]=0;}if(!pts[m.tras]){pts[m.tras]=0;diff[m.tras]=0;gf[m.tras]=0;}gf[m.casa]+=a;gf[m.tras]+=b;diff[m.casa]+=a-b;diff[m.tras]+=b-a;if(a>b)pts[m.casa]+=3;else if(b>a)pts[m.tras]+=3;else{pts[m.casa]+=1;pts[m.tras]+=1;}}
+var best="";var bestPts=-1;var bestDiff=-9999;var bestGf=-1;
+for(var k in pts){if(pts[k]>bestPts||(pts[k]===bestPts&&diff[k]>bestDiff)||(pts[k]===bestPts&&diff[k]===bestDiff&&gf[k]>bestGf)){best=k;bestPts=pts[k];bestDiff=diff[k];bestGf=gf[k];}}
+return best;
+}
+function coppaLoser(m){
+if(m.stato!=="Giocata")return "";
+var a=parseInt(m.golC);var b=parseInt(m.golT);
+if(a>b)return m.tras;if(b>a)return m.casa;return "";
+}
+function generaPlayout(){
+var cl=calc();var clA=cl.filter(function(x){return teamLeague(x[0])==="Serie A";});
+if(clA.length!==14){alert("Ci devono essere 14 squadre in Serie A. Ora: "+clA.length);return;}
+if(coppaGiaEsiste("Playout Serie A","Semifinale")){alert("Playout gia generato!");return;}
+if(!confirm("Genero Playout? 11a vs 14a e 12a vs 13a. Partite secche."))return;
+var s11=clA[10][0];var s14=clA[13][0];var s12=clA[11][0];var s13=clA[12][0];
+var m1={};m1.coppa="Playout Serie A";m1.fase="Semifinale";m1.casa=s11;m1.tras=s14;m1.data="";m1.ora="";m1.luogo="";m1.golC="";m1.golT="";m1.stato="Programmata";coppaMatches.push(m1);
+var m2={};m2.coppa="Playout Serie A";m2.fase="Semifinale";m2.casa=s12;m2.tras=s13;m2.data="";m2.ora="";m2.luogo="";m2.golC="";m2.golT="";m2.stato="Programmata";coppaMatches.push(m2);
+save();alert("Playout creato! 11a vs 14a e 12a vs 13a");
+}
+function generaFinalePlayout(){
+if(coppaGiaEsiste("Playout Serie A","Finale")){alert("Finale Playout gia generata!");return;}
+var vinc=coppaWinners("Playout Serie A","Semifinale");
+if(vinc.length!==2){alert("Prima gioca le 2 semifinali Playout e metti i risultati.");return;}
+if(!confirm("Genero Finale Playout tra "+vinc[0]+" e "+vinc[1]+"? Partita secca."))return;
+var m={};m.coppa="Playout Serie A";m.fase="Finale";m.casa=vinc[0];m.tras=vinc[1];m.data="";m.ora="";m.luogo="";m.golC="";m.golT="";m.stato="Programmata";coppaMatches.push(m);
+save();alert("Finale Playout creata!");
+}
+function generaChampions(){
+var cl=calc();var clA=cl.filter(function(x){return teamLeague(x[0])==="Serie A";});
+if(clA.length!==14){alert("Ci devono essere 14 squadre in Serie A.");return;}
+if(coppaGiaEsiste("Coppa Campioni","Girone")){alert("Champions gia generata!");return;}
+if(!confirm("Genero Champions con le prime 6 di Serie A?"))return;
+var sq=clA.slice(0,6).map(function(x){return x[0];});
+creaGironeCoppa("Coppa Campioni",sq);save();alert("Champions creata! Prime 6 di Serie A");
+}
+function generaMitropa(){
+var cl=calc();var clA=cl.filter(function(x){return teamLeague(x[0])==="Serie A";});var clB1=cl.filter(function(x){return teamLeague(x[0])==="Serie B1";});
+if(clA.length!==14){alert("Ci devono essere 14 squadre in Serie A.");return;}
+if(clB1.length!==8){alert("Prima genera B1/B2. Servono 8 squadre in B1.");return;}
+if(coppaGiaEsiste("Coppa Mitropa","Girone")){alert("Mitropa gia generata!");return;}
+if(!confirm("Genero Mitropa: 7a-10a Serie A + prime 2 B1?"))return;
+var sq=clA.slice(6,10).map(function(x){return x[0];});sq=sq.concat(clB1.slice(0,2).map(function(x){return x[0];}));
+creaGironeCoppa("Coppa Mitropa",sq);save();alert("Mitropa creata!");
+}
+function generaPlayoffB(){
+var cl=calc();var clB1=cl.filter(function(x){return teamLeague(x[0])==="Serie B1";});var clB2=cl.filter(function(x){return teamLeague(x[0])==="Serie B2";});
+if(clB1.length!==8||clB2.length!==8){alert("Prima genera B1/B2. Servono 8+8 squadre.");return;}
+if(coppaGiaEsiste("Playoff Serie B","Girone")){alert("Playoff gia generato!");return;}
+if(!confirm("Genero Playoff B: 3a-8a B1 + prime 2 B2? Vincitrice promossa in A."))return;
+var sq=clB1.slice(2,8).map(function(x){return x[0];});sq=sq.concat(clB2.slice(0,2).map(function(x){return x[0];}));
+creaGironeCoppa("Playoff Serie B",sq);save();alert("Playoff B creato!");
+}
+function generaConference(){
+var cl=calc();var clB2=cl.filter(function(x){return teamLeague(x[0])==="Serie B2";});
+if(clB2.length!==8){alert("Prima genera B1/B2. Servono 8 squadre in B2.");return;}
+if(coppaGiaEsiste("Conference","Girone")){alert("Conference gia generata!");return;}
+if(!confirm("Genero Conference con le ultime 6 di B2?"))return;
+var sq=clB2.slice(2,8).map(function(x){return x[0];});
+creaGironeCoppa("Conference",sq);save();alert("Conference creata! Ultime 6 B2");
+}
+  function generaSecondaFaseB(){
 var cl=calc();
 var clB=cl.filter(function(x){return teamLeague(x[0])==="Serie B";});
 if(clB.length!==16){

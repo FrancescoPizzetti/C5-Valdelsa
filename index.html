@@ -2778,12 +2778,6 @@ function backToTeams(){
   var bk=document.getElementById('backTeams'); if(bk) bk.style.display='none';
   var team=document.getElementById('team'); if(team) team.scrollIntoView({behavior:'smooth'});
 }
-  var s=document.getElementById('teamFilter');
-  if(s) s.value=n;
-  render();
-  var info=document.getElementById('teamInfo');
-  if(info) info.scrollIntoView({behavior:'smooth'});
-}
 function renderStrips(){
   var a=document.getElementById('stripA');
   var b=document.getElementById('stripB');

@@ -1629,6 +1629,9 @@ function applySettings(){
 if(el('hdrSub'))el('hdrSub').textContent=settings.sub;
 if(el('sTitle'))el('sTitle').value=settings.title;
 if(el('sSub'))el('sSub').value=settings.sub;
+if(el('fChiSiamo'))el('fChiSiamo').value=settings.chiSiamo||'';
+if(el('fChiSiamoFoto'))el('fChiSiamoFoto').value=settings.chiSiamoFoto||'';
+if(el('chiSiamo')&&settings.chiSiamo)el('chiSiamo').innerHTML='<div class="card"><h2>Chi Siamo</h2>'+(settings.chiSiamoFoto?'<img src="'+settings.chiSiamoFoto+'" style="width:100%;border-radius:12px;margin:10px 0">':'')+'<p style="white-space:pre-line;line-height:1.6">'+settings.chiSiamo+'</p></div>';
 if(el('fRegola'))el('fRegola').value=settings.regola||"";
 if(el('regolaView'))el('regolaView').textContent=settings.regola||"";
 if(el('headerLogo1')){

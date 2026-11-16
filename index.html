@@ -2031,7 +2031,7 @@ var list=[];
 if(curCoppa==='Altre'){
 list=coppaMatches.filter(function(m){return m.coppa!=="Coppa di Lega"&&m.coppa!=="Coppa Mitropa"&&m.coppa!=="Coppa Campioni";});
 }else{
-list=coppaMatches.filter(function(m){return m.coppa===curCoppa;});
+list=coppaMatches.filter(function(m){return m.coppa.indexOf(curCoppa)!==-1;});
 }
 var fasi=[];
 fasi.push("Sedicesimi di Finale");

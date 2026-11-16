@@ -2099,10 +2099,10 @@ var presN="Non indicato"; for(var pr=0;pr<players.length;pr++){if(players[pr].t=
 }
 if(el('teamList')){
 var rp=players.filter(function(p){return p.t===selTeam;});
-var ordineRuoli={"Mister":0,"Accompagnatore":1,"Portiere":2,"Portieri":2,"Difensore":3,"Difensori":3,"Laterale":4,"Laterali":4,"Attaccante":5,"Attaccanti":5,"Centrocampista":4,"Giocatore":6}; rp.sort(function(a,b){return (ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99)-(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99)||(a.n||"").localeCompare(b.n||"");});
+var ordineRuoli={"Mister":0,"Accompagnatore":1,"Giocatore":2};function ordRuolo(r){return r==="Mister"?0:r==="Accompagnatore"?1:2;}rp.sort(function(a,b){return ordRuolo(a.r)-ordRuolo(b.r)||(a.n||"").localeCompare(b.n||"");});
 var htl="";
 for(var rpI=0;rpI<rp.length;rpI++){
-htl+=((rp[rpI].r==="Presidente")?"":"<div class='row'><div><b>"+rp[rpI].n+"</b><br><span class='small'>"+rp[rpI].r+"</span></div>"+((rp[rpI].r==="Mister"||rp[rpI].r==="Accompagnatore")?"":"<span class='badge'>"+rp[rpI].g+" gol</span>")+"</div>");
+htl+=((rp[rpI].r==="Presidente")?"":"<div class='row'><div><b>"+rp[rpI].n+"</b><br><span class='small'>"+(rp[rpI].r==="Mister"||rp[rpI].r==="Accompagnatore"?rp[rpI].r:"Giocatore")</span></div>"+((rp[rpI].r==="Mister"||rp[rpI].r==="Accompagnatore")?"":"<span class='badge'>"+rp[rpI].g+" gol</span>")+"</div>");
 }
 if(!htl)htl="<p class='small'>Nessun giocatore in rosa.</p>";
 el('teamList').innerHTML=htl;

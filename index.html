@@ -2132,50 +2132,7 @@ if(!hp)hp="<p class='small'>Ancora nessuna partita giocata.</p>";
 el('pastMatches').innerHTML=hp;
 }
 function topScorersHtml(league){
-try{
-var agg={};
-for(var mi=0;mi<matches.length;mi++){
-var mm=matches[mi];
-if(!mm)continue;
-if(mm.stato!=="Giocata")continue;
-if(!mm.scorers)continue;
-var ml=mm.lega||mm.league||mm.campionato||mm.serie||mm.div||mm.girone||"";
-if(ml&&ml!==league)continue;
-for(var si=0;si<mm.scorers.length;si++){
-var sc=mm.scorers[si];
-if(!sc)continue;
-var key=sc.team+"|"+sc.n;
-if(!agg[key])agg[key]={n:sc.n,team:sc.team,g:0};
-agg[key].g+=Number(sc.gol||0);
-}
-}
-var list=[];
-for(var k in agg){
-var it=agg[k];
-if(it.g>0){
-if(!ml){
-var pl=null;
-for(var pi=0;pi<players.length;pi++){
-if(players[pi]&&(players[pi].n===it.n||players[pi].nome===it.n)){
-if(players[pi].team===it.team||players[pi].squadra===it.team){pl=players[pi];break;}
-if(!pl)pl=players[pi];
-}
-}
-if(pl){
-var lg=pl.lega||pl.league||pl.campionato||pl.serie||"";
-if(lg&&lg!==league)continue;
-}
-}
-list.push(it);
-}
-}
-list.sort(function(a,b){return b.g-a.g;});
-list=list.slice(0,3);
-if(!list.length)return "<p class='small'>Nessun gol ancora</p>";
-var h="";
-for(var i=0;i<list.length;i++){h+="<div class='row'><div><small>"+(i+1)+". <b>"+list[i].n+"</b> - "+list[i].team+" - "+list[i].g+" gol</small></div></div>";}
-return h;
-}catch(e){return "<p class='small'>Nessun gol ancora</p>";}
+return "<p class='small'>Nessun gol ancora</p>";
 }
 return out;
 }

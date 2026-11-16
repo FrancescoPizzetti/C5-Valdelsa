@@ -2100,6 +2100,7 @@ var presN="Non indicato"; for(var pr=0;pr<players.length;pr++){if(players[pr].t=
 if(el('teamList')){
 var rp=players.filter(function(p){return p.t===selTeam;});
 var ordineRuoli={"Mister":0,"Accompagnatore":1,"Giocatore":2,"Giocatori":2,"Portiere":2,"Portieri":2,"Difensore":2,"Difensori":2,"Laterale":2,"Laterali":2,"Attaccante":2,"Attaccanti":2,"Centrocampista":2,"Centrocampisti":2,"Presidente":99};
+rp.sort(function(a,b){var d=(ordineRuoli[a.r]||99)-(ordineRuoli[b.r]||99);if(d)return d;var ca=a.n.split(" ").slice(-1)[0],cb=b.n.split(" ").slice(-1)[0];return ca.localeCompare(cb);});
 var htl="";
 for(var rpI=0;rpI<rp.length;rpI++){
 htl+=((rp[rpI].r==="Presidente")?"":"<div class='row'><div><b>"+rp[rpI].n+"</b><br><span class='small'>"+((rp[rpI].r=="Portiere"||rp[rpI].r=="Portieri"||rp[rpI].r=="Difensore"||rp[rpI].r=="Difensori"||rp[rpI].r=="Laterale"||rp[rpI].r=="Laterali"||rp[rpI].r=="Attaccante"||rp[rpI].r=="Attaccanti"||rp[rpI].r=="Centrocampista"||rp[rpI].r=="Centrocampisti")?"Giocatore":rp[rpI].r)+"</span></div>"+((rp[rpI].r==="Mister"||rp[rpI].r==="Accompagnatore")?"":"<span class='badge'>"+rp[rpI].g+" gol</span>")+"</div>");

@@ -2132,16 +2132,43 @@ if(!hp)hp="<p class='small'>Ancora nessuna partita giocata.</p>";
 el('pastMatches').innerHTML=hp;
 }
 function topScorersHtml(league){
-var list=players.filter(function(p){return teamLeague(p.t||"")==league;});
-list=list.filter(function(p){return p.r!=="Mister"&&p.r!=="Accompagnatore"&&p.r!=="Presidente";});
+var agg={};
+for(var mi=0;mi<matches.length;mi++){
+var mm=matches[mi];
+if(mm.stato!=="Giocata")continue;
+if(!mm.scorers)continue;
+for(var si=0;si<mm.scorers.length;si++){
+var sc=mm.scorers[si];
+var key=sc.team+"|"+sc.n;
+if(!agg[key])agg[key]={n:sc.n,team:sc.team,g:0};
+agg[key].g+=Number(sc.gol||0);
+}
+}
+var list=[];
+for(var k in agg){
+var it=agg[k];
+var pl=null;
+for(var pi=0;pi<players.length;pi++){
+if(players[pi].n===it.n||players[pi].nome===it.n||players[pi].name===it.n){
+if(players[pi].team===it.team||players[pi].squadra===it.team||players[pi].team===it.team){pl=players[pi];break;}
+if(!pl)pl=players[pi];
+}
+}
+var lg=pl?(pl.lega||pl.league||pl.campionato||pl.serie||""):"";
+if(lg&&lg!==league)continue;
+if(!lg){
+var tm=null;
+for(var ti=0;ti<teams.length;ti++){if(teams[ti].nome===it.team||teams[ti].name===it.team){tm=teams[ti];break;}}
+if(tm&&(tm.lega||tm.league||tm.campionato||tm.serie)&&((tm.lega||tm.league||tm.campionato||tm.serie)!==league))continue;
+}
+if(it.g>0)list.push(it);
+}
 list.sort(function(a,b){return b.g-a.g;});
 list=list.slice(0,3);
-if(!list.length)return "<p class='small'>Ancora nessun gol.</p>";
-var out="";
-for(var i=0;i<list.length;i++){
-out+="<div class='row'><div><b>"+(i+1)+". "+list[i].n+"</b>";
-out+="<br><span class='small'>"+list[i].t+"</span></div>";
-out+="<span class='badge'>"+list[i].g+" gol</span></div>";
+if(!list.length)return "<p class='small'>Nessun gol ancora</p>";
+var h="";
+for(var i=0;i<list.length;i++){h+="<div class='row'><div><small>"+(i+1)+". <b>"+list[i].n+"</b> - "+list[i].team+" - "+list[i].g+" gol</small></div></div>";}
+return h;
 }
 return out;
 }

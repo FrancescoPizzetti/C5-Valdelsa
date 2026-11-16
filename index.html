@@ -374,7 +374,9 @@ input[type=checkbox]{width:20px;height:20px;accent-color:#facc15;margin:0}
 <input id="fCoppaLuogoAltro" class="hidden" placeholder="Scrivi luogo...">
 <div class="label">RISULTATO</div><div style="display:flex;gap:8px"><input id="fCoppaGolC" type="number" placeholder="Gol Casa"><input id="fCoppaGolT" type="number" placeholder="Gol Trasferta"></div>
 <select id="fCoppaStato"><option>Programmata</option><option>Giocata</option></select>
-<button class="big" type="button" onclick="saveCoppaMatch()">🏆 Salva Partita di Coppa</button><div id="coppaAdminList"></div>
+<button class="big" type="button" onclick="saveCoppaMatch()">🏆 Salva Partita di Coppa</button>
+<button type='button' onclick='creaPlayoutAuto()' style='width:100%;margin-top:8px;background:#22c55e;color:white;padding:10px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;'>Genera Playout Automatico - 11 vs 14 / 12 vs 13</button>
+<div id="coppaAdminList"></div>
 </div>
 <div id="adminSec-disc" style="display:none">
 <h3>🟨 DISCIPLINA - Tutte partono da 50 punti</h3>

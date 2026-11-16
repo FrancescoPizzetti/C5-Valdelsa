@@ -1080,7 +1080,26 @@ if(!confirm("Genero Conference con le ultime 6 di B2?"))return;
 var sq=clB2.slice(2,8).map(function(x){return x[0];});
 creaGironeCoppa("Conference",sq);save();alert("Conference creata! Ultime 6 B2");
 }
-  function generaSecondaFaseB(){
+function modificaCoppa(i){
+var m=coppaMatches[i];
+if(!m){return;}
+if(!confirm("Modifico "+m.coppa+" - "+m.casa+" vs "+m.tras+"? La partita verra caricata nel modulo sopra, la modifichi e premi Salva."))return;
+try{document.getElementById("fCoppa").value=m.coppa;}catch(e){}
+try{document.getElementById("fFase").value=m.fase;}catch(e){}
+try{document.getElementById("fCoppaCasa").value=m.casa;}catch(e){}
+try{document.getElementById("fCoppaTras").value=m.tras;}catch(e){}
+try{document.getElementById("fCoppaData").value=m.data||"";}catch(e){}
+try{document.getElementById("fCoppaOra").value=m.ora||"21:00";}catch(e){}
+try{document.getElementById("fCoppaLuogo").value=m.luogo||"Bernino Indoor";}catch(e){}
+try{document.getElementById("fCoppaGolC").value=m.golC||"";}catch(e){}
+try{document.getElementById("fCoppaGolT").value=m.golT||"";}catch(e){}
+try{document.getElementById("fCoppaStato").value=m.stato||"Programmata";}catch(e){}
+coppaMatches.splice(i,1);
+save();
+if(typeof render==="function")render();
+window.scrollTo(0,0);
+}
+function generaSecondaFaseB(){
 var cl=calc();
 var clB=cl.filter(function(x){return teamLeague(x[0])==="Serie B";});
 if(clB.length!==16){

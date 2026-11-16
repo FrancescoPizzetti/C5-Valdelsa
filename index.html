@@ -2757,7 +2757,27 @@ if(el('alboYearFilter'))el('alboYearFilter').value=curAlboYear;
 if(el('alboYearFilterInd'))el('alboYearFilterInd').value=curAlboYearInd;
 refreshScorerPlayers();
 }
-function selectTeamStrip(n){
+  function selectTeamStrip(n){
+  var s=document.getElementById('teamFilter');
+  if(s) s.value=n;
+  render();
+  // Nascondi le griglie, mostra solo la rosa = pagina a parte
+  var a=document.getElementById('stripA'); if(a) a.style.display='none';
+  var b=document.getElementById('stripB'); if(b) b.style.display='none';
+  var titles=document.querySelectorAll('.stripTitle'); for(var i=0;i<titles.length;i++) titles[i].style.display='none';
+  if(s) s.style.display='none';
+  var bk=document.getElementById('backTeams'); if(bk) bk.style.display='block';
+  var info=document.getElementById('teamInfo');
+  if(info) info.scrollIntoView({behavior:'smooth'});
+}
+function backToTeams(){
+  var a=document.getElementById('stripA'); if(a) a.style.display='grid';
+  var b=document.getElementById('stripB'); if(b) b.style.display='grid';
+  var titles=document.querySelectorAll('.stripTitle'); for(var i=0;i<titles.length;i++) titles[i].style.display='block';
+  var s=document.getElementById('teamFilter'); if(s) s.style.display='block';
+  var bk=document.getElementById('backTeams'); if(bk) bk.style.display='none';
+  var team=document.getElementById('team'); if(team) team.scrollIntoView({behavior:'smooth'});
+}
   var s=document.getElementById('teamFilter');
   if(s) s.value=n;
   render();

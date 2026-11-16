@@ -2137,17 +2137,17 @@ var agg={};
 for(var mi=0;mi<matches.length;mi++){
 var mm=matches[mi];
 if(!mm)continue;
-if(mm.stato!=="Giocata")continue;
 if(!mm.scorers)continue;
-var f=mm.fase||"";
-if(league==="Serie B"){
-if(f.indexOf("Serie B")!==0)continue;
-}else{
-if(f!==league)continue;
-}
 for(var si=0;si<mm.scorers.length;si++){
 var sc=mm.scorers[si];
-if(!sc)continue;
+if(!sc||!sc.team)continue;
+var lg="";
+try{lg=teamLeague(sc.team)||"";}catch(e){lg="";}
+if(league==="Serie B"){
+if(!(lg.indexOf("Serie B")===0))continue;
+}else{
+if(lg!==league)continue;
+}
 var key=sc.team+"|"+sc.n;
 if(!agg[key])agg[key]={n:sc.n,team:sc.team,g:0};
 agg[key].g+=Number(sc.gol||0);

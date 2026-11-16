@@ -2101,14 +2101,15 @@ el('upcomingMatches').innerHTML=htmlNext;
 }
 if(el('pastMatches')){
 var hp="";
-var tuttePast=matches.filter(function(m){return m.stato=="Giocata";}).concat(coppaMatches.filter(function(m){return m.stato=="Giocata";}));
-tuttePast.sort(function(a,b){var da=(a.data||"").split("/").reverse().join("");var db=(b.data||"").split("/").reverse().join("");if(db!==da)return db.localeCompare(da);return (b.giornata||0)-(a.giornata||0);});
+var listaCoppa=(typeof coppaMatches!=="undefined"?coppaMatches:[]);
+var tuttePast=matches.filter(function(m){return m.stato=="Giocata";}).concat(listaCoppa.filter(function(m){return m.stato=="Giocata";}));
+tuttePast.sort(function(a,b){return (b.data||"").localeCompare(a.data||"");});
 tuttePast=tuttePast.slice(0,6);
 for(var pm=0;pm<tuttePast.length;pm++){
 var g1=tuttePast[pm];
 var etichetta=g1.coppa?(g1.coppa+" - "+(g1.fase||"")):("Giornata "+(g1.giornata||1));
 hp+="<div class='row'><div><b>"+g1.casa+" vs "+g1.tras+"</b>";
-hp+="<br><span class='small'>"+etichetta+" - "+g1.data+"</span>";
+hp+="<br><span class='small'>"+etichetta+" - "+(g1.data||"")+"</span>";
 hp+=scorersHtml(g1)+"</div>"+resultLabel(g1)+"</div>";
 }
 if(!hp)hp="<p class='small'>Ancora nessuna partita giocata.</p>";

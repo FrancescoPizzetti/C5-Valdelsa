@@ -892,6 +892,23 @@ if(diffA!==diffB)return diffB-diffA;
 if(B.v!==A.v)return B.v-A.v;
 return B.gf-A.gf;
 }
+// PEZZO 9 - Playout automatico 11 vs 14, 12 vs 13
+function creaPlayoutAuto(){
+var sqA=[];
+for(var i=0;i<teams.length;i++){if(teams[i].l==="Serie A"){sqA.push(teams[i]);}}
+function puntiDi(t){var p=0; for(var k=0;k<matches.length;k++){var m=matches[k]; if(m.casa===t.n||m.casa===t.nome){if(m.golC>m.golT)p+=3; else if(m.golC===m.golT&&m.golC!==""&&m.golC!=null)p+=1;} if(m.tras===t.n||m.tras===t.nome){if(m.golT>m.golC)p+=3; else if(m.golT===m.golC&&m.golT!==""&&m.golT!=null)p+=1;}} return p;}
+sqA.sort(function(a,b){return puntiDi(b)-puntiDi(a);});
+if(sqA.length<14){alert("Servono 14 squadre in Serie A per il Playout. Ora ce ne sono "+sqA.length); return;}
+var s11=sqA[10].n||sqA[10].nome;
+var s12=sqA[11].n||sqA[11].nome;
+var s13=sqA[12].n||sqA[12].nome;
+var s14=sqA[13].n||sqA[13].nome;
+if(!confirm("Playout Serie A:\n"+s11+" (11ª) vs "+s14+" (14ª)\n"+s12+" (12ª) vs "+s13+" (13ª)\n\nCreo le 2 Semifinali?"))return;
+coppaMatches.push({coppa:"Playout Serie A",fase:"Semifinale",casa:s11,tras:s14,data:"",ora:"",luogo:"",golC:"",golT:"",stato:"Programmata"});
+coppaMatches.push({coppa:"Playout Serie A",fase:"Semifinale",casa:s12,tras:s13,data:"",ora:"",luogo:"",golC:"",golT:"",stato:"Programmata"});
+salvaDati();
+alert("Playout creato! Ora vai in Admin > Coppe e con la ✏️ metti data / ora / luogo alle 2 partite.");
+}
 function chiudiStagione(){
 var stag=el('fStagione').value.trim()||"2026/27";
 if(!confirm("CHIUDERE LA STAGIONE "+stag+"?"))return;

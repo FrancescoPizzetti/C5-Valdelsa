@@ -1939,9 +1939,21 @@ save();
 alert("Coppe svuotate!");
 }
 function _leggiRigoriDaForm(){
-  var r = document.getElementById("fCoppaRigori").value;
-  var v = document.getElementById("fCoppaVincRigori").value;
-  return {rigori:r, vincRigori:v};
+var r = document.getElementById("fCoppaRigori").value;
+var v = document.getElementById("fCoppaVincRigori").value;
+return {rigori:r, vincRigori:v};
+}
+function aggiornaTendinaVincRigori(){
+var sel = document.getElementById("fCoppaVincRigori");
+if(!sel) return;
+var casa = document.getElementById("fCoppaCasa").value;
+var tras = document.getElementById("fCoppaTras").value;
+var cur = sel.value;
+var h = "<option value=''>-</option>";
+if(casa) h += "<option value='"+casa+"'>"+casa+"</option>";
+if(tras) h += "<option value='"+tras+"'>"+tras+"</option>";
+sel.innerHTML = h;
+if(cur) sel.value = cur;
 }
 function saveCoppaMatch(){
 var coppa=el('fCoppa').value;

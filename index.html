@@ -2165,6 +2165,21 @@ function topScorersHtml(league){
       agg[key].g+=(s.gol||0);
     }
   }
+    // + GOL FATTI da ROSA - prime 9 giornate
+  for(var pi=0; pi<players.length; pi++){
+    var pp=players[pi];
+    if(!pp || !(pp.g||0)) continue;
+    var lg2="";
+    try{ lg2=teamLeague(pp.t)||""; }catch(e){}
+    if(league==="Serie B"){
+      if(lg2.indexOf("Serie B")!==0) continue;
+    } else {
+      if(lg2!==league) continue;
+    }
+    var key2=pp.n+"|"+pp.t;
+    if(!agg[key2]) agg[key2]={n:pp.n, team:pp.t, g:0};
+    agg[key2].g+=(pp.g||0);
+  }
   var list=[];
   for(var kk in agg){ if(agg[kk].g>0) list.push(agg[kk]); }
   list.sort(function(a,b){ return b.g-a.g; });

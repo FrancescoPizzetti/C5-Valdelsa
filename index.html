@@ -2524,7 +2524,7 @@ var presN="Non indicato"; for(var pr=0;pr<players.length;pr++){if(players[pr].t=
 if(el('teamList')){
 var rp=players.filter(function(p){return p.t===selTeam;});
 var ordineRuoli={"Mister":0,"Accompagnatore":1,"Giocatore":2,"Giocatori":2,"Portiere":2,"Portieri":2,"Difensore":2,"Difensori":2,"Laterale":2,"Laterali":2,"Attaccante":2,"Attaccanti":2,"Centrocampista":2,"Centrocampisti":2,"Presidente":99};
-rp.sort(function(a,b){var da=(ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99),db=(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99);var d=da-db;if(d)return d;var ca=a.n.split(" ").slice(-1)[0],cb=b.n.split(" ").slice(-1)[0];return ca.localeCompare(cb);});
+rp.sort(function(a,b){var da=(ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99),db=(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99);var d=da-db;if(d)return d;var ca=a.n,cb=b.n;return ca.localeCompare(cb);});
 var htl="";
 for(var rpI=0;rpI<rp.length;rpI++){
 var totGolP=(rp[rpI].g||0);

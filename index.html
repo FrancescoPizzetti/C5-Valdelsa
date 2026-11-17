@@ -120,7 +120,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:#facc15;margin:0}
 <p id="hdrSub">LEGA CALCIO A 5 VAL D'ELSA 2026/27 - 14 SERIE A + 16 SERIE B</p>
 </header><div class="wrap">
 <div id="home">
-<div class="card" style="background:#facc15;color:#000">
+<div id="installBanner" class="card" style="background:#facc15;color:#000">
 <h2 style="margin:0 0 6px">📱 Metti C5 Valdelsa sul tuo telefono</h2>
 <button class="big" type="button" style="background:#000;color:#facc15" onclick="installApp()">📱 AGGIUNGI ALLA SCHERMATA HOME</button>
 <p class="small" style="color:#333" id="installHint">Premi il bottone e segui le istruzioni.</p>
@@ -2880,6 +2880,12 @@ function renderStrips(){
   b.innerHTML=htmlFor('Serie B');
 }
 load();
+</script>
+<script>
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+  var b = document.getElementById('installBanner');
+  if (b) b.style.display = 'none';
+}
 </script>
 </body>
 </html>

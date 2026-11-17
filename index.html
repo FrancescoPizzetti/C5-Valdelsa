@@ -2888,5 +2888,73 @@ if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.
   if (b) b.style.display = 'none';
 }
 </script>
+<script>
+function salvaTestoChiSiamo(){
+  var ta = document.querySelector('textarea[placeholder*="Scrivi qui chi siete"]');
+  if(!ta){ alert("Non trovo la casella testo"); return; }
+  var testo = ta.value;
+  // Salva in tutti i posti possibili, così di sicuro la Home lo trova
+  try{
+    localStorage.setItem("chiSiamoTesto", testo);
+    localStorage.setItem("testoChiSiamo", testo);
+    localStorage.setItem("aboutText", testo);
+    // Aggiorna anche l'oggetto impostazioni se esiste
+    Object.keys(localStorage).forEach(function(k){
+      try{
+        var o = JSON.parse(localStorage.getItem(k));
+        if(o && typeof o === "object"){
+          if("about" in o) o.about = testo;
+          if("aboutText" in o) o.aboutText = testo;
+          if("chiSiamo" in o) o.chiSiamo = testo;
+          if("testoChiSiamo" in o) o.testoChiSiamo = testo;
+          localStorage.setItem(k, JSON.stringify(o));
+        }
+      }catch(e){}
+    });
+  }catch(e){}
+  // Aggiorna subito la pagina senza ricaricare
+  var els = document.querySelectorAll('[id*="about"],[id*="About"],[id*="chiSiamo"],[id*="ChiSiamo"]');
+  els.forEach(function(el){ if(el.tagName!=="TEXTAREA" && el.tagName!=="INPUT") el.textContent = testo; });
+  alert("Testo Chi Siamo salvato!");
+}
+
+function salvaFotoChiSiamo(){
+  var inputs = document.querySelectorAll('input');
+  var fotoInput = null;
+  inputs.forEach(function(inp){
+    if(inp.placeholder && inp.placeholder.indexOf("https://")>=0) fotoInput = inp;
+  });
+  // Se non lo trova dal placeholder, prendi l'input subito dopo la scritta "Foto Chi Siamo"
+  if(!fotoInput){
+    var ps = document.querySelectorAll('p');
+    ps.forEach(function(p){
+      if(p.textContent.indexOf("Foto Chi Siamo")>=0){
+        var n = p.nextElementSibling;
+        if(n && n.tagName==="INPUT") fotoInput = n;
+      }
+    });
+  }
+  if(!fotoInput){ alert("Non trovo la casella foto"); return; }
+  var url = fotoInput.value;
+  try{
+    localStorage.setItem("chiSiamoFoto", url);
+    localStorage.setItem("aboutImg", url);
+    localStorage.setItem("fotoChiSiamo", url);
+    Object.keys(localStorage).forEach(function(k){
+      try{
+        var o = JSON.parse(localStorage.getItem(k));
+        if(o && typeof o === "object"){
+          if("aboutImg" in o) o.aboutImg = url;
+          if("aboutImage" in o) o.aboutImage = url;
+          if("fotoChiSiamo" in o) o.fotoChiSiamo = url;
+          if("chiSiamoFoto" in o) o.chiSiamoFoto = url;
+          localStorage.setItem(k, JSON.stringify(o));
+        }
+      }catch(e){}
+    });
+  }catch(e){}
+  alert("Foto Chi Siamo salvata!");
+}
+</script>
 </body>
 </html>

@@ -3009,41 +3009,36 @@ function salvaFotoChiSiamo(){
 }
 </script>
 <script>
-function fixChiSiamoDisplay(){
+function fixChiSiamoVero(){
   try{
     var s = window.settings || {};
-    if(!s.chiSiamo){
-      Object.keys(localStorage).forEach(function(k){
-        try{
-          var o = JSON.parse(localStorage.getItem(k));
-          if(o && o.chiSiamo) s = o;
-        }catch(e){}
-      });
-    }
-    var img = document.getElementById("chiSiamoImg");
-    // Il testo è l'elemento subito dopo la foto
-    var txt = img ? img.nextElementSibling : null;
-    if(txt && s.chiSiamo){
-      txt.textContent = s.chiSiamo;
-      txt.style.display = "block";
-    }
-    if(img && s.chiSiamoFoto){
-      img.src = s.chiSiamoFoto;
-      img.style.display = "block";
+    if(!s.chiSiamo) return;
+    var box = document.getElementById("chiSiamo");
+    if(!box) return;
+    var html = '<div class="card"><h2>Chi Siamo</h2>';
+    if(s.chiSiamoFoto) html += '<img src="'+s.chiSiamoFoto+'" style="width:100%;border-radius:14px;margin-bottom:12px;">';
+    html += '<p style="white-space:pre-line;line-height:1.6">'+s.chiSiamo+'</p></div>';
+    // Solo se è ancora vuoto o senza il testo, riscrivi
+    if(box.innerHTML.indexOf(s.chiSiamo) === -1){
+      box.innerHTML = html;
     }
   }catch(e){}
 }
 try{
-  var _oldApply2 = window.applySettings;
+  var _oldA = window.applySettings;
   window.applySettings = function(){
-    try{ if(_oldApply2) _oldApply2(); }catch(e){}
-    fixChiSiamoDisplay();
+    try{ if(_oldA) _oldA(); }catch(e){}
+    fixChiSiamoVero();
   };
 }catch(e){}
-document.addEventListener("DOMContentLoaded", fixChiSiamoDisplay);
-setTimeout(fixChiSiamoDisplay, 500);
-setTimeout(fixChiSiamoDisplay, 1500);
-setTimeout(fixChiSiamoDisplay, 3000);
+document.addEventListener("DOMContentLoaded", function(){
+  fixChiSiamoVero();
+  setTimeout(fixChiSiamoVero, 500);
+  setTimeout(fixChiSiamoVero, 1000);
+  setTimeout(fixChiSiamoVero, 2000);
+  setTimeout(fixChiSiamoVero, 3000);
+  setTimeout(fixChiSiamoVero, 5000);
+});
 </script>
 </body>
 </html>

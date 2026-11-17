@@ -2642,6 +2642,7 @@ if(el('matchesList')){
 var hml="";
 for(var ml=0;ml<matches.length;ml++){
 var mm2=matches[ml];
+if(el('fLegaMatch')&&el('fLegaMatch').value&&(mm2.fase||'Serie A')!==el('fLegaMatch').value)continue;
 hml+="<div class='row'><div><small>Giornata "+(mm2.giornata||1)+" - "+mm2.casa+" vs "+mm2.tras;
 if(mm2.stato==="Giocata")hml+=" ("+mm2.golC+"-"+mm2.golT+")";
 else hml+=" (Da giocare)";

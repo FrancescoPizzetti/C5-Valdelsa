@@ -2547,14 +2547,15 @@ var oGrouped="<optgroup label='SERIE A'>"+oA+"</optgroup>";
 oGrouped+="<optgroup label='SERIE B'>"+oB+"</optgroup>";
 oGrouped+="<optgroup label='SERIE B1'>"+oB1+"</optgroup>";
 oGrouped+="<optgroup label='SERIE B2'>"+oB2+"</optgroup>";
+var _lf=el('fLegaMatch')?el('fLegaMatch').value:''; var oFiltro=_lf==='Serie A'?oA:_lf==='Serie B'?oB:_lf==='Serie B1'?oB1:_lf==='Serie B2'?oB2:oGrouped;
 if(el('fCasa')){
 var curCasa=el('fCasa').value;
-el('fCasa').innerHTML=oGrouped;
+el('fCasa').innerHTML=oFiltro;
 if(curCasa)el('fCasa').value=curCasa;
 }
 if(el('fTras')){
 var curTras=el('fTras').value;
-el('fTras').innerHTML=oGrouped;
+el('fTras').innerHTML=oFiltro;
 if(curTras)el('fTras').value=curTras;
 }
 if(el('fCoppaCasa'))el('fCoppaCasa').innerHTML=o;

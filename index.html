@@ -1580,7 +1580,7 @@ render();
 }
 async function save(){
 try{
-  for(var _p=0;_p<players.length;_p++) players[_p].g=0;
+  for(var _p=0;_p<players.length;_p++) players[_p].g=players[_p].base||0;
   var _all=[];
   if(window.matches) _all=_all.concat(matches);
   if(window.coppaMatches) _all=_all.concat(coppaMatches);
@@ -2028,7 +2028,7 @@ var g=parseInt(el('fPlayerGol').value||0);
 if(isNaN(g))g=0;
 var t=el('fPlayerTeam').value;
 if(!t){alert("Scegli la squadra!");return;}
-players.push({n:n,r:r,g:g,t:t});
+players.push({n:n,r:r,g:g,t:t,base:g});
 el('fPlayerNome').value="";
 el('fPlayerGol').value="0";
 save();

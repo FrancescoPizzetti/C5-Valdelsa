@@ -2088,7 +2088,7 @@ var a=parseInt(m.golC);
 var b=parseInt(m.golT);
 return "<b>"+a+" - "+b+"</b>";
   }function render(){
-  var _isCamp=['Serie A','Serie B','Serie B1','Serie B2'].includes(el('fLegaMatch').value); if(el('fGiornata')){el('fGiornata').style.display=_isCamp?'':'none'; if(el('fGiornata').previousElementSibling) el('fGiornata').previousElementSibling.style.display=_isCamp?'':'none'; if(!_isCamp) el('fGiornata').value='';}
+  var _isCamp=['Serie A','Serie B','Serie B1','Serie B2'].includes(el('fLegaMatch').value); if(el('fGiornata')){el('fGiornata').style.display=_isCamp?'':'none'; if(el('fGiornata').previousElementSibling) el('fGiornata').previousElementSibling.style.display=_isCamp?'':'none'; if(!_isCamp) el('fGiornata').value='';}if(el('fSpeculare')){var _isA=el('fLegaMatch').value==='Serie A'; if(el('fSpeculare').parentElement) el('fSpeculare').parentElement.style.display=_isA?'':'none'; if(!_isA) el('fSpeculare').checked=false;}
 fixTeams();
   renderStrips();
 applySettings();

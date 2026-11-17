@@ -1580,6 +1580,7 @@ render();
 }
 async function save(){
 try{
+players.sort(function(a,b){ return (a.n||"").toLowerCase().localeCompare((b.n||"").toLowerCase()); });
   for(var _p=0;_p<players.length;_p++) players[_p].g=players[_p].base||0;
   var _all=[];
   if(window.matches) _all=_all.concat(matches);

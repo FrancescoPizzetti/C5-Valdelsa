@@ -2132,18 +2132,35 @@ if(!hp)hp="<p class='small'>Ancora nessuna partita giocata.</p>";
 el('pastMatches').innerHTML=hp;
 }
 function topScorersHtml(league){
-var list=players.filter(function(p){return teamLeague(p.t||"")==league;});
-list=list.filter(function(p){return p.r!=="Mister"&&p.r!=="Accompagnatore"&&p.r!=="Presidente";});
-list.sort(function(a,b){return b.g-a.g;});
-list=list.slice(0,3);
-if(!list.length)return "<p class='small'>Ancora nessun gol.</p>";
-var out="";
-for(var i=0;i<list.length;i++){
-out+="<div class='row'><div><b>"+(i+1)+". "+list[i].n+"</b>";
-out+="<br><span class='small'>"+list[i].t+"</span></div>";
-out+="<span class='badge'>"+list[i].g+" gol</span></div>";
-}
-return out;
+  var agg={};
+  for(var i=0;i<matches.length;i++){
+    var m=matches[i];
+    if(!m||!m.scorers) continue;
+    for(var k=0;k<m.scorers.length;k++){
+      var s=m.scorers[k];
+      if(!s||s.autogol) continue;
+      var lg="";
+      try{ lg=teamLeague(s.team)||""; }catch(e){ lg=""; }
+      if(league==="Serie B"){
+        if(!(lg==="Serie B"||lg==="Serie B1"||lg==="Serie B2")) continue;
+      } else {
+        if(lg!==league) continue;
+      }
+      var key=s.n+"||"+s.team;
+      if(!agg[key]) agg[key]={n:s.n,team:s.team,g:0};
+      agg[key].g+=(s.gol||0);
+    }
+  }
+  var list=[];
+  for(var kk in agg){ if(agg[kk].g>0) list.push(agg[kk]); }
+  list.sort(function(a,b){ return b.g-a.g; });
+  list=list.slice(0,3);
+  if(!list.length) return "<p class='small'>Nessun gol ancora</p>";
+  var out="";
+  for(var i2=0;i2<list.length;i2++){
+    out+="<div class='row'><div><b>"+(i2+1)+". "+list[i2].n+"</b><br><span class='small'>"+list[i2].team+"</span></div><div><span class='badge'>"+list[i2].g+"</span></div></div>";
+  }
+  return out;
 }
 if(el('topScorersA'))el('topScorersA').innerHTML=topScorersHtml("Serie A");
 if(el('topScorersB'))el('topScorersB').innerHTML=topScorersHtml("Serie B");

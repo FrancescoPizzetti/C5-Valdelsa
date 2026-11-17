@@ -1859,7 +1859,7 @@ var luogo=getLuogo();
 var speculare=el('fSpeculare').checked;
 var esiste=false;
 for(var i=0;i<matches.length;i++){
-if(matches[i].casa===casa&&matches[i].tras===tras&&String(matches[i].giornata||1)===String(giornata))esiste=true;
+if(matches[i].casa===casa&&matches[i].tras===tras&&String(matches[i].giornata||1)===String(giornata)&&(matches[i].fase||lega)===lega)esiste=true;
 }
 if(esiste){alert("Questa partita esiste già!");return;}
 var m={};
@@ -1880,7 +1880,7 @@ if(speculare){
 var gr=giornata+13;
 var esisteR=false;
 for(var j=0;j<matches.length;j++){
-if(matches[j].casa===tras&&matches[j].tras===casa&&String(matches[j].giornata||1)===String(gr))esisteR=true;
+if(matches[j].casa===tras&&matches[j].tras===casa&&String(matches[j].giornata||1)===String(gr)&&(matches[j].fase||lega)===lega)esisteR=true;
 }
 if(!esisteR){
 var mr={};

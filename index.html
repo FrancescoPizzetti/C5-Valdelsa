@@ -2088,6 +2088,7 @@ var a=parseInt(m.golC);
 var b=parseInt(m.golT);
 return "<b>"+a+" - "+b+"</b>";
   }function render(){
+  var _isCamp=['Serie A','Serie B','Serie B1','Serie B2'].includes(el('fLegaMatch').value); if(el('fGiornata')){el('fGiornata').style.display=_isCamp?'':'none'; if(el('fGiornata').previousElementSibling) el('fGiornata').previousElementSibling.style.display=_isCamp?'':'none'; if(!_isCamp) el('fGiornata').value='';}
 fixTeams();
   renderStrips();
 applySettings();

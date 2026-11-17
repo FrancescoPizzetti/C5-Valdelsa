@@ -3008,5 +3008,42 @@ function salvaFotoChiSiamo(){
   alert("Foto Chi Siamo salvata!");
 }
 </script>
+<script>
+function fixChiSiamoDisplay(){
+  try{
+    var s = window.settings || {};
+    if(!s.chiSiamo){
+      Object.keys(localStorage).forEach(function(k){
+        try{
+          var o = JSON.parse(localStorage.getItem(k));
+          if(o && o.chiSiamo) s = o;
+        }catch(e){}
+      });
+    }
+    var img = document.getElementById("chiSiamoImg");
+    // Il testo è l'elemento subito dopo la foto
+    var txt = img ? img.nextElementSibling : null;
+    if(txt && s.chiSiamo){
+      txt.textContent = s.chiSiamo;
+      txt.style.display = "block";
+    }
+    if(img && s.chiSiamoFoto){
+      img.src = s.chiSiamoFoto;
+      img.style.display = "block";
+    }
+  }catch(e){}
+}
+try{
+  var _oldApply2 = window.applySettings;
+  window.applySettings = function(){
+    try{ if(_oldApply2) _oldApply2(); }catch(e){}
+    fixChiSiamoDisplay();
+  };
+}catch(e){}
+document.addEventListener("DOMContentLoaded", fixChiSiamoDisplay);
+setTimeout(fixChiSiamoDisplay, 500);
+setTimeout(fixChiSiamoDisplay, 1500);
+setTimeout(fixChiSiamoDisplay, 3000);
+</script>
 </body>
 </html>

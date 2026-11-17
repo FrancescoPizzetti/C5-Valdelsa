@@ -285,7 +285,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:#facc15;margin:0}
 <div class="row"><div><b>Logo 2 - Destra</b><br><span class="small" id="adminLogo2Text">Nessun logo</span></div><button class="big" type="button" style="width:auto;padding:8px 12px;margin:0" onclick="uploadHomeLogo(2)">📸 Carica Logo 2</button></div>
 <div class="row"><div><b>Azzerare</b></div><button class="del" type="button" onclick="clearHomeLogos()">Rimuovi Loghi</button></div>
 </div>
-<div class="card"><h2>🎨 Grafica</h2><p>Titolo</p><input id="sTitle"><p>Sottotitolo</p><input id="sSub"><p>Testo Chi Siamo</p><textarea id="fChiSiamo" rows="5" placeholder="Scrivi qui chi siete..."></textarea><<button class="big" type="button" onclick="salvaTestoChiSiamo()">SALVA TESTO CHI SIAMO</button><p>Foto Chi Siamo (link immagine)</p><input id="fChiSiamoFoto" placeholder="https://..."><button class="big" type="button" onclick="saveSettings()">SALVA FOTO</button></div>
+<div class="card"><h2>🎨 Grafica</h2><p>Titolo</p><input id="sTitle"><p>Sottotitolo</p><input id="sSub"><p>Testo Chi Siamo</p><textarea id="fChiSiamo" rows="5" placeholder="Scrivi qui chi siete..."></textarea><button class="big" type="button" onclick="salvaTestoChiSiamo()">SALVA TESTO CHI SIAMO</button><p>Foto Chi Siamo (link immagine)</p><input id="fChiSiamoFoto" placeholder="https://..."><button class="big" type="button" onclick="saveSettings()">SALVA FOTO</button></div>
 <div class="card"><h2>🏆 Aggiungi Competizione</h2><input id="fComp" placeholder="Es: Supercoppa"><button class="big" type="button" onclick="addComp()">Aggiungi Competizione</button><div id="compList"></div></div>
 </div>
 <div id="adminSec-sistema" style="display:none">
@@ -2949,6 +2949,58 @@ function salvaFotoChiSiamo(){
           if("fotoChiSiamo" in o) o.fotoChiSiamo = url;
           if("chiSiamoFoto" in o) o.chiSiamoFoto = url;
           localStorage.setItem(k, JSON.stringify(o));
+        }
+      }catch(e){}
+    });
+  }catch(e){}
+  alert("Foto Chi Siamo salvata!");
+}
+</script>
+<script>
+function salvaTestoChiSiamo(){
+  var ta = document.getElementById("fChiSiamo");
+  if(!ta){ alert("Non trovo fChiSiamo"); return; }
+  var testo = ta.value;
+  try{ localStorage.setItem("fChiSiamo", testo); }catch(e){}
+  try{ if(typeof saveSettings==="function") saveSettings(); }catch(e){}
+  try{
+    Object.keys(localStorage).forEach(function(k){
+      try{
+        var o = JSON.parse(localStorage.getItem(k));
+        if(o && typeof o==="object"){
+          var changed=false;
+          ["fChiSiamo","chiSiamo","about","aboutText","testoChiSiamo","chiSiamoTesto"].forEach(function(f){
+            if(f in o){ o[f]=testo; changed=true; }
+          });
+          if(!changed && ("title" in o || "sTitle" in o || "sub" in o || "sSub" in o)){
+            o.fChiSiamo=testo; o.chiSiamo=testo; changed=true;
+          }
+          if(changed) localStorage.setItem(k, JSON.stringify(o));
+        }
+      }catch(e){}
+    });
+  }catch(e){}
+  alert("Testo Chi Siamo salvato!");
+}
+function salvaFotoChiSiamo(){
+  var inp = document.getElementById("fChiSiamoFoto");
+  if(!inp){ alert("Non trovo fChiSiamoFoto"); return; }
+  var url = inp.value;
+  try{ localStorage.setItem("fChiSiamoFoto", url); }catch(e){}
+  try{ if(typeof saveSettings==="function") saveSettings(); }catch(e){}
+  try{
+    Object.keys(localStorage).forEach(function(k){
+      try{
+        var o = JSON.parse(localStorage.getItem(k));
+        if(o && typeof o==="object"){
+          var changed=false;
+          ["fChiSiamoFoto","chiSiamoFoto","fotoChiSiamo","aboutImg","aboutImage"].forEach(function(f){
+            if(f in o){ o[f]=url; changed=true; }
+          });
+          if(!changed && ("title" in o || "sTitle" in o)){
+            o.fChiSiamoFoto=url; changed=true;
+          }
+          if(changed) localStorage.setItem(k, JSON.stringify(o));
         }
       }catch(e){}
     });

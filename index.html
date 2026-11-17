@@ -2787,7 +2787,7 @@ el('alboIndAdminList').innerHTML=hai2;
 }if(el('playersList')){
 var hpl="";
 var ordineRuoli={"Mister":0,"Accompagnatore":1,"Giocatore":2,"Giocatori":2,"Portiere":2,"Portieri":2,"Difensore":2,"Difensori":2,"Laterale":2,"Laterali":2,"Attaccante":2,"Attaccanti":2,"Centrocampista":2,"Centrocampisti":2,"Presidente":99};
-players.sort(function(a,b){var da=(ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99),db=(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99);var d=da-db;if(d)return d;var ca=a.n.split(" ").slice(-1)[0],cb=b.n.split(" ").slice(-1)[0];return ca.localeCompare(cb);});
+players.sort(function(a,b){var da=(ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99),db=(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99);var d=da-db;if(d)return d;var ca=a.n,cb=b.n;return ca.localeCompare(cb);});
 if(el('fPlayerTeam')){el('fPlayerTeam').onchange=function(){render();};}
 var squadraFiltroAdmin=el('fPlayerTeam')?el('fPlayerTeam').value:"";
 for(var pi=0;pi<players.length;pi++){ if(squadraFiltroAdmin && players[pi].t!==squadraFiltroAdmin){continue;}

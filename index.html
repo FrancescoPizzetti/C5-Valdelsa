@@ -2034,6 +2034,22 @@ el('fPlayerGol').value="0";
 save();
 alert(n+" aggiunto!");
 }
+function editPlayer(i){
+  var p = players[i];
+  if(!p) return;
+  var nn = prompt("Nome giocatore:", p.n);
+  if(nn === null) return;
+  var rr = prompt("Ruolo:", p.r || "Giocatore");
+  if(rr === null) return;
+  var gg = prompt("Gol fatti (base, senza quelli delle partite):", p.base || 0);
+  if(gg === null) return;
+  p.n = nn.trim();
+  p.r = rr.trim();
+  p.base = parseInt(gg) || 0;
+  p.g = p.base;
+  save();
+  alert("Modificato!");
+}
 function transferPlayer(i){
 var sel=el('transferSel_'+i);
 if(!sel)return;

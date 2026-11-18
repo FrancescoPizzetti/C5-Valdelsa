@@ -1331,24 +1331,71 @@ function cambiaAbbinamentiSupercoppa(){
   if(m1.stato==="Giocata" || m2.stato==="Giocata"){
     if(!confirm("ATTENZIONE: una semifinale e gia giocata. Continuo?")) return;
   }
-  var scelta=prompt("CAMBIA ABBINAMENTI - Semifinali attuali:\n\nSEMIFINALE 1: "+m1.casa+" vs "+m1.tras+"\nSEMIFINALE 2: "+m2.casa+" vs "+m2.tras+"\n\nLe 4 squadre sono:\n1) "+m1.casa+"\n2) "+m1.tras+"\n3) "+m2.casa+"\n4) "+m2.tras+"\n\nScrivi 1 per SCAMBIARE le 2 squadre di Semifinale 2\nScrivi 2 per fare: 1 vs 3 e 2 vs 4\nScrivi 3 per fare: 1 vs 4 e 2 vs 3\nScrivi 4 per RIMESCOLARE a caso");
+  var attuali=[m1.casa, m1.tras, m2.casa, m2.tras];
+  var scelta=prompt("CAMBIA SUPERCOPPA - Semifinali attuali:\n\nSEMIFINALE 1: "+attuali[0]+" vs "+attuali[1]+"\nSEMIFINALE 2: "+attuali[2]+" vs "+attuali[3]+"\n\nCosa vuoi fare?\n\n1 = RIMESCOLARE le 4 (scambia / 1vs3 / 1vs4 / a caso)\n2 = SOSTITUISCI 1 SQUADRA con una iscritta a tua scelta\n3 = SOSTITUISCI 2 SQUADRE con 2 iscritte a tua scelta\n4 = ADMIN SCEGLIE ABBINAMENTI: scegli tu le 4 squadre e come si incontrano");
   if(scelta===null) return;
-  var a=m1.casa, b=m1.tras, c=m2.casa, d=m2.tras;
-  var n1="", n2="", n3="", n4="";
-  if(scelta==="1"){ n1=a; n2=b; n3=d; n4=c; }
-  else if(scelta==="2"){ n1=a; n2=c; n3=b; n4=d; }
-  else if(scelta==="3"){ n1=a; n2=d; n3=b; n4=c; }
+
+  // FUNZIONE PER SCEGLIERE UNA SQUADRA TRA LE ISCRITTE
+  function scegliSquadra(testo){
+    var nome = prompt(testo+"\n\nScrivi il NOME ESATTO come in classifica.\n\nSquadre iscritte:\n"+teamNames().join(", "));
+    if(nome===null) return null;
+    nome=nome.trim();
+    if(teamNames().indexOf(nome)===-1){ alert("Nome non trovato: "+nome); return null; }
+    return nome;
+  }
+
+  if(scelta==="1"){
+    var s2=prompt("RIMESCOLA - Come?\n\n1 = Scambia le 2 di Semifinale 2\n2 = 1 vs 3 e 2 vs 4\n3 = 1 vs 4 e 2 vs 3\n4 = A caso");
+    if(s2===null) return;
+    var a=attuali[0], b=attuali[1], c=attuali[2], d=attuali[3];
+    var n1="", n2="", n3="", n4="";
+    if(s2==="1"){ n1=a; n2=b; n3=d; n4=c; }
+    else if(s2==="2"){ n1=a; n2=c; n3=b; n4=d; }
+    else if(s2==="3"){ n1=a; n2=d; n3=b; n4=c; }
+    else if(s2==="4"){
+      var arr=[a,b,c,d];
+      for(var k=arr.length-1;k>0;k--){ var rr=Math.floor(Math.random()*(k+1)); var tt=arr[k]; arr[k]=arr[rr]; arr[rr]=tt; }
+      n1=arr[0]; n2=arr[1]; n3=arr[2]; n4=arr[3];
+    } else { alert("Scelta non valida"); return; }
+    if(!confirm("Nuovi abbinamenti:\n\nSEMIFINALE 1: "+n1+" vs "+n2+"\nSEMIFINALE 2: "+n3+" vs "+n4+"\n\nConfermi?")) return;
+    m1.casa=n1; m1.tras=n2; m2.casa=n3; m2.tras=n4;
+  }
+  else if(scelta==="2" || scelta==="3"){
+    var quante = (scelta==="2" ? 1 : 2);
+    var nuove = attuali.slice();
+    for(var q=0;q<quante;q++){
+      var pos = prompt("SOSTITUTA "+(q+1)+" di "+quante+"\n\nChi vuoi TOGLIERE?\nScrivi 1, 2, 3 o 4\n1) "+nuove[0]+"\n2) "+nuove[1]+"\n3) "+nuove[2]+"\n4) "+nuove[3]);
+      if(pos===null) return;
+      var pi=parseInt(pos)-1;
+      if(isNaN(pi)||pi<0||pi>3){ alert("Numero non valido"); return; }
+      var sost2 = scegliSquadra("SOSTITUTA per "+nuove[pi]+":\nChi vuoi METTERE al suo posto?");
+      if(!sost2) return;
+      if(nuove.indexOf(sost2)!==-1){ alert("Questa squadra e gia in Supercoppa."); return; }
+      nuove[pi]=sost2;
+    }
+    if(!confirm("Con le sostitute, le 4 diventano:\n\n1) "+nuove[0]+"\n2) "+nuove[1]+"\n3) "+nuove[2]+"\n4) "+nuove[3]+"\n\nLe lascio cosi divise?\nSEMIFINALE 1: "+nuove[0]+" vs "+nuove[1]+"\nSEMIFINALE 2: "+nuove[2]+" vs "+nuove[3]+"\n\nSe vuoi anche cambiare gli abbinamenti, dopo usa di nuovo opzione 4.")) return;
+    m1.casa=nuove[0]; m1.tras=nuove[1]; m2.casa=nuove[2]; m2.tras=nuove[3];
+  }
   else if(scelta==="4"){
-    var arr=[a,b,c,d];
-    for(var k=arr.length-1;k>0;k--){ var rr=Math.floor(Math.random()*(k+1)); var tt=arr[k]; arr[k]=arr[rr]; arr[rr]=tt; }
-    n1=arr[0]; n2=arr[1]; n3=arr[2]; n4=arr[3];
-  } else { alert("Scelta non valida"); return; }
-  if(!confirm("Nuovi abbinamenti:\n\nSEMIFINALE 1: "+n1+" vs "+n2+"\nSEMIFINALE 2: "+n3+" vs "+n4+"\n\nConfermi?")) return;
-  m1.casa=n1; m1.tras=n2;
-  m2.casa=n3; m2.tras=n4;
+    var t1 = scegliSquadra("ADMIN SCEGLIE ABBINAMENTI\n\nSEMIFINALE 1 - PRIMA squadra:");
+    if(!t1) return;
+    var t2 = scegliSquadra("SEMIFINALE 1 - SECONDA squadra (avversaria di "+t1+"):");
+    if(!t2) return;
+    if(t2===t1){ alert("Stessa squadra!"); return; }
+    var t3 = scegliSquadra("SEMIFINALE 2 - PRIMA squadra:");
+    if(!t3) return;
+    if(t3===t1||t3===t2){ alert("Questa squadra e gia usata!"); return; }
+    var t4 = scegliSquadra("SEMIFINALE 2 - SECONDA squadra (avversaria di "+t3+"):");
+    if(!t4) return;
+    if(t4===t1||t4===t2||t4===t3){ alert("Questa squadra e gia usata!"); return; }
+    if(!confirm("Nuovi abbinamenti scelti da te:\n\nSEMIFINALE 1: "+t1+" vs "+t2+"\nSEMIFINALE 2: "+t3+" vs "+t4+"\n\nConfermi?")) return;
+    m1.casa=t1; m1.tras=t2; m2.casa=t3; m2.tras=t4;
+  }
+  else { alert("Scelta non valida"); return; }
+
   save();
   render();
-  alert("Abbinamenti cambiati!");
+  alert("Supercoppa aggiornata!");
 }
 function generaTabelloneMitropa(){
   var cl=calc();

@@ -2469,7 +2469,7 @@ r+="<td><b>"+discVal(x[0])+"</b></td></tr>";
 return r;
 }
 function rowClassB(x,i){
-var r="<tr><td>"+(i+1)+"</td>";
+var pos=i+1;var clsB=pos<=8?'posVerde':'posViola';var r="<tr><td><div class='"+clsB+"'>"+pos+"</div></td>";
 r+="<td><div class='teamline'>"+logoHtml(x[0])+"<div class='teamName'>"+x[0]+"</div></div></td>";
 r+="<td><b>"+x[1].pti+"</b></td>";
 r+="<td>"+x[1].g+"</td>";

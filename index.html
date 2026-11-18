@@ -1500,7 +1500,6 @@ if(hashPw(pwB) !== settings.adminHash){
 alert("Password sbagliata! B1/B2 NON generate.");
 return;
 }
-alert("Password OK - vado avanti");
 var cl=calc();
 var clB=cl.filter(function(x){return teamLeague(x[0])==="Serie B";});
 if(clB.length!==16){

@@ -1248,6 +1248,89 @@ function generaTabelloneChampions(){
   if(!confirm("Genero Champions con "+n+" squadre?\n"+sq.join(", ")+"\nDopo puoi cambiare gli abbinamenti a mano in Admin.")) return;
   generaTabellone("Coppa Campioni", sq);
 }
+function generaTabelloneSupercoppa(){
+  function vincitoreDaAlbo(trofeo){
+    var best=null;
+    for(var i=0;i<teamTitles.length;i++){
+      if(teamTitles[i].trofeo===trofeo){
+        if(!best || teamTitles[i].anno > best.anno) best=teamTitles[i];
+      }
+    }
+    return best ? best.team : "";
+  }
+  var cl=calc();
+  var clA=cl.filter(function(x){return teamLeague(x[0])==="Serie A";});
+  var campA = clA.length ? clA[0][0] : vincitoreDaAlbo("Serie A");
+  var vincCampioni = coppaWinners("Coppa Campioni","Finale")[0] || vincitoreDaAlbo("Coppa Campioni");
+  var vincLega = coppaWinners("Coppa di Lega","Finale")[0] || vincitoreDaAlbo("Coppa di Lega");
+  var vincMitropa = coppaWinners("Coppa Mitropa","Finale")[0] || vincitoreDaAlbo("Mitropa Cup");
+  var sq=[campA, vincCampioni, vincLega, vincMitropa];
+  var nomi=["Campione Serie A","Vincitrice Coppa Campioni","Vincitrice Coppa di Lega","Vincitrice Mitropa"];
+  var manca="";
+  for(var i=0;i<sq.length;i++){ if(!sq[i]) manca+=nomi[i]+" MANCANTE\n"; }
+  if(manca){ alert("Non posso generare la Supercoppa:\n"+manca+"\nFinisci prima le 4 finali, o chiudi la stagione cosi finiscono nell'Albo d'oro."); return; }
+  var uniche=[];
+  for(var j=0;j<sq.length;j++){ if(uniche.indexOf(sq[j])===-1) uniche.push(sq[j]); }
+  if(uniche.length<4){ alert("ATTENZIONE: una squadra ha vinto 2 trofei:\n"+sq.join(", ")+"\nDopo aver generato, usa CAMBIA ABBINAMENTI per mettere la sostituta a mano."); return; }
+  for(var k=0;k<coppaMatches.length;k++){
+    if(coppaMatches[k].coppa==="Supercoppa"){ alert("Supercoppa gia generata! Usa CAMBIA ABBINAMENTI per cambiare le semifinali."); return; }
+  }
+  var scelta = prompt("SUPERCOPPA - Come vuoi gli abbinamenti?\n\nLe 4 squadre sono:\n1) "+sq[0]+" (Serie A)\n2) "+sq[1]+" (Coppa Campioni)\n3) "+sq[2]+" (Coppa di Lega)\n4) "+sq[3]+" (Mitropa)\n\nScrivi:\n1 = ESTRAZIONE AUTOMATICA a caso\n2 = SCELGO IO gli abbinamenti");
+  if(scelta===null) return;
+  if(scelta!=="2") scelta="1";
+  var mescolate=[];
+  if(scelta==="1"){
+    mescolate=sq.slice();
+    for(var m=mescolate.length-1;m>0;m--){
+      var r=Math.floor(Math.random()*(m+1));
+      var tmp=mescolate[m]; mescolate[m]=mescolate[r]; mescolate[r]=tmp;
+    }
+  } else {
+    var s1 = prompt("SEMIFINALE 1 - Scegli la PRIMA squadra:\nScrivi 1, 2, 3 o 4\n1) "+sq[0]+"\n2) "+sq[1]+"\n3) "+sq[2]+"\n4) "+sq[3]);
+    if(s1===null) return;
+    var i1=parseInt(s1)-1;
+    if(isNaN(i1)||i1<0||i1>3){ alert("Numero non valido"); return; }
+    var s2 = prompt("SEMIFINALE 1 - Scegli la SECONDA squadra (avversaria di "+sq[i1]+"):\nScrivi 1, 2, 3 o 4\n1) "+sq[0]+"\n2) "+sq[1]+"\n3) "+sq[2]+"\n4) "+sq[3]);
+    if(s2===null) return;
+    var i2=parseInt(s2)-1;
+    if(isNaN(i2)||i2<0||i2>3||i2===i1){ alert("Numero non valido o stessa squadra"); return; }
+    var rest=[];
+    for(var x=0;x<4;x++){ if(x!==i1 && x!==i2) rest.push(sq[x]); }
+    mescolate=[sq[i1], sq[i2], rest[0], rest[1]];
+  }
+  if(!confirm("Genero SUPERCOPPA:\n\nSEMIFINALE 1: "+mescolate[0]+" vs "+mescolate[1]+"\nSEMIFINALE 2: "+mescolate[2]+" vs "+mescolate[3]+"\n\nPoi Finale 1-2 posto tra le vincenti.")) return;
+  generaTabellone("Supercoppa", mescolate);
+}
+function cambiaAbbinamentiSupercoppa(){
+  var semi=[];
+  for(var i=0;i<coppaMatches.length;i++){
+    if(coppaMatches[i].coppa==="Supercoppa" && coppaMatches[i].fase==="Semifinale") semi.push(i);
+  }
+  if(semi.length!==2){ alert("Prima genera la Supercoppa! Non trovo 2 semifinali."); return; }
+  var m1=coppaMatches[semi[0]];
+  var m2=coppaMatches[semi[1]];
+  if(m1.stato==="Giocata" || m2.stato==="Giocata"){
+    if(!confirm("ATTENZIONE: una semifinale e gia giocata. Continuo?")) return;
+  }
+  var scelta=prompt("CAMBIA ABBINAMENTI - Semifinali attuali:\n\nSEMIFINALE 1: "+m1.casa+" vs "+m1.tras+"\nSEMIFINALE 2: "+m2.casa+" vs "+m2.tras+"\n\nLe 4 squadre sono:\n1) "+m1.casa+"\n2) "+m1.tras+"\n3) "+m2.casa+"\n4) "+m2.tras+"\n\nScrivi 1 per SCAMBIARE le 2 squadre di Semifinale 2\nScrivi 2 per fare: 1 vs 3 e 2 vs 4\nScrivi 3 per fare: 1 vs 4 e 2 vs 3\nScrivi 4 per RIMESCOLARE a caso");
+  if(scelta===null) return;
+  var a=m1.casa, b=m1.tras, c=m2.casa, d=m2.tras;
+  var n1="", n2="", n3="", n4="";
+  if(scelta==="1"){ n1=a; n2=b; n3=d; n4=c; }
+  else if(scelta==="2"){ n1=a; n2=c; n3=b; n4=d; }
+  else if(scelta==="3"){ n1=a; n2=d; n3=b; n4=c; }
+  else if(scelta==="4"){
+    var arr=[a,b,c,d];
+    for(var k=arr.length-1;k>0;k--){ var rr=Math.floor(Math.random()*(k+1)); var tt=arr[k]; arr[k]=arr[rr]; arr[rr]=tt; }
+    n1=arr[0]; n2=arr[1]; n3=arr[2]; n4=arr[3];
+  } else { alert("Scelta non valida"); return; }
+  if(!confirm("Nuovi abbinamenti:\n\nSEMIFINALE 1: "+n1+" vs "+n2+"\nSEMIFINALE 2: "+n3+" vs "+n4+"\n\nConfermi?")) return;
+  m1.casa=n1; m1.tras=n2;
+  m2.casa=n3; m2.tras=n4;
+  save();
+  render();
+  alert("Abbinamenti cambiati!");
+}
 function generaTabelloneMitropa(){
   var cl=calc();
   var clA=cl.filter(function(x){return teamLeague(x[0])==="Serie A";});

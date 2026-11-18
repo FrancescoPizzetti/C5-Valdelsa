@@ -1501,7 +1501,11 @@ for(var q=0;q<matches.length;q++){
 if((matches[q].fase||"")==="Serie B1")gia=true;
 }
 if(gia){alert("B1/B2 già generate!");return;}
-if(!confirm("Genero B1/B2? Prime 8 in B1, altre 8 in B2."))return;
+var bonus1 = clB[0][1].pti - clB[1][1].pti;
+var bonus2 = clB[8][1].pti - clB[9][1].pti;
+if(!confirm("Genero B1/B2?\n\nPrime 8 in B1, altre 8 in B2.\n\nBONUS:\n1a di B1: "+clB[0][0]+" parte con "+bonus1+" punti (distacco sulla 2a)\n1a di B2: "+clB[8][0]+" parte con "+bonus2+" punti (distacco sulla 2a di B2)\nTutte le altre partono da 0.\n\nDisciplina: si trasportano i punti residui dalla B.\n\nConfermi?"))return;
+bonusB1={team:clB[0][0],pti:bonus1};
+bonusB2={team:clB[8][0],pti:bonus2};
 primaFaseB={};
 for(var i=0;i<clB.length;i++){primaFaseB[clB[i][0]]=i+1;}
 var gB1=clB.slice(0,8).map(function(x){return x[0];});

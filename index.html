@@ -1272,7 +1272,25 @@ function generaTabelloneSupercoppa(){
   if(manca){ alert("Non posso generare la Supercoppa:\n"+manca+"\nFinisci prima le 4 finali, o chiudi la stagione cosi finiscono nell'Albo d'oro."); return; }
   var uniche=[];
   for(var j=0;j<sq.length;j++){ if(uniche.indexOf(sq[j])===-1) uniche.push(sq[j]); }
-  if(uniche.length<4){ alert("ATTENZIONE: una squadra ha vinto 2 trofei:\n"+sq.join(", ")+"\nDopo aver generato, usa CAMBIA ABBINAMENTI per mettere la sostituta a mano."); return; }
+    // SE UNA SQUADRA HA VINTO 2-3 TROFEI -> ADMIN SCEGLIE 1 O 2 SOSTITUTE
+  if(uniche.length<4){
+    var finali=[];
+    for(var j2=0;j2<sq.length;j2++){
+      if(finali.indexOf(sq[j2])===-1){
+        finali.push(sq[j2]);
+      } else {
+        // duplicato: questa squadra ha gia un posto, serve una sostituta
+        var sost = prompt("DOPPIO TROFEO!\n\n"+sq[j2]+" ha vinto piu di un trofeo e occupa gia un posto.\nServe una SOSTITUTA per il posto di: "+nomi[j2]+"\n\nScrivi il NOME ESATTO della squadra sostituta come in classifica.\nEs: Bar Colle\n\nSquadre iscritte:\n"+teamNames().join(", "));
+        if(sost===null) return;
+        sost=sost.trim();
+        if(!sost || teamNames().indexOf(sost)===-1){ alert("Nome non trovato tra le iscritte. Riprova."); return; }
+        if(finali.indexOf(sost)!==-1){ alert("Questa squadra e gia in Supercoppa. Scegli un'altra."); return; }
+        finali.push(sost);
+      }
+    }
+    sq=finali;
+    if(!confirm("Con le sostitute, la Supercoppa sara:\n\n1) "+sq[0]+"\n2) "+sq[1]+"\n3) "+sq[2]+"\n4) "+sq[3]+"\n\nContinuo con gli abbinamenti?")) return;
+  }
   for(var k=0;k<coppaMatches.length;k++){
     if(coppaMatches[k].coppa==="Supercoppa"){ alert("Supercoppa gia generata! Usa CAMBIA ABBINAMENTI per cambiare le semifinali."); return; }
   }

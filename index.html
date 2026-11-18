@@ -2260,6 +2260,11 @@ t[names[i]]={pti:0,g:0,v:0,n:0,p:0,gf:0,gs:0};
 for(var j=0;j<matches.length;j++){
 var m=matches[j];
 if(m.stato!=="Giocata")continue;
+// DOPO LO SPLIT: le partite di B non contano piu in B1/B2.
+// Conto solo le partite della lega attuale della squadra.
+if(m.fase==="Serie A"||m.fase==="Serie B"||m.fase==="Serie B1"||m.fase==="Serie B2"){
+  if(teamLeague(m.casa)!==m.fase) continue;
+}
 if(m.golC===""||m.golC===undefined)continue;
 var a=parseInt(m.golC);
 var b=parseInt(m.golT);

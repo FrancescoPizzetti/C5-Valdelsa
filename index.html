@@ -1494,6 +1494,9 @@ if(typeof render==="function")render();
 window.scrollTo(0,0);
 }
 function generaSecondaFaseB(){
+var pwB = prompt("BLOCCO SICUREZZA - Per generare B1/B2 inserisci la PASSWORD ADMIN:");
+if(pwB === null) return;
+if(pwB !== adminPw){ alert("Password sbagliata! B1/B2 NON generate."); return; }
 var cl=calc();
 var clB=cl.filter(function(x){return teamLeague(x[0])==="Serie B";});
 if(clB.length!==16){

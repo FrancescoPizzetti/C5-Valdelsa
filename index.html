@@ -2260,6 +2260,8 @@ var names=teamNames();
 for(var i=0;i<names.length;i++){
 t[names[i]]={pti:0,g:0,v:0,n:0,p:0,gf:0,gs:0};
 }
+// BONUS B1 - solo la 1a di B1 parte col bonus, B2 tutte a 0
+if(bonusB1&&bonusB1.team&&t[bonusB1.team])t[bonusB1.team].pti+=bonusB1.pti;
 for(var j=0;j<matches.length;j++){
 var m=matches[j];
 if(m.stato!=="Giocata")continue;

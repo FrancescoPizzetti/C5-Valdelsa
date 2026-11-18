@@ -2040,19 +2040,30 @@ el('fPlayerGol').value="0";
 save();
 alert(n+" aggiunto!");
 }
+let giocatoreDaModificare = null;
+
 function editPlayer(i){
+  giocatoreDaModificare = i;
   var p = players[i];
   if(!p) return;
-  var nn = prompt("Nome giocatore:", p.n);
-  if(nn === null) return;
-  var rr = prompt("Ruolo:", p.r || "Giocatore");
-  if(rr === null) return;
-  var gg = prompt("Gol fatti (base, senza quelli delle partite):", p.base || 0);
-  if(gg === null) return;
-  p.n = nn.trim();
-  p.r = rr.trim();
-  p.base = parseInt(gg) || 0;
+  document.getElementById('modNome').value = p.n || '';
+  document.getElementById('modRuolo').value = p.r || 'Giocatore';
+  document.getElementById('modGol').value = p.base || 0;
+  document.getElementById('modalModifica').style.display = 'flex';
+}
+
+function chiudiModifica(){
+  document.getElementById('modalModifica').style.display = 'none';
+}
+
+function salvaModifica(){
+  var p = players[giocatoreDaModificare];
+  if(!p) return;
+  p.n = document.getElementById('modNome').value.trim();
+  p.r = document.getElementById('modRuolo').value;
+  p.base = parseInt(document.getElementById('modGol').value) || 0;
   p.g = p.base;
+  chiudiModifica();
   save();
   alert("Modificato!");
 }

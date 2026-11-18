@@ -3126,5 +3126,29 @@ try{
   };
 }catch(e){}
 </script>
+<div id="modalModifica" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#111; border:2px solid #d4af37; border-radius:16px; padding:20px; width:90%; max-width:400px; color:white;">
+    <h3 style="color:#d4af37; margin-top:0;">Modifica giocatore</h3>
+
+    <label>Nome giocatore</label>
+    <input id="modNome" type="text" style="width:100%; padding:10px; margin:6px 0 14px; border-radius:8px; border:1px solid #444; background:#222; color:white;">
+
+    <label>Ruolo</label>
+    <select id="modRuolo" style="width:100%; padding:10px; margin:6px 0 14px; border-radius:8px; border:1px solid #444; background:#222; color:white;">
+      <option>Presidente</option>
+      <option>Mister</option>
+      <option>Accompagnatore</option>
+      <option>Giocatore</option>
+    </select>
+
+    <label>Gol fatti (base, senza quelli delle partite)</label>
+    <input id="modGol" type="number" style="width:100%; padding:10px; margin:6px 0 18px; border-radius:8px; border:1px solid #444; background:#222; color:white;">
+
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button onclick="chiudiModifica()" style="padding:10px 16px; border-radius:8px; background:#444; color:white; border:none;">Annulla</button>
+      <button onclick="salvaModifica()" style="padding:10px 16px; border-radius:8px; background:#d4af37; color:black; font-weight:bold; border:none;">Salva</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

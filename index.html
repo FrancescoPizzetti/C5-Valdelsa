@@ -3041,5 +3041,87 @@ document.addEventListener("DOMContentLoaded", function(){
   setTimeout(fixChiSiamoVero, 5000);
 });
 </script>
+<script>
+// Albo d'oro - Altra squadra a mano
+function initAltraSquadraAlbo(){
+  try{
+    var selects = document.querySelectorAll('select');
+    selects.forEach(function(sel){
+      // Solo i menù che contengono squadre (hanno Atl. Madrink o simili) e non l'hanno già
+      var txt = sel.innerHTML;
+      if(sel.dataset.altraSquadra) return;
+      if(txt.indexOf('Madrink')===-1 && txt.indexOf('Atl.')===-1) return;
+      // Se è il menù Trofeo / Anno, non toccarlo - lo capiamo dalle opzioni: deve avere più di 2 squadre
+      if(sel.options.length < 2) return;
+
+      sel.dataset.altraSquadra = "1";
+
+      // Aggiungi opzione Altra
+      var opt = document.createElement('option');
+      opt.value = '__ALTRA__';
+      opt.textContent = '✏️ Altra squadra - scrivi a mano...';
+      sel.appendChild(opt);
+
+      // Crea casella nascosta
+      var inp = document.createElement('input');
+      inp.type = 'text';
+      inp.placeholder = 'Scrivi nome squadra a mano - Es: Real Colle 2018';
+      inp.style.display = 'none';
+      inp.style.width = '100%';
+      inp.style.marginTop = '8px';
+      inp.style.padding = '12px';
+      inp.style.borderRadius = '12px';
+      inp.style.background = '#000';
+      inp.style.color = '#fff';
+      inp.style.border = '1px solid #333';
+      inp.className = 'altra-squadra-input';
+      sel.parentNode.insertBefore(inp, sel.nextSibling);
+
+      // Quando scrivi, crea un'opzione con quel nome e selezionala
+      // Così la funzione originale Assegna lo legge come se fosse nel menù
+      var optManuale = null;
+      inp.addEventListener('input', function(){
+        var v = inp.value.trim();
+        if(!optManuale){
+          optManuale = document.createElement('option');
+          optManuale.value = '__MANUALE__';
+          sel.appendChild(optManuale);
+        }
+        optManuale.value = v;
+        optManuale.textContent = v;
+        sel.value = v;
+        // Trucco: mettiamo il valore anche come attributo per le funzioni che leggono text
+        sel.dataset.squadraManuale = v;
+      });
+
+      sel.addEventListener('change', function(){
+        if(sel.value === '__ALTRA__'){
+          inp.style.display = 'block';
+          inp.focus();
+        } else {
+          inp.style.display = 'none';
+          inp.value = '';
+          sel.dataset.squadraManuale = '';
+        }
+      });
+    });
+  }catch(e){ console.log(e); }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  initAltraSquadraAlbo();
+  setTimeout(initAltraSquadraAlbo, 1000);
+  setTimeout(initAltraSquadraAlbo, 2500);
+});
+
+// Se le squadre si ricaricano da Firebase, riprova quando cambia pagina
+try{
+  var _oldShow = window.show;
+  window.show = function(id){
+    try{ if(_oldShow) _oldShow(id); }catch(e){}
+    setTimeout(initAltraSquadraAlbo, 300);
+  };
+}catch(e){}
+</script>
 </body>
 </html>

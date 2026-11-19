@@ -3638,11 +3638,7 @@ function nascondiFaseForte(){
       if(sel.parentElement) sel.parentElement.style.display="none";
       // Nasconde anche la label prima di lui
   </script>
-  <div class="card" style="border:2px solid #facc15">
-<p class="small">Coppa Campioni - Nuovo: crea 2 Quarti + 2 Semifinali + Finale vuoti. Poi li compili tu in Calendario Coppe.</p>
-<button class="big" type="button" style="background:#facc15;color:#000" onclick="generaCampioniNuovo()">🏆 GENERA COPPA CAMPIONI - NUOVO</button>
-</div>
-<script>
+  <script>
 function _nuovaPartitaCoppa(coppa,fase){
   var o = {};
   o.coppa = coppa;
@@ -3667,6 +3663,27 @@ function generaCampioniNuovo(){
   save();
   alert("Coppa Campioni generata. Vai in Calendario Coppe e compila Casa / Trasferta.");
 }
-</script>
+function _mettiBottoneCampioni(){
+  if(document.getElementById("btnCampioniNuovo")) return;
+  var tutti = document.querySelectorAll("button");
+  for(var i=0;i<tutti.length;i++){
+    if(tutti[i].textContent.indexOf("GENERA COPPA DI LEGA")!==-1){
+      var b = document.createElement("button");
+      b.id = "btnCampioniNuovo";
+      b.className = "big";
+      b.type = "button";
+      b.style.background = "#facc15";
+      b.style.color = "#000";
+      b.style.marginTop = "10px";
+      b.textContent = "🏆 GENERA COPPA CAMPIONI - NUOVO";
+      b.onclick = generaCampioniNuovo;
+      tutti[i].parentNode.insertBefore(b, tutti[i].nextSibling);
+      return;
+    }
+  }
+}
+setTimeout(_mettiBottoneCampioni, 800);
+setInterval(_mettiBottoneCampioni, 2000);
+  </script>
 </body>
 </html>

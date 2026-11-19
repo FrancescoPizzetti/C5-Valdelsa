@@ -1797,58 +1797,59 @@ giorni.push("Venerdì");
 giorni.push("Sabato");
 var dt=new Date(p[0],parseInt(p[1])-1,parseInt(p[2]));
 return giorni[dt.getDay()]+" "+p[2]+"/"+p[1]+"/"+p[0];
-  }async function load(){
-try{
-var r=await fetch(DB);
-var d=await r.json();
-if(d){
-if(d.teams){var raw=d.teams;var arr=Array.isArray(raw)?raw:Object.values(raw);var ft=arr.filter(function(x){return x&&x.n;});if(ft.length>0)teams=ft;}
-if(d.matches)matches=d.matches;
-if(d.coppaMatches)coppaMatches=d.coppaMatches;
-if(d.teamTitles)teamTitles=d.teamTitles;
-if(d.indTitles)indTitles=d.indTitles;
-if(d.players)players=d.players;
-if(d.contacts&&d.contacts.length)contacts=d.contacts;
-if(d.comps)comps=d.comps;
-if(d.disciplina){
-if(Array.isArray(d.disciplina)){
-disciplina={};
-for(var di=0;di<d.disciplina.length;di++){
-if(d.disciplina[di]&&d.disciplina[di].n!==undefined)disciplina[d.disciplina[di].n]=d.disciplina[di].d;
+function toArr(v){
+  if(!v) return [];
+  if(Array.isArray(v)) return v.filter(function(x){ return x!=null; });
+  return Object.values(v).filter(function(x){ return x!=null; });
 }
-}else{disciplina=d.disciplina;}
-}
-if(d.primaFaseB)primaFaseB=d.primaFaseB;
-if(d.bonusB1)bonusB1=d.bonusB1;
-if(d.bonusB2)bonusB2=d.bonusB2;
-if(d.settings)settings=Object.assign(settings,d.settings);
-if(d.storico)storico=d.storico;
-}
-}catch(e){}
-try{
-var bak=localStorage.getItem('c5_backup_matches');
-if(bak){
-var bm=JSON.parse(bak);
-if(bm&&bm.length>0&&matches.length===0){matches=bm;}
-}
-}catch(e){}
-for(var mi=0;mi<matches.length;mi++){
-if(!matches[mi].scorers)matches[mi].scorers=[];
-}
-fixTeams();
-try{
-var hLocal=localStorage.getItem('c5_adminHash');
-if(hLocal)settings.adminHash=parseInt(hLocal);
-}catch(e){}
-if(!disciplina||Object.keys(disciplina).length===0){
-var nn=teamNames();
-for(var i=0;i<nn.length;i++){
-if(disciplina[nn[i]]===undefined)disciplina[nn[i]]=50;
-}
-}
-fillYears();
-applySettings();
-render();
+async function load(){
+  try{
+    var r = await fetch(DB);
+    var d = await r.json();
+    if(d){
+      if(d.teams){ var ft = toArr(d.teams).filter(function(x){ return x && x.n; }); if(ft.length>0) teams = ft; }
+      if(d.matches) matches = toArr(d.matches);
+      if(d.coppaMatches) coppaMatches = toArr(d.coppaMatches);
+      if(d.teamTitles) teamTitles = toArr(d.teamTitles);
+      if(d.indTitles) indTitles = toArr(d.indTitles);
+      if(d.players) players = toArr(d.players);
+      if(d.contacts && toArr(d.contacts).length) contacts = toArr(d.contacts);
+      if(d.comps) comps = toArr(d.comps);
+      if(d.disciplina){
+        if(Array.isArray(d.disciplina)){
+          disciplina = {};
+          for(var di=0;di<d.disciplina.length;di++){
+            if(d.disciplina[di] && d.disciplina[di].n!==undefined) disciplina[d.disciplina[di].n]=d.disciplina[di].d;
+          }
+        } else { disciplina = d.disciplina; }
+      }
+      if(d.primaFaseB) primaFaseB = d.primaFaseB;
+      if(d.bonusB1) bonusB1 = d.bonusB1;
+      if(d.bonusB2) bonusB2 = d.bonusB2;
+      if(d.settings) settings = Object.assign(settings, d.settings);
+      if(d.storico) storico = toArr(d.storico);
+    }
+  }catch(e){}
+  try{
+    var bak = localStorage.getItem('c5_backup_matches');
+    if(bak){
+      var bm = JSON.parse(bak);
+      if(bm && bm.length>0 && matches.length===0){ matches = bm; }
+    }
+  }catch(e){}
+  for(var mi=0;mi<matches.length;mi++){ if(!matches[mi].scorers) matches[mi].scorers=[]; }
+  fixTeams();
+  try{
+    var hLocal = localStorage.getItem('c5_adminHash');
+    if(hLocal) settings.adminHash = parseInt(hLocal);
+  }catch(e){}
+  if(!disciplina || Object.keys(disciplina).length===0){
+    var nn = teamNames();
+    for(var i=0;i<nn.length;i++){ if(disciplina[nn[i]]===undefined) disciplina[nn[i]]=50; }
+  }
+  fillYears();
+  applySettings();
+  render();
 }
 async function save(){
 try{

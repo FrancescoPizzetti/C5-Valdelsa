@@ -3509,5 +3509,107 @@ saveCoppaMatch = function(){
   _vecchiaSaveCoppa();
 };
 </script>
+  <script>
+// ADD-ON - Nasconde Turno/Fase + Mitropa/Campioni/Conference/Playoff/Playout
+function nascondiFaseCoppe(){
+  var ids=["fCoppaFase","fCoppaTurno","fFaseCoppa","fTurnoCoppa"];
+  ids.forEach(function(id){
+    var e=document.getElementById(id); if(!e) return;
+    e.style.display="none";
+    var p=e.parentElement; if(p) p.style.display="none";
+    var lab=document.querySelector('label[for="'+id+'"]'); if(lab) lab.style.display="none";
+  });
+  document.querySelectorAll("label, p, div, span").forEach(function(l){
+    if(l.textContent && l.textContent.trim().toUpperCase()==="TURNO / FASE"){ l.style.display="none"; if(l.nextElementSibling) l.nextElementSibling.style.display="none"; }
+  });
+}
+setInterval(nascondiFaseCoppe, 800);
+
+// Calendario Coppe = solo Data/Ora/Luogo, per TUTTE le coppe
+var _saveCoppaVecchia2 = saveCoppaMatch;
+saveCoppaMatch = function(){
+  var coppa = el('fCoppa') ? el('fCoppa').value : "";
+  var elenco = ["Coppa Campioni","Mitropa Cup","Coppa Mitropa","Conference","Coppa Conference","Playoff","Playoff B","Playout","Playout A","Supercoppa"];
+  var isNuova = elenco.indexOf(coppa) !== -1;
+  if(!isNuova){ _saveCoppaVecchia2(); return; }
+  var _casa=el('fCoppaCasa').value;
+  var _tras=el('fCoppaTras').value;
+  var _data=el('fCoppaData').value;
+  var _ora=el('fCoppaOra').value;
+  var _luogo=(el('fCoppaLuogo')?el('fCoppaLuogo').value:"");
+  var _trovata=false;
+  for(var k=0;k<coppaMatches.length;k++){
+    var cm=coppaMatches[k];
+    var stessa=(cm.coppa===coppa || (coppa==="Mitropa Cup"&&cm.coppa==="Coppa Mitropa") || (coppa==="Coppa Mitropa"&&cm.coppa==="Mitropa Cup"));
+    if(stessa && cm.casa===_casa && cm.tras===_tras){ cm.data=_data; cm.ora=_ora; cm.luogo=_luogo; _trovata=true; }
+  }
+  if(!_trovata){ alert("Questa partita non c'è nel tabellone.\nControlla Casa e Trasferta.\nPrima generalo in Admin."); return; }
+  save();
+  alert("Calendario aggiornato nel tabellone!\n"+_casa+" vs "+_tras+" - "+_data+" "+_ora+" - "+_luogo);
+};
+
+function _classificaPerLega(liga){
+  try{ return calc().filter(function(x){ return teamLeague(x[0])===liga; }).map(function(x){ return x[0]; }); }catch(e){ return []; }
+}
+function _creaPartitaCoppa(coppa,fase,casa,tras){
+  coppaMatches.push({coppa:coppa,fase:fase,casa:casa,tras:tras,data:"",[STRIPPED] giocare"});
+}
+function generaCampioniNuovo(){
+  var clA=_classificaPerLega("Serie A");
+  var bye1=clA[0]||"", bye2=clA[1]||"";
+  if(!confirm("Genero COPPA CAMPIONI?\nBYE: "+bye1+" (1a) e "+bye2+" (2a)\nLe altre 4 fanno i Quarti.")) return;
+  coppaMatches=coppaMatches.filter(function(m){ return m.coppa!=="Coppa Campioni"; });
+  _creaPartitaCoppa("Coppa Campioni","Quarti","","");
+  _creaPartitaCoppa("Coppa Campioni","Quarti","","");
+  _creaPartitaCoppa("Coppa Campioni","Semifinale","Vinc. Quarto 1",bye1);
+  _creaPartitaCoppa("Coppa Campioni","Semifinale","Vinc. Quarto 2",bye2);
+  _creaPartitaCoppa("Coppa Campioni","Finale","Vinc. Semifinale 1","Vinc. Semifinale 2");
+  save(); alert("Coppa Campioni generata.");
+}
+function generaMitropaNuovo(){
+  var clA=_classificaPerLega("Serie A");
+  var bye1=clA[6]||"", bye2=clA[7]||"";
+  if(!confirm("Genero MITROPA?\nBYE: "+bye1+" (7a) e "+bye2+" (8a)")) return;
+  coppaMatches=coppaMatches.filter(function(m){ return m.coppa!=="Coppa Mitropa" && m.coppa!=="Mitropa Cup"; });
+  _creaPartitaCoppa("Coppa Mitropa","Quarti","","");
+  _creaPartitaCoppa("Coppa Mitropa","Quarti","","");
+  _creaPartitaCoppa("Coppa Mitropa","Semifinale","Vinc. Quarto 1",bye1);
+  _creaPartitaCoppa("Coppa Mitropa","Semifinale","Vinc. Quarto 2",bye2);
+  _creaPartitaCoppa("Coppa Mitropa","Finale","Vinc. Semifinale 1","Vinc. Semifinale 2");
+  save(); alert("Mitropa generata. BYE: "+bye1+" e "+bye2);
+}
+function generaConferenceNuovo(){
+  var clB2=_classificaPerLega("Serie B2");
+  if(clB2.length<4){ try{ clB2=_classificaPerLega("Serie B"); }catch(e){} }
+  var bye1=clB2[2]||"", bye2=clB2[3]||"";
+  if(!confirm("Genero CONFERENCE?\nBYE: "+bye1+" (3a B2) e "+bye2+" (4a B2)")) return;
+  coppaMatches=coppaMatches.filter(function(m){ return m.coppa!=="Conference" && m.coppa!=="Coppa Conference"; });
+  _creaPartitaCoppa("Conference","Quarti","","");
+  _creaPartitaCoppa("Conference","Quarti","","");
+  _creaPartitaCoppa("Conference","Semifinale","Vinc. Quarto 1",bye1);
+  _creaPartitaCoppa("Conference","Semifinale","Vinc. Quarto 2",bye2);
+  _creaPartitaCoppa("Conference","Finale","Vinc. Semifinale 1","Vinc. Semifinale 2");
+  save(); alert("Conference generata.");
+}
+function generaPlayoffNuovo(){
+  if(!confirm("Genero PLAYOFF a 8?\n3a-8a B1 + 1a-2a B2\nTutto editabile da te.")) return;
+  coppaMatches=coppaMatches.filter(function(m){ return m.coppa!=="Playoff" && m.coppa!=="Playoff B"; });
+  for(var i=0;i<4;i++) _creaPartitaCoppa("Playoff","Quarti","","");
+  _creaPartitaCoppa("Playoff","Semifinale","Vinc. Quarto 1","Vinc. Quarto 2");
+  _creaPartitaCoppa("Playoff","Semifinale","Vinc. Quarto 3","Vinc. Quarto 4");
+  _creaPartitaCoppa("Playoff","Finale","Vinc. Semifinale 1","Vinc. Semifinale 2");
+  save(); alert("Playoff generato.");
+}
+function generaPlayoutNuovo(){
+  var clA=_classificaPerLega("Serie A");
+  var s11=clA[10]||"", s12=clA[11]||"", s13=clA[12]||"", s14=clA[13]||"";
+  if(!confirm("Genero PLAYOUT?\n11a vs 14a: "+s11+" vs "+s14+"\n12a vs 13a: "+s12+" vs "+s13+"\nChi perde va in B. Vincitrici in finale, perdente finale va in B.")) return;
+  coppaMatches=coppaMatches.filter(function(m){ return m.coppa!=="Playout" && m.coppa!=="Playout A"; });
+  _creaPartitaCoppa("Playout","Semifinale",s11,s14);
+  _creaPartitaCoppa("Playout","Semifinale",s12,s13);
+  _creaPartitaCoppa("Playout","Finale","Vinc. Semifinale 1","Vinc. Semifinale 2");
+  save(); alert("Playout generato.");
+}
+</script>
 </body>
 </html>

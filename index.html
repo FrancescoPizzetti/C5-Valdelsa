@@ -1802,7 +1802,7 @@ try{
 var r=await fetch(DB);
 var d=await r.json();
 if(d){
-if(d.teams&&Array.isArray(d.teams)){var ft=d.teams.filter(function(x){return x&&x.n;});if(ft.length>0)teams=ft;}
+if(d.teams){var raw=d.teams;var arr=Array.isArray(raw)?raw:Object.values(raw);var ft=arr.filter(function(x){return x&&x.n;});if(ft.length>0)teams=ft;}
 if(d.matches)matches=d.matches;
 if(d.coppaMatches)coppaMatches=d.coppaMatches;
 if(d.teamTitles)teamTitles=d.teamTitles;

@@ -3611,5 +3611,37 @@ function generaPlayoutNuovo(){
   save(); alert("Playout generato.");
 }
 </script>
+  <script>
+// FIX FORTE - Nasconde Turno/Fase anche se si chiama diverso
+function nascondiFaseForte(){
+  // 1) Nasconde per ID, tutti i nomi possibili
+  ["fCoppaFase","fCoppaTurno","fFaseCoppa","fTurnoCoppa","coppaFase","coppaTurno","faseCoppa"].forEach(function(id){
+    var e=document.getElementById(id);
+    if(e){ e.style.display="none"; if(e.parentElement) e.parentElement.style.display="none"; }
+  });
+  // 2) Nasconde qualsiasi select che ha "Sedicesimi" dentro le opzioni
+  document.querySelectorAll("select").forEach(function(sel){
+    var txt=sel.textContent||"";
+    if(txt.indexOf("Sedicesimi")!==-1 || txt.indexOf("Quarti")!==-1 && txt.indexOf("Turno")!==-1){
+      sel.style.display="none";
+      if(sel.parentElement) sel.parentElement.style.display="none";
+      // Nasconde anche la label prima di lui
+      var prev=sel.previousElementSibling;
+      if(prev) prev.style.display="none";
+    }
+  });
+  // 3) Nasconde qualsiasi riga che contiene la scritta TURNO o FASE
+  document.querySelectorAll("label, p, div, span").forEach(function(l){
+    var t=(l.textContent||"").toUpperCase();
+    if(t.indexOf("TURNO")!==-1 && t.indexOf("FASE")!==-1 && l.children.length<3){
+      l.style.display="none";
+      // Se la tendina è subito dopo la label, nascondila anche
+      var nxt=l.nextElementSibling;
+      if(nxt && (nxt.tagName==="SELECT" || nxt.tagName==="INPUT")) nxt.style.display="none";
+    }
+  });
+}
+setInterval(nascondiFaseForte, 500);
+  </script>
 </body>
 </html>

@@ -3552,7 +3552,18 @@ function _classificaPerLega(liga){
   try{ return calc().filter(function(x){ return teamLeague(x[0])===liga; }).map(function(x){ return x[0]; }); }catch(e){ return []; }
 }
 function _creaPartitaCoppa(coppa,fase,casa,tras){
-  coppaMatches.push({coppa:coppa,fase:fase,casa:casa,tras:tras,data:"",[STRIPPED] giocare"});
+  var o={};
+  o.coppa=coppa;
+  o.fase=fase;
+  o.casa=casa;
+  o.tras=tras;
+  o.data="";
+  o.ora="";
+  o.luogo="";
+  o.golC="";
+  o.golT="";
+  o.stato="Da giocare";
+  coppaMatches.push(o);
 }
 function generaCampioniNuovo(){
   var clA=_classificaPerLega("Serie A");

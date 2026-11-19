@@ -2640,6 +2640,7 @@ html+="</div></div>";
 }
 if(!html)html="<p class='small'>Ancora nessuna partita.</p>";
 el('coppeList').innerHTML=html;
+if(curCoppa==='Coppa di Lega'&&legaBracket&&legaBracket.size>0){ el('coppeList').innerHTML=legaBracketHtml(false)+el('coppeList').innerHTML; }
 }
 if(el('coppeTutte')){
 var tutte=[];

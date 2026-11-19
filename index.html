@@ -3637,22 +3637,6 @@ function nascondiFaseForte(){
       sel.style.display="none";
       if(sel.parentElement) sel.parentElement.style.display="none";
       // Nasconde anche la label prima di lui
-      var prev=sel.previousElementSibling;
-      if(prev) prev.style.display="none";
-    }
-  });
-  // 3) Nasconde qualsiasi riga che contiene la scritta TURNO o FASE
-  document.querySelectorAll("label, p, div, span").forEach(function(l){
-    var t=(l.textContent||"").toUpperCase();
-    if(t.indexOf("TURNO")!==-1 && t.indexOf("FASE")!==-1 && l.children.length<3){
-      l.style.display="none";
-      // Se la tendina è subito dopo la label, nascondila anche
-      var nxt=l.nextElementSibling;
-      if(nxt && (nxt.tagName==="SELECT" || nxt.tagName==="INPUT")) nxt.style.display="none";
-    }
-  });
-}
-setInterval(nascondiFaseForte, 500);
   </script>
 </body>
 </html>

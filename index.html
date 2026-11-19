@@ -1802,7 +1802,7 @@ try{
 var r=await fetch(DB);
 var d=await r.json();
 if(d){
-if(d.teams)teams=d.teams;
+if(d.teams&&d.teams.length>0)teams=d.teams;
 if(d.matches)matches=d.matches;
 if(d.coppaMatches)coppaMatches=d.coppaMatches;
 if(d.teamTitles)teamTitles=d.teamTitles;

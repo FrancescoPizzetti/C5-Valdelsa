@@ -403,6 +403,13 @@ input[type=checkbox]{width:20px;height:20px;accent-color:#facc15;margin:0}
 <button class="big" type="button" style="background:#ef4444;color:#fff" onclick="svuotaCalendario()">🗑️ ELIMINA TUTTE LE PARTITE DI CAMPIONATO</button>
 <button class="big" type="button" style="background:#111827;color:#fff;border:1px solid #444" onclick="svuotaCoppe()">🗑️ ELIMINA TUTTE LE PARTITE DI COPPA</button>
 </div>
+</div>
+<script>
+function showCalTab(t){
+  document.getElementById('tabCalCrea').style.display = (t==='crea'?'block':'none');
+  document.getElementById('tabCalRisultati').style.display = (t==='risultati'?'block':'none');
+}
+</script>
 <div id="adminSec-coppe" style="display:none">
 <h3>🏆 CALENDARIO COPPE</h3>
 <div class="label">COPPA</div><select id="fCoppa"><option>Coppa di Lega</option><option>Coppa Mitropa</option><option>Coppa Campioni</option><option>Conference</option><option>Supercoppa</option><option>Playout Serie A</option><option>Playoff Serie B</option></select>

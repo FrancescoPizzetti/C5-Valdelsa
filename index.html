@@ -1797,7 +1797,7 @@ giorni.push("Venerdì");
 giorni.push("Sabato");
 var dt=new Date(p[0],parseInt(p[1])-1,parseInt(p[2]));
 return giorni[dt.getDay()]+" "+p[2]+"/"+p[1]+"/"+p[0];
-function toArr(v){
+} function toArr(v){
   if(!v) return [];
   if(Array.isArray(v)) return v.filter(function(x){ return x!=null; });
   return Object.values(v).filter(function(x){ return x!=null; });

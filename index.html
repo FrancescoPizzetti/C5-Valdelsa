@@ -1892,7 +1892,7 @@ payload.storico=storico;
 var res=await fetch(DB,{method:"PUT",body:JSON.stringify(payload)});
 if(!res.ok){alert("Firebase errore "+res.status);}
 if(el('sync'))el('sync').textContent="● LIVE";
-}catch(e){alert("Errore salvataggio, ma ho backup nel telefono.");}
+}catch(e){alert("Errore salvataggio: "+e.message);}
 render();
 }
 async function salvaOraEVerifica(){

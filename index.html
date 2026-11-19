@@ -1505,8 +1505,11 @@ function generaFasiFinaliA(){
   if(_coppaGiaFatta("Playout Serie A") || _coppaGiaFatta("Coppa Campioni") || _coppaGiaFatta("Coppa Mitropa")){ alert("Playout, Champions o Mitropa gia generati."); return; }
   if(!confirm("Genero FASI FINALI A?\nPlayout + Champions + Mitropa")) return;
   generaTabellone("Playout Serie A", [clA[10][0], clA[13][0], clA[11][0], clA[12][0]]);
-  var n=6;
-  var sqCh=clA.slice(0,n).map(function(x){return x[0];});
+    var nChStr=prompt("Champions: quante squadre? 4, 6 o 8\nDi base sono 6 (prime 6 di A).");
+  var nCh=parseInt(nChStr);
+  if(isNaN(nCh)) nCh=6;
+  if(nCh!==4 && nCh!==6 && nCh!==8){alert("Scegli 4, 6 o 8."); return;}
+  var sqCh=clA.slice(0,nCh).map(function(x){return x[0];});
   generaTabellone("Coppa Campioni", sqCh);
   var sqMi=clA.slice(6,10).map(function(x){return x[0];});
   sqMi=sqMi.concat(clB1.slice(0,2).map(function(x){return x[0];}));

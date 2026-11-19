@@ -381,6 +381,8 @@ input[type=checkbox]{width:20px;height:20px;accent-color:#facc15;margin:0}
 <input id="fLuogoAltro" class="hidden" placeholder="Scrivi luogo...">
 <label class="checkBox"><input type="checkbox" id="fSpeculare"><div><b>🔁 Calendario speculare - Serie A</b><br><span class="small">Crea in automatico il ritorno Giornata +13.</span></div></label>
 <button class="big" type="button" onclick="saveMatchCal()">+ Aggiungi Partita al Calendario</button>
+</div>
+<div id="tabCalRisultati" style="display:none">
 <h3>📋 PASSO 2 - Risultato Campionato</h3>
 <div class="label">SCEGLI LA PARTITA</div><select id="fMatchSelect" onchange="refreshScorerPlayers()"></select>
 <div style="display:flex;gap:8px"><div style="flex:1"><div class="label">GOL CASA</div><input id="fResGolC" type="number" placeholder="Gol Casa"></div><div style="flex:1"><div class="label">GOL TRASFERTA</div><input id="fResGolT" type="number" placeholder="Gol Trasferta"></div></div>

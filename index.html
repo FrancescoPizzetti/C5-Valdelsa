@@ -363,6 +363,11 @@ input[type=checkbox]{width:20px;height:20px;accent-color:#facc15;margin:0}
 <div id="storicoAdminList"></div>
 </div>
 </div><div id="adminSec-cal" style="display:none">
+<div style="display:flex;gap:10px;margin-bottom:15px">
+<button onclick="showCalTab('crea')" id="btnCalCrea" style="flex:1;padding:12px;font-weight:bold;background:#FFD700;color:#000;border-radius:10px">1. CREA / MODIFICA CALENDARIO</button>
+<button onclick="showCalTab('risultati')" id="btnCalRisultati" style="flex:1;padding:12px;font-weight:bold;background:#222;color:#fff;border-radius:10px">2. METTI RISULTATI</button>
+</div>
+<div id="tabCalCrea">
 <h3>📅 PASSO 1 - Calendario Campionato</h3>
 <div class="label">LEGA</div>
 <select id="fLegaMatch" onchange="render()"><option>Serie A</option><option>Serie B</option><option>Serie B1</option><option>Serie B2</option></select>

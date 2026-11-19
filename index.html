@@ -1807,6 +1807,8 @@ if(d){
 if(d.teams){var raw=d.teams;var arr=Array.isArray(raw)?raw:Object.values(raw);var ft=arr.filter(function(x){return x&&x.n;});if(ft.length>0)teams=ft;}
 if(d.matches)matches=d.matches;
 if(d.coppaMatches)coppaMatches=d.coppaMatches;
+if(d.legaBracket)legaBracket=d.legaBracket;
+if(!legaBracket||!legaBracket.rounds)legaBracket={size:0,slots:[],rounds:[],anno:0};
 if(d.teamTitles)teamTitles=d.teamTitles;
 if(d.indTitles)indTitles=d.indTitles;
 if(d.players)players=d.players;

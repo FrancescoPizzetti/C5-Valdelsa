@@ -970,7 +970,7 @@ var s14=sqA[13].n||sqA[13].nome;
 if(!confirm("Playout Serie A:\n"+s11+" (11ª) vs "+s14+" (14ª)\n"+s12+" (12ª) vs "+s13+" (13ª)\n\nCreo le 2 Semifinali?"))return;
 coppaMatches.push({coppa:"Playout Serie A",fase:"Semifinale",casa:s11,tras:s14,data:"",ora:"",luogo:"",golC:"",golT:"",stato:"Programmata"});
 coppaMatches.push({coppa:"Playout Serie A",fase:"Semifinale",casa:s12,tras:s13,data:"",ora:"",luogo:"",golC:"",golT:"",stato:"Programmata"});
-salvaDati();
+save();
 alert("Playout creato! Ora vai in Admin > Coppe e con la ✏️ metti data / ora / luogo alle 2 partite.");
 }
 function chiudiStagione(){

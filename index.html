@@ -1435,6 +1435,81 @@ function generaTabellonePlayout(){
   if(!confirm("Genero Playout:\n"+s11+" vs "+s14+"\n"+s12+" vs "+s13)) return;
   generaTabellone("Playout Serie A", [s11,s14,s12,s13]);
 }
+function _partiteFiniteDi(lega){
+  for(var i=0;i<matches.length;i++){
+    var m=matches[i];
+    if(teamLeague(m.casa)!==lega) continue;
+    if(m.stato!=="Giocata" && m.stato!=="Disputata") return false;
+    if(m.golC==="" || m.golT==="" || m.golC==null || m.golT==null) return false;
+  }
+  return true;
+}
+function _coppaGiaFatta(nome){
+  for(var i=0;i<coppaMatches.length;i++){ if(coppaMatches[i].coppa===nome) return true; }
+  return false;
+}
+function generaFasiFinaliB(){
+  var cl=calc();
+  var clB1=cl.filter(function(x){return teamLeague(x[0])==="Serie B1";});
+  var clB2=cl.filter(function(x){return teamLeague(x[0])==="Serie B2";});
+  if(clB1.length!==8 || clB2.length!==8){ alert("Servono 8 squadre in B1 e 8 in B2. Prima genera B1/B2."); return; }
+  if(!_partiteFiniteDi("Serie B1") || !_partiteFiniteDi("Serie B2")){ alert("B1 o B2 non sono finite. Manca ancora qualche partita da mettere come Giocata."); return; }
+  if(_coppaGiaFatta("Playoff Serie B") || _coppaGiaFatta("Conference")){ alert("Playoff o Conference gia generati."); return; }
+  if(!confirm("Genero FASI FINALI B?\nPlayoff B + Conference")) return;
+  var sqPlay=clB1.slice(2,8).map(function(x){return x[0];});
+  sqPlay=sqPlay.concat(clB2.slice(0,2).map(function(x){return x[0];}));
+  generaTabellone("Playoff Serie B", sqPlay);
+  var sqConf=clB2.slice(2,8).map(function(x){return x[0];});
+  generaTabellone("Conference", sqConf);
+}
+function generaFasiFinaliA(){
+  var cl=calc();
+  var clA=cl.filter(function(x){return teamLeague(x[0])==="Serie A";});
+  var clB1=cl.filter(function(x){return teamLeague(x[0])==="Serie B1";});
+  if(clA.length!==14 || clB1.length!==8){ alert("Servono 14 in A e 8 in B1."); return; }
+  if(!_partiteFiniteDi("Serie A")){ alert("Serie A non finita. Manca ancora qualche partita da mettere come Giocata."); return; }
+  if(_coppaGiaFatta("Playout Serie A") || _coppaGiaFatta("Coppa Campioni") || _coppaGiaFatta("Coppa Mitropa")){ alert("Playout, Champions o Mitropa gia generati."); return; }
+  if(!confirm("Genero FASI FINALI A?\nPlayout + Champions + Mitropa")) return;
+  generaTabellone("Playout Serie A", [clA[10][0], clA[13][0], clA[11][0], clA[12][0]]);
+  var n=6;
+  var sqCh=clA.slice(0,n).map(function(x){return x[0];});
+  generaTabellone("Coppa Campioni", sqCh);
+  var sqMi=clA.slice(6,10).map(function(x){return x[0];});
+  sqMi=sqMi.concat(clB1.slice(0,2).map(function(x){return x[0];}));
+  generaTabellone("Coppa Mitropa", sqMi);
+}
+function assegnaTitoliStagioneCorrente(){
+  var stag=el('fStagione').value.trim()||"2026/27";
+  var parts=stag.split("/");
+  var annoTitolo=parseInt(parts[1]);
+  if(isNaN(annoTitolo)) annoTitolo=2026;
+  function assegnaAuto(squadra,trofeo){
+    if(!squadra) return;
+    for(var i=0;i<teamTitles.length;i++){
+      if(teamTitles[i].team===squadra && teamTitles[i].trofeo===trofeo && teamTitles[i].anno===annoTitolo) return;
+    }
+    teamTitles.push({team:squadra,trofeo:trofeo,anno:annoTitolo});
+  }
+  var cl=calc();
+  var clA=cl.filter(function(x){return teamLeague(x[0])==="Serie A";});
+  var clB1=cl.filter(function(x){return teamLeague(x[0])==="Serie B1";});
+  var clB2=cl.filter(function(x){return teamLeague(x[0])==="Serie B2";});
+  if(clA[0]) assegnaAuto(clA[0][0],"Serie A");
+  if(clB1[0]) assegnaAuto(clB1[0][0],"Serie B1");
+  if(clB2[0]) assegnaAuto(clB2[0][0],"Serie B2");
+  var vLega=coppaWinners("Coppa di Lega","Finale")[0]||"";
+  var vMit=coppaWinners("Coppa Mitropa","Finale")[0]||"";
+  var vCamp=coppaWinners("Coppa Campioni","Finale")[0]||"";
+  var vSup=coppaWinners("Supercoppa","Finale")[0]||"";
+  var vConf=coppaWinners("Conference","Finale")[0]||"";
+  if(vLega) assegnaAuto(vLega,"Coppa di Lega");
+  if(vMit) assegnaAuto(vMit,"Mitropa Cup");
+  if(vCamp) assegnaAuto(vCamp,"Coppa Campioni");
+  if(vSup) assegnaAuto(vSup,"Supercoppa");
+  if(vConf) assegnaAuto(vConf,"Conference");
+  save();
+  alert("Titoli assegnati per "+stag+"!\nControlla in Albo d'oro. Non ho cancellato niente.");
+}
 function generaTabelloneLega(){
   // Coppa di Lega: numero libero, tu metti le squadre a mano dopo
   generaTabellone("Coppa di Lega", []);

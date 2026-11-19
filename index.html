@@ -1877,7 +1877,7 @@ for(var dk in disciplina){discSalva.push({n:dk,d:disciplina[dk]});}
 var payload={};
 payload.teams=teams;
 payload.matches=matches;
-payload.coppaMatches=coppaMatches;
+payload.coppaMatches=(typeof coppaMatches!=='undefined'?coppaMatches:[]);
 payload.teamTitles=teamTitles;
 payload.indTitles=indTitles;
 payload.players=players;

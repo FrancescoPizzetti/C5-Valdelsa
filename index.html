@@ -3638,5 +3638,35 @@ function nascondiFaseForte(){
       if(sel.parentElement) sel.parentElement.style.display="none";
       // Nasconde anche la label prima di lui
   </script>
+  <div class="card" style="border:2px solid #facc15">
+<p class="small">Coppa Campioni - Nuovo: crea 2 Quarti + 2 Semifinali + Finale vuoti. Poi li compili tu in Calendario Coppe.</p>
+<button class="big" type="button" style="background:#facc15;color:#000" onclick="generaCampioniNuovo()">🏆 GENERA COPPA CAMPIONI - NUOVO</button>
+</div>
+<script>
+function _nuovaPartitaCoppa(coppa,fase){
+  var o = {};
+  o.coppa = coppa;
+  o.fase = fase;
+  o.casa = "";
+  o.tras = "";
+  o.data = "";
+  o.ora = "";
+  o.luogo = "";
+  o.golC = "";
+  o.golT = "";
+  o.stato = "Da giocare";
+  coppaMatches.push(o);
+}
+function generaCampioniNuovo(){
+  if(!confirm("Genero Coppa Campioni? 2 Quarti + 2 Semifinali + Finale vuoti.")) return;
+  _nuovaPartitaCoppa("Coppa Campioni","Quarti");
+  _nuovaPartitaCoppa("Coppa Campioni","Quarti");
+  _nuovaPartitaCoppa("Coppa Campioni","Semifinali");
+  _nuovaPartitaCoppa("Coppa Campioni","Semifinali");
+  _nuovaPartitaCoppa("Coppa Campioni","Finale");
+  save();
+  alert("Coppa Campioni generata. Vai in Calendario Coppe e compila Casa / Trasferta.");
+}
+</script>
 </body>
 </html>

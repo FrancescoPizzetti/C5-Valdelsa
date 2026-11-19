@@ -3458,5 +3458,56 @@ try{
     </div>
   </div>
 </div>
+<script>
+// PATCH - Collega Calendario Coppe al Tabellone Coppa di Lega
+function legaBracketHtml2(isAdmin){
+  if(!legaBracket||!legaBracket.size) return "";
+  var nTeam=0; for(var s=0;s<legaBracket.slots.length;s++){ if(legaBracket.slots[s]&&legaBracket.slots[s]!=="BYE") nTeam++; }
+  var h='<div class="card" style="border-color:#facc15"><h3>🏆 Coppa di Lega - Tabellone</h3><p class="small">Squadre: '+nTeam+' - Tabellone da '+legaBracket.size+' - BYE: '+(legaBracket.size-nTeam)+'</p><div style="display:flex;gap:10px;overflow-x:auto">';
+  for(var r=0;r<legaBracket.rounds.length;r++){
+    var cnt=legaBracket.rounds[r].length;
+    h+='<div style="min-width:190px;flex:1"><h4 style="text-align:center">'+legaRoundName(cnt*2)+'</h4>';
+    for(var m=0;m<cnt;m++){
+      var mm=legaBracket.rounds[r][m];
+      var casa=mm.casa||"—"; var tras=mm.tras||"—";
+      var isBye=(casa==="BYE"||tras==="BYE");
+      h+='<div style="background:#111827;border:1px solid #374151;border-radius:12px;padding:8px;margin-bottom:10px"><b>'+casa+'</b><div style="text-align:center">vs</div><b>'+tras+'</b>';
+      if(mm.data||mm.ora||mm.luogo){ h+='<div class="small" style="text-align:center;margin-top:4px">📅 '+(mm.data||"")+' '+(mm.ora||"")+' - '+(mm.luogo||"")+'</div>'; }
+      if(mm.stato==="Giocata"){ h+='<div style="text-align:center;margin-top:6px"><b>'+mm.golC+" - "+mm.golT+'</b> ✅ '+(mm.winner||"")+'</div>'; if(isAdmin&&!isBye) h+='<div style="text-align:center"><button type="button" onclick="legaAnnulla('+r+','+m+')">↩️ Annulla</button></div>'; }
+      else if(isBye){ h+='<div class="small" style="text-align:center">BYE - passa avanti</div>'; }
+      else if(casa==="—"||tras==="—"){ h+='<div class="small" style="text-align:center">In attesa</div>'; }
+      else if(isAdmin){ h+='<div style="display:flex;gap:6px;margin-top:8px"><input id="legaGolC'+r+'_'+m+'" type="number" placeholder="Casa"><input id="legaGolT'+r+'_'+m+'" type="number" placeholder="Trasf."><button type="button" onclick="legaSetRisultato('+r+','+m+')">Salva</button></div>'; }
+      else { h+='<div style="text-align:center"><span class="badge">Da giocare</span></div>'; }
+      h+='</div>';
+    }
+    h+='</div>';
+  }
+  h+='</div></div>'; return h;
+}
+legaBracketHtml = legaBracketHtml2;
+
+var _vecchiaSaveCoppa = saveCoppaMatch;
+saveCoppaMatch = function(){
+  if(el('fCoppa') && el('fCoppa').value==="Coppa di Lega" && legaBracket && legaBracket.size>0){
+    var _casa=el('fCoppaCasa').value;
+    var _tras=el('fCoppaTras').value;
+    var _data=el('fCoppaData').value;
+    var _ora=el('fCoppaOra').value;
+    var _luogo=getCoppaLuogo();
+    var _trovata=false;
+    for(var _r=0;_r<legaBracket.rounds.length;_r++){
+      for(var _m=0;_m<legaBracket.rounds[_r].length;_m++){
+        var _mm=legaBracket.rounds[_r][_m];
+        if(_mm.casa===_casa && _mm.tras===_tras){ _mm.data=_data; _mm.ora=_ora; _mm.luogo=_luogo; _trovata=true; }
+      }
+    }
+    if(!_trovata){ alert("Questa partita non c'è nel tabellone. Controlla Casa e Trasferta."); return; }
+    save();
+    alert("Calendario aggiornato nel tabellone! "+_casa+" vs "+_tras+" - "+_data+" "+_ora+" - "+_luogo);
+    return;
+  }
+  _vecchiaSaveCoppa();
+};
+</script>
 </body>
 </html>

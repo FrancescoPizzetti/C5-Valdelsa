@@ -1046,7 +1046,9 @@ if(promossi.indexOf(nm)!==-1 && (teams[ti2].l==="Serie B"||teams[ti2].l==="Serie
 }
 if(retrocessi.length||promossi.length){alert("Playout / Playoff: Retrocesse: "+retrocessi.join(", ")+" - Promosse: "+promossi.join(", "));}
 matches=[];
-coppaMatches=[];
+var _superDaTenere=[];
+for(var _s=0;_s<coppaMatches.length;_s++){ if(coppaMatches[_s].coppa==="Supercoppa") _superDaTenere.push(coppaMatches[_s]); }
+coppaMatches=_superDaTenere;
 disciplina={};
 primaFaseB={};
 var ns=teamNames();

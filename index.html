@@ -3818,27 +3818,48 @@ function _nuovaPartitaCoppa(coppa,fase){
       });
     });
   }
-
-  // ---------- 4) FILTRO COPPE: fCoppa filtra la lista sotto ----------
+  // ---------- 4) FILTRO COPPE: fCoppa filtra lista + tabellone ----------
   function _filtro(){
     var sel = document.getElementById("fCoppa");
     var list = document.getElementById("coppaAdminList");
-    if(!sel || !list) return;
-    if(sel.dataset.fixV3) return;
-    sel.dataset.fixV3 = "1";
+    var legaBox = document.getElementById("legaAdminBox");
+    if(!sel) return;
+    if(sel.dataset.fixV3filtro) return;
+    sel.dataset.fixV3filtro = "1";
     function _applica(){
-      var scelta = sel.value; // es. "Coppa di Lega", "Coppa Mitropa"
+      var scelta = sel.value; // es. "Coppa di Lega", "Supercoppa", "Coppa Mitropa"
       try{ localStorage.setItem("filtroCoppaScelta", scelta); }catch(e){}
-      list.querySelectorAll(".row").forEach(function(row){
-        var txt = row.textContent || "";
-        // Ogni riga inizia con "Coppa - Fase - Casa vs Tras"
-        var mostra = txt.indexOf(scelta) === 0 || txt.indexOf(scelta) !== -1;
-        // Se la riga è di un'altra coppa, nascondila. Se è della coppa scelta, mostrala.
-        // Controlla solo l'inizio: "Coppa di Lega - ..."
-        var primaParte = txt.split(" - ")[0] || "";
-        mostra = (primaParte.trim() === scelta);
-        row.style.display = mostra ? "" : "none";
-      });
+
+      // 1) Se NON è Coppa di Lega, nascondi il tabellone CELLE
+      // Se È Coppa di Lega, mostralo
+      if(legaBox){
+        legaBox.style.display = (scelta === "Coppa di Lega") ? "" : "none";
+      }
+
+      // 2) Filtra la lista sotto: mostra solo le righe di quella coppa
+      if(list){
+        list.querySelectorAll(".row").forEach(function(row){
+          var txt = row.textContent || "";
+          var primaParte = (txt.split(" - ")[0] || "").trim();
+          var mostra = (primaParte === scelta);
+          // La Coppa di Lega ha anche le partite in legaBracket, non in lista:
+          // se scelta è Coppa di Lega, la lista può restare vuota, va bene
+          row.style.display = mostra ? "" : "none";
+        });
+      }
+
+      // 3) Se hai scelto un'altra coppa, mostra un titolino sopra la lista
+      // così capisci che stai vedendo il tabellone di quella coppa
+      var titoloId = "titoloFiltroCoppa";
+      var vecchio = document.getElementById(titoloId);
+      if(vecchio) vecchio.remove();
+      if(scelta !== "Coppa di Lega" && list && list.parentElement){
+        var h = document.createElement("div");
+        h.id = titoloId;
+        h.style.cssText = "text-align:center;font-weight:bold;color:#facc15;margin:10px 0 6px";
+        h.textContent = "🏆 Tabellone " + scelta + " - sotto vedi tutte le fasi";
+        list.parentElement.insertBefore(h, list);
+      }
     }
     sel.addEventListener("change", _applica);
     try{
@@ -3847,9 +3868,10 @@ function _nuovaPartitaCoppa(coppa,fase){
         for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value === salvata || sel.options[i].text === salvata) sel.selectedIndex = i; }
       }
     }catch(e){}
+    // Lo richiamo ogni volta che render() ridisegna, perché legaAdminBox viene ricreato
+    setInterval(_applica, 900);
     setTimeout(_applica, 300);
   }
-
   function _tutto(){
     _pulisciCalendario();
     _iniettaDCR();

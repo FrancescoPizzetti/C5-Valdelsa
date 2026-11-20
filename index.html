@@ -3988,7 +3988,7 @@ function _nuovaPartitaCoppa(coppa,fase){
     var s11 = clA[10][0], s12 = clA[11][0], s13 = clA[12][0];
     if(!confirm("Genero PLAYOUT con RITIRATA:\n\n11a " + s11 + " -> DIRETTA IN FINALE\nSemifinale: " + s12 + " vs " + s13 + "\nFinale: " + s11 + " vs Vincente Semifinale\n\nRetrocedono SOLO 2.")) return true;
     coppaMatches = coppaMatches.filter(function(m){ return m.coppa !== "Playout" && m.coppa !== "Playout Serie A" && m.coppa !== "Playout A"; });
-    function _crea(coppa,fase,casa,tras){ coppaMatches.push({coppa:coppa,fase:fase,casa:casa,tras:tras,data:"",[STRIPPED]
+    function _crea(coppa,fase,casa,tras){ coppaMatches.push({coppa:coppa,fase:fase,casa:casa,tras:tras,data:"",ora:"",luogo:"",golC:"",golT:"",stato:"Da giocare"}); }
     }
     _crea("Playout","Semifinale",s12,s13);
     _crea("Playout","Finale",s11,"Vinc. Semifinale");

@@ -4061,5 +4061,91 @@ function _nuovaPartitaCoppa(coppa,fase){
   setTimeout(_fix, 500);
 })();
 </script>
+<script>
+// ===== FIX FINALE - DA AGGIUNGERE DOPO GLI ALTRI, NON CANCELLARE NIENTE =====
+(function(){
+  function _pulisciCalendario(){
+    // Nascondi rigori solo nel form Calendario Coppe
+    document.querySelectorAll("label, div, span, p, h3, h4").forEach(function(el){
+      var t = (el.textContent || "").trim().toUpperCase();
+      // Solo se è una label corta, non tutta la pagina
+      if(el.children.length === 0 || t.length < 40){
+        if(t.indexOf("CALCI DI RIGORE") !== -1 || t.indexOf("CHI HA VINTO AI RIGORI") !== -1){
+          el.style.display = "none";
+          var nxt = el.nextElementSibling;
+          if(nxt) nxt.style.display = "none";
+          // Se dopo c'è un select, nascondilo
+          var par = el.parentElement;
+          if(par){
+            var sel = par.querySelector("select");
+            if(sel && sel.textContent.indexOf("partita normale") !== -1) sel.style.display = "none";
+          }
+        }
+      }
+    });
+    document.querySelectorAll("select").forEach(function(s){
+      if((s.textContent || "").indexOf("partita normale") !== -1){
+        s.style.display = "none";
+        if(s.previousElementSibling) s.previousElementSibling.style.display = "none";
+      }
+    });
+  }
+
+  function _sistema(){
+    _pulisciCalendario();
+
+    // 1) Togli gli Annulla doppi - se in una card ce ne sono 2, tieni solo l'ultimo
+    document.querySelectorAll("div").forEach(function(card){
+      var annulli = card.querySelectorAll("[data-annulla='1'], [data-annulla-fix5='1'], [data-annulla-unico='1']");
+      // Questo controllo è per card intere, lo facciamo in modo semplice:
+      // se trovi più di 1 bottone Annulla nella stessa riga, nascondi i primi
+    });
+    // Rimuovi i doppioni veri: tutti gli Annulla che sono dentro la stessa riga dei gol
+    document.querySelectorAll("[data-annulla='1']").forEach(function(a){
+      var riga = a.parentElement;
+      if(riga && riga.querySelector("input")){
+        // Era quello messo male del FIX 4 dentro la riga gol -> lo nascondo, il FIX 5 ne ha già messo uno sotto
+        a.style.display = "none";
+      }
+    });
+
+    // 2) Sistema i casellini gol - larghi, non pilloline
+    document.querySelectorAll("input").forEach(function(inp){
+      var ph = (inp.getAttribute("placeholder") || "").toLowerCase();
+      if(ph.indexOf("rig") !== -1) return; // i dcr li lasciamo come sono
+      // Solo gli input del Tabellone (quelli senza placeholder Squadra ecc.)
+      if(inp.type === "number" || inp.placeholder === "" || inp.placeholder === null){
+        inp.style.minWidth = "0";
+        inp.style.width = "100%";
+        inp.style.flex = "1";
+        inp.style.padding = "12px 8px";
+        inp.style.fontSize = "16px";
+        inp.style.textAlign = "center";
+      }
+    });
+
+    // 3) Rendi la riga Salva a capo, così non schiaccia
+    document.querySelectorAll("button").forEach(function(btn){
+      if(btn.textContent.trim() === "Salva"){
+        var row = btn.parentElement;
+        if(row && !row.dataset.fixFinale){
+          row.dataset.fixFinale = "1";
+          row.style.display = "flex";
+          row.style.gap = "6px";
+          row.style.flexWrap = "wrap";
+          row.style.alignItems = "center";
+        }
+      }
+    });
+  }
+
+  var _r = window.render;
+  if(typeof _r === "function"){
+    window.render = function(){ _r(); setTimeout(_sistema, 100); };
+  }
+  setTimeout(_sistema, 600);
+  setTimeout(_sistema, 1500);
+})();
+</script>
 </body>
 </html>

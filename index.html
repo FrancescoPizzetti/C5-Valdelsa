@@ -10,7 +10,7 @@
 .logoTitolo{height:38px; width:auto; object-fit:contain; vertical-align:middle; margin-right:8px;}
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;color:#fff;background:#0b3d1e}
-body{background-image:linear-gradient(rgba(0,0,0,0.65),rgba(0,0,0,0.75)),url('https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=1200&q=80')}
+body{background-image:linear-gradient(rgba(0,0,0,0.78),rgba(0,0,0,0.88)),url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=80')}
 body{background-size:cover}
 body{background-position:center}
 body{background-attachment:fixed}
@@ -91,6 +91,19 @@ input[type=checkbox]{width:20px;height:20px;accent-color:#facc15;margin:0}
 .teamBox.on{border-color:#22c55e;background:#273449}
 .teamBox .logo{width:54px;height:54px;margin:auto;font-size:20px}
 .teamBoxName{font-size:11px;line-height:1.15;margin-top:6px;font-weight:700;min-height:28px}
+/* --- PARQUET 3 HOME - solo grafica, non tocca il vecchio --- */
+.p3-title{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.p3-btn{background:#facc15;color:#000;border:0;padding:8px 12px;border-radius:8px;font-weight:900;cursor:pointer;font-size:12px}
+.p3-btn-ghost{background:transparent;color:#facc15;border:1px solid #facc15;padding:7px 10px;border-radius:8px;font-weight:900;cursor:pointer;font-size:12px}
+.p3-tabs{display:flex;gap:8px;margin-bottom:10px}
+.p3-tabs button{flex:1;padding:10px;border-radius:20px;border:1px solid #555;background:#1a1a1a;color:#fff;font-weight:900;cursor:pointer}
+.p3-tabs button.on{background:#facc15;color:#000;border-color:#facc15}
+/* Le righe che il tuo render() crea dentro #upcomingMatches e #pastMatches diventano quadrati 2x2 */
+#upcomingMatches,#pastMatches{display:grid!important;grid-template-columns:1fr 1fr;gap:10px}
+#upcomingMatches .giornataTitle{grid-column:1/-1}
+#upcomingMatches .row,#pastMatches .row{background:rgba(10,10,10,.92);border:1px solid #c9a227;border-radius:12px;padding:12px;min-height:92px;flex-direction:column;align-items:flex-start;justify-content:center}
+#pastMatches .row{flex-direction:column;align-items:flex-start}
+#upcomingMatches .row .badge,#pastMatches .row .badge{margin-top:8px}
 </style>
 </head>
 <body>
@@ -128,13 +141,9 @@ input[type=checkbox]{width:20px;height:20px;accent-color:#facc15;margin:0}
 <button class="big" type="button" style="background:#000;color:#facc15" onclick="installApp()">📱 AGGIUNGI ALLA SCHERMATA HOME</button>
 <p class="small" style="color:#333" id="installHint">Premi il bottone e segui le istruzioni.</p>
 </div>
-<div class="card hero"><h2>🔥 Prossima Partita</h2><div id="nextMatch">Caricamento...</div></div>
-<div class="card"><h2>📅 Partite in Programma</h2><div id="upcomingMatches"></div></div>
-<div class="card"><h2>✅ Partite Trascorse</h2><div id="pastMatches"></div></div>
-<div class="card"><h2>🥇 Top 3 Capocannonieri - Serie A</h2><div id="topScorersA"></div></div>
-<div class="card"><h2>🥇 Top 3 Capocannonieri - Serie B</h2><div id="topScorersB"></div></div>
-<div class="card"><h2>🏆 Top 5 Serie A</h2><div id="top5"></div></div>
-<div class="card"><h2>🏆 Top 5 Serie B</h2><div id="top5B"></div></div>
+<div class="card"><div class="p3-title"><h2>PROSSIME PARTITE</h2><button class="p3-btn" type="button" onclick="show('cal')">MOSTRA ALTRO</button></div><p class="small">Primo giorno utile - in ordine di orario</p><div id="nextMatch" style="display:none">Caricamento...</div><div id="upcomingMatches"></div><div style="text-align:center;margin-top:10px"><button class="p3-btn" type="button" onclick="show('cal')">MOSTRA ALTRO</button></div></div>
+<div class="card"><h2>ULTIMI RISULTATI</h2><div id="pastMatches"></div></div>
+<div class="card"><div class="p3-title"><h2>CLASSIFICA HOME - TOP 5</h2><button class="p3-btn-ghost" type="button" onclick="show('class')">VEDI CLASSIFICA INTEGRALE</button></div><div class="p3-tabs"><button id="p3tabA" class="on" type="button" onclick="p3home('A')">SERIE A</button><button id="p3tabB" type="button" onclick="p3home('B')">SERIE B</button></div><div id="p3boxA"><div id="top5"></div></div><div id="p3boxB" style="display:none"><div id="top5B"></div></div></div>
 <div class="card" style="display:none"><h2>📚 Storico Stagioni</h2>📚 Storico Stagioni</h2><div id="storicoHome"></div></div>
 <div class="card"><h2>👑 Albo d'oro - Top 5</h2><div id="alboPreview"></div><button class="big" type="button" onclick="show('albo')">Vedi tutto l'Albo d'oro →</button></div>
 <div class="versionFooter">Versione 1.60 • C5 Valdelsa</div>
@@ -4244,6 +4253,7 @@ function _nuovaPartitaCoppa(coppa,fase){
   }, 1000);
   provaInserire();
 })();
+function p3home(c){try{document.getElementById('p3tabA').className=c==='A'?'on':'';document.getElementById('p3tabB').className=c==='B'?'on':'';document.getElementById('p3boxA').style.display=c==='A'?'block':'none';document.getElementById('p3boxB').style.display=c==='B'?'block':'none';}catch(e){}}
 </script>
 </body>
 </html>

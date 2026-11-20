@@ -4147,5 +4147,231 @@ function _nuovaPartitaCoppa(coppa,fase){
   setTimeout(_sistema, 1500);
 })();
 </script>
+<script>
+// ===== FIX DEFINITIVO - CALENDARIO SOLO PROGRAMMA + DCR VISIBILE + DATA NEL TABELLONE =====
+(function(){
+  // ---------- 1) CALENDARIO: TOGLI RISULTATO E PROGRAMMATA ----------
+  function _pulisciCalendario(){
+    // Trova il bottone Salva Partita di Coppa, il form è tutto sopra di lui
+    var btnSalva = null;
+    document.querySelectorAll("button").forEach(function(b){
+      if(b.textContent.indexOf("Salva Partita di Coppa") !== -1) btnSalva = b;
+    });
+    if(!btnSalva) return;
+    var form = btnSalva.closest("div");
+    // Sali fino al contenitore del form - proviamo 3 livelli
+    var cont = btnSalva;
+    for(var i=0;i<4;i++){ if(cont.parentElement) cont = cont.parentElement; }
+
+    // Nascondi label RISULTATO + i 2 input Gol Casa / Gol Trasferta
+    document.querySelectorAll("label, div, span, p").forEach(function(el){
+      var t = (el.textContent || "").trim().toUpperCase();
+      if(t === "RISULTATO"){
+        el.style.display = "none";
+        // Il div dopo contiene i 2 input
+        var nxt = el.nextElementSibling;
+        if(nxt) nxt.style.display = "none";
+        // Se il genitore contiene solo RISULTATO + input, nascondi il pezzo
+      }
+      if(t === "PROGRAMMATA" || t === "STATO" || t === "ESITO"){
+        // Non nascondere la label se è altrove, solo se è vicina al Salva Coppa
+        if(cont.contains(el)) el.style.display = "none";
+      }
+    });
+    // Nascondi gli input Gol Casa / Gol Trasferta che sono NEL form calendario, non nel tabellone
+    // Li riconosciamo perché sono vicini al bottone Salva Partita di Coppa e hanno placeholder Gol
+    if(cont){
+      cont.querySelectorAll("input").forEach(function(inp){
+        var ph = (inp.getAttribute("placeholder") || "");
+        if(ph.indexOf("Gol Casa") !== -1 || ph.indexOf("Gol Trasferta") !== -1){
+          inp.style.display = "none";
+          if(inp.parentElement) inp.parentElement.style.display = "none";
+        }
+      });
+      cont.querySelectorAll("select").forEach(function(s){
+        var txt = s.textContent || "";
+        // Programmata / Giocata / Rinviata - il select dello stato nel calendario
+        if(txt.indexOf("Programmata") !== -1 && txt.indexOf("Coppa di Lega") === -1){
+          s.style.display = "none";
+          if(s.previousElementSibling) s.previousElementSibling.style.display = "none";
+          if(s.parentElement && s.parentElement.textContent.length < 60) s.parentElement.style.display = "none";
+        }
+      });
+    }
+  }
+
+  // ---------- 2) DCR: RICREA I CASELLINI SE MANCANO ----------
+  function _sistemaDCR(){
+    document.querySelectorAll("button").forEach(function(btn){
+      if(btn.textContent.trim() !== "Salva") return;
+      var box = btn.closest("div");
+      if(box && box.parentElement) box = box.parentElement;
+      if(!box) return;
+      var inps = box.querySelectorAll("input");
+      if(inps.length < 2) return;
+
+      // Se la riga DCR non c'è o non ha i 2 input, la ricreiamo da zero
+      var riga = box.querySelector("[data-dcr-row='1']");
+      var rigaInputs = riga ? riga.querySelectorAll("input") : [];
+      if(!riga || rigaInputs.length < 2){
+        if(riga) riga.remove();
+        riga = document.createElement("div");
+        riga.setAttribute("data-dcr-row","1");
+        riga.style.cssText = "display:none;margin-top:8px;background:#1f2937;border:1px solid #facc15;border-radius:10px;padding:10px";
+        riga.innerHTML =
+          '<div style="text-align:center;font-size:13px;margin-bottom:6px">⚽ <b>Calci di rigore - dcr</b></div>' +
+          '<div style="display:flex;gap:6px;align-items:center">' +
+          '<input type="number" min="0" placeholder="Rig. Casa" style="flex:1;min-width:0;background:#000;color:#fff;padding:12px;border-radius:10px;text-align:center;font-size:16px;border:1px solid #444" />' +
+          '<span style="color:#fff"><b>-</b></span>' +
+          '<input type="number" min="0" placeholder="Rig. Trasf." style="flex:1;min-width:0;background:#000;color:#fff;padding:12px;border-radius:10px;text-align:center;font-size:16px;border:1px solid #444" />' +
+          '</div><div class="dcr-msg" style="text-align:center;font-size:12px;margin-top:6px;color:#facc15"></div>';
+        box.appendChild(riga);
+        // Ricollega al bottone Salva così il FIX 3 / FIX 4 lo trova
+        btn._rCasa = riga.querySelectorAll("input")[0];
+        btn._rTras = riga.querySelectorAll("input")[1];
+        btn._riga = riga;
+        var inCasa = inps[0], inTras = inps[1];
+        var rCasa = btn._rCasa, rTras = btn._rTras, msg = riga.querySelector(".dcr-msg");
+        function _check(){
+          var a = parseInt(inCasa.value), b = parseInt(inTras.value);
+          if(!isNaN(a) && !isNaN(b) && a === b){
+            riga.style.display = "block";
+            var rc = parseInt(rCasa.value), rt = parseInt(rTras.value);
+            if(!isNaN(rc) && !isNaN(rt)){
+              var bold = box.querySelectorAll("b");
+              var casa = bold.length ? bold[0].textContent.trim() : "";
+              var tras = bold.length > 1 ? bold[1].textContent.trim() : "";
+              if(rc === rt) msg.textContent = "⚠️ Ai rigori non può finire pari";
+              else if(rc > rt) msg.textContent = "✅ Passa " + casa + " - dcr " + rc + "-" + rt;
+              else msg.textContent = "✅ Passa " + tras + " - dcr " + rc + "-" + rt;
+            } else msg.textContent = "Scrivi il risultato ai rigori, es. 4-2";
+          } else {
+            riga.style.display = "none";
+            msg.textContent = "";
+          }
+        }
+        inCasa.addEventListener("input", _check);
+        inTras.addEventListener("input", _check);
+        rCasa.addEventListener("input", _check);
+        rTras.addEventListener("input", _check);
+        // Forza il check subito
+        _check();
+      } else {
+        // Se c'è già, assicurati che sia visibile quando è pareggio
+        var a2 = parseInt(inps[0].value), b2 = parseInt(inps[1].value);
+        if(!isNaN(a2) && !isNaN(b2) && a2 === b2){
+          riga.style.display = "block";
+          // Assicurati che gli input non siano nascosti dal FIX FINALE
+          riga.querySelectorAll("input").forEach(function(inp){
+            inp.style.display = "block";
+            inp.style.width = "100%";
+            inp.style.flex = "1";
+          });
+        }
+      }
+    });
+  }
+
+  // ---------- 3) CALENDARIO -> TABELLONE: DATA / ORA / LUOGO NELLE CASELLINE ----------
+  function _collegaCalendario(){
+    document.querySelectorAll("button").forEach(function(btn){
+      if(btn.textContent.indexOf("Salva Partita di Coppa") === -1) return;
+      if(btn.dataset.fixDef) return;
+      btn.dataset.fixDef = "1";
+      btn.addEventListener("click", function(){
+        setTimeout(function(){
+          // Leggi Data / Ora / Luogo dal form calendario
+          var cont = btn;
+          for(var i=0;i<5;i++){ if(cont.parentElement) cont = cont.parentElement; }
+          var data = "", ora = "", luogo = "", casa = "", tras = "";
+          cont.querySelectorAll("input, select").forEach(function(el){
+            var v = el.value || "";
+            if(!v) return;
+            // Data è tipo 20/11/2026 o 2026-11-20
+            if(v.indexOf("/") !== -1 && v.length >= 8 && !data) data = v;
+            if(v.indexOf(":") !== -1 && v.length <= 5 && !ora) ora = v;
+          });
+          // Luogo è un select con Bernino ecc. - lo prendiamo dal form
+          cont.querySelectorAll("select").forEach(function(s){
+            var txt = s.options && s.selectedIndex >= 0 ? s.options[s.selectedIndex].text : "";
+            if(txt && (txt.indexOf("Bernino") !== -1 || txt.indexOf("Indoor") !== -1 || txt.indexOf("Campo") !== -1 || txt.indexOf("Palestra") !== -1)) luogo = txt;
+          });
+          // Squadre: i primi 2 select con nomi squadra
+          var selects = cont.querySelectorAll("select");
+          if(selects.length >= 2){
+            casa = selects[0].value || "";
+            tras = selects[1].value || "";
+          }
+          if(casa && tras && typeof coppaMatches !== "undefined"){
+            for(var j=0;j<coppaMatches.length;j++){
+              var m = coppaMatches[j];
+              if(m.casa === casa && m.tras === tras){
+                if(data) m.data = data;
+                if(ora) m.ora = ora;
+                if(luogo) m.luogo = luogo;
+                break;
+              }
+            }
+            if(typeof save === "function"){ try{ save(); }catch(e){} }
+            if(typeof render === "function"){ try{ render(); }catch(e){} }
+          }
+        }, 400);
+      });
+    });
+  }
+
+  // ---------- 4) MOSTRA DATA / ORA / LUOGO NEL TABELLONE ----------
+  function _mostraDataTabellone(){
+    if(typeof coppaMatches === "undefined") return;
+    document.querySelectorAll("button").forEach(function(btn){
+      if(btn.textContent.trim() !== "Salva" && btn.textContent.indexOf("Da giocare") === -1) return;
+      // Per ogni card del tabellone, cerca se c'è un match con data
+      // Lo facciamo in modo semplice: dopo render, aggiungiamo la riga info se manca
+    });
+    // Aggiungi riga info sotto ogni card del tabellone che ha un match con data
+    // Usiamo i bold per trovare casa/tras
+    var cards = document.querySelectorAll("div");
+    // Non facciamo loop su tutti i div, usiamo i bottoni Salva come ancora
+    document.querySelectorAll("button").forEach(function(btn){
+      if(btn.textContent.trim() !== "Salva") return;
+      var box = btn.closest("div");
+      if(box && box.parentElement) box = box.parentElement;
+      if(!box || box.querySelector("[data-info-cal='1']")) return;
+      var bold = box.querySelectorAll("b");
+      if(bold.length < 2) return;
+      var casa = bold[0].textContent.trim(), tras = bold[1].textContent.trim();
+      var m = null;
+      for(var i=0;i<coppaMatches.length;i++){
+        if(coppaMatches[i].casa === casa && coppaMatches[i].tras === tras){ m = coppaMatches[i]; break; }
+      }
+      if(m && (m.data || m.ora || m.luogo)){
+        var info = document.createElement("div");
+        info.setAttribute("data-info-cal","1");
+        info.style.cssText = "text-align:center;font-size:11px;color:#9ca3af;margin-top:6px;line-height:1.4";
+        var txt = "";
+        if(m.data) txt += "📅 " + m.data + " ";
+        if(m.ora) txt += "🕐 " + m.ora + " ";
+        if(m.luogo) txt += "<br>📍 " + m.luogo;
+        info.innerHTML = txt;
+        box.insertBefore(info, box.firstChild.nextSibling);
+      }
+    });
+  }
+
+  function _tutto(){
+    _pulisciCalendario();
+    _sistemaDCR();
+    _collegaCalendario();
+    _mostraDataTabellone();
+  }
+
+  var _r = window.render;
+  if(typeof _r === "function"){
+    window.render = function(){ _r(); setTimeout(_tutto, 100); };
+  }
+  setTimeout(_tutto, 600);
+  setTimeout(_tutto, 1500);
+})();
+</script>
 </body>
 </html>

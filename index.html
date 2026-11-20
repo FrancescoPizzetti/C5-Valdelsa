@@ -3888,5 +3888,290 @@ function _nuovaPartitaCoppa(coppa,fase){
   setTimeout(_tutto, 500);
 })();
 </script>
+<script>
+// ===== FIX v5 UNICO - RITIRATA + PENALITA + V N P + NASCONDI 1a FASE =====
+(function(){
+  if(window.__fixV5) return;
+  window.__fixV5 = true;
+
+  function _isRit(n){ try{ var o = teamObj(n); return !!(o && o.ritirata); }catch(e){ return false; } }
+  function _pen(n){ try{ var o = teamObj(n); return parseInt(o.penalita || 0) || 0; }catch(e){ return 0; } }
+  function _ritirataInLega(lega){
+    for(var i=0;i<teams.length;i++){ if(teams[i].l === lega && teams[i].ritirata) return teams[i].n; }
+    return "";
+  }
+  function _checkPw(){
+    var pw = prompt("Per sicurezza, inserisci la PASSWORD ADMIN:");
+    if(pw === null) return false;
+    try{
+      var salvato = settings.adminHash;
+      try{ var hL = localStorage.getItem('c5_adminHash'); if(hL) salvato = parseInt(hL); }catch(e){}
+      if(hashPw(pw) === salvato) return true;
+    }catch(e){}
+    alert("Password sbagliata! Operazione annullata.");
+    return false;
+  }
+
+  // ---------- 1) CALC: salta ritirata + toglie penalità ----------
+  calc = function(){
+    var t = {};
+    var names = teamNames();
+    for(var i=0;i<names.length;i++){ if(_isRit(names[i])) continue; t[names[i]] = {pti:0,g:0,v:0,n:0,p:0,gf:0,gs:0}; }
+    if(typeof bonusB1 !== "undefined" && bonusB1 && bonusB1.team && t[bonusB1.team]) t[bonusB1.team].pti += bonusB1.pti;
+    for(var j=0;j<matches.length;j++){
+      var m = matches[j];
+      if(m.stato !== "Giocata") continue;
+      if(_isRit(m.casa) || _isRit(m.tras)) continue;
+      if(m.fase === "Serie A" || m.fase === "Serie B" || m.fase === "Serie B1" || m.fase === "Serie B2"){
+        if(teamLeague(m.casa) !== m.fase) continue;
+      }
+      if(m.golC === "" || m.golC === undefined) continue;
+      var a = parseInt(m.golC), b = parseInt(m.golT);
+      if(!t[m.casa] || !t[m.tras]) continue;
+      t[m.casa].g++; t[m.tras].g++;
+      t[m.casa].gf += a; t[m.casa].gs += b;
+      t[m.tras].gf += b; t[m.tras].gs += a;
+      if(a > b){ t[m.casa].pti += 3; t[m.casa].v++; t[m.tras].p++; }
+      else if(b > a){ t[m.tras].pti += 3; t[m.tras].v++; t[m.casa].p++; }
+      else { t[m.casa].pti++; t[m.tras].pti++; t[m.casa].n++; t[m.tras].n++; }
+    }
+    for(var k in t){ var pen = _pen(k); if(pen) t[k].pti -= pen; }
+    var arr = [];
+    for(var key in t){ arr.push([key, t[key]]); }
+    arr.sort(function(x,y){ return sortAvulsa(x,y,teamLeague(x[0])); });
+    return arr;
+  };
+
+  // ---------- 2) RITIRATA / ANNULLA RITIRO ----------
+  window.marcaRitirata = function(idx){
+    var sq = teams[idx]; if(!sq) return;
+    if(sq.ritirata){ alert(sq.n + " è già ritirata."); return; }
+    if(!confirm("⚠️ RITIRARE " + sq.n + "?\n\n- Tutte le sue partite diventano RIPOSA\n- Punti / gol di SQUADRA / giornate / V-N-P contro di lei si annullano\n- I gol dei SINGOLI per capocannoniere RESTANO\n- Sparisce dalla classifica\n- Playout: 11a diretta in Finale, Semifinale 12a vs 13a")) return;
+    if(!_checkPw()) return;
+    sq.ritirata = true; save();
+    alert(sq.n + " RITIRATA.");
+  };
+  window.annullaRitiro = function(idx){
+    var sq = teams[idx]; if(!sq) return;
+    if(!sq.ritirata) return;
+    if(!confirm("Annullare il ritiro di " + sq.n + "?\nTorna tutto come prima.")) return;
+    if(!_checkPw()) return;
+    delete sq.ritirata; save();
+    alert("Ritiro annullato. " + sq.n + " è tornata in classifica.");
+  };
+
+  // ---------- 3) PENALITÀ ----------
+  window.applicaPenalita = function(){
+    var sel = document.getElementById("penTeam");
+    var inp = document.getElementById("penPunti");
+    if(!sel || !inp) return;
+    var nome = sel.value; var punti = parseInt(inp.value);
+    if(!nome){ alert("Scegli la squadra"); return; }
+    if(isNaN(punti) || punti < 0){ alert("Scrivi quanti punti togliere, es. 3"); return; }
+    if(!confirm("Togliere " + punti + " punti a " + nome + " in classifica?")) return;
+    var o = teamObj(nome);
+    if(punti === 0) delete o.penalita; else o.penalita = punti;
+    save(); alert(nome + ": penalità " + punti + " punti applicata.");
+  };
+  window.azzeraPenalita = function(){
+    var sel = document.getElementById("penTeam");
+    if(!sel) return;
+    var nome = sel.value; if(!nome) return;
+    var o = teamObj(nome); delete o.penalita; save(); alert("Penalità azzerata per " + nome);
+  };
+
+  // ---------- 4) PLAYOUT CON RITIRATA ----------
+  function _playoutRitirata(){
+    var cl = calc();
+    var clA = cl.filter(function(x){ return teamLeague(x[0]) === "Serie A"; });
+    if(clA.length !== 13) return false;
+    var s11 = clA[10][0], s12 = clA[11][0], s13 = clA[12][0];
+    if(!confirm("Genero PLAYOUT con RITIRATA:\n\n11a " + s11 + " -> DIRETTA IN FINALE\nSemifinale: " + s12 + " vs " + s13 + "\nFinale: " + s11 + " vs Vincente Semifinale\n\nRetrocedono SOLO 2.")) return true;
+    coppaMatches = coppaMatches.filter(function(m){ return m.coppa !== "Playout" && m.coppa !== "Playout Serie A" && m.coppa !== "Playout A"; });
+    function _crea(coppa,fase,casa,tras){ coppaMatches.push({coppa:coppa,fase:fase,casa:casa,tras:tras,data:"",[STRIPPED]
+    }
+    _crea("Playout","Semifinale",s12,s13);
+    _crea("Playout","Finale",s11,"Vinc. Semifinale");
+    save(); alert("Playout con ritirata creato!");
+    return true;
+  }
+  if(typeof generaPlayout === "function"){
+    var _gp = generaPlayout;
+    generaPlayout = function(){ if(_ritirataInLega("Serie A")){ _playoutRitirata(); return; } _gp(); };
+  }
+  if(typeof generaPlayoutNuovo === "function"){
+    var _gpn = generaPlayoutNuovo;
+    generaPlayoutNuovo = function(){ if(_ritirataInLega("Serie A")){ _playoutRitirata(); return; } _gpn(); };
+  }
+  if(typeof generaTabellonePlayout === "function"){
+    var _gtp = generaTabellonePlayout;
+    generaTabellonePlayout = function(){ if(_ritirataInLega("Serie A")){ _playoutRitirata(); return; } _gtp(); };
+  }
+  if(typeof _partiteFiniteDi === "function"){
+    _partiteFiniteDi = function(lega){
+      for(var i=0;i<matches.length;i++){
+        var m = matches[i];
+        if(teamLeague(m.casa) !== lega) continue;
+        if(_isRit(m.casa) || _isRit(m.tras)) continue;
+        if(m.stato !== "Giocata" && m.stato !== "Disputata") return false;
+        if(m.golC === "" || m.golT === "" || m.golC == null || m.golT == null) return false;
+      }
+      return true;
+    };
+  }
+
+  // ---------- 5) DOM DOPO OGNI RENDER ----------
+  function _fixDom(){
+    document.querySelectorAll("button").forEach(function(b){
+      if(b.textContent.trim() === "🟨 Disciplina" || b.textContent.trim() === "Disciplina"){
+        b.textContent = "🟨 Punti in classifica e Disciplina";
+      }
+    });
+    var disc = document.getElementById("adminSec-disc");
+    if(disc && !document.getElementById("penBox")){
+      var box = document.createElement("div");
+      box.id = "penBox";
+      box.className = "card";
+      box.style.cssText = "border-color:#ef4444;margin-top:12px";
+      box.innerHTML =
+        '<h3 style="margin:0 0 8px">⛔ Penalità punti in classifica</h3>' +
+        '<p class="small">Scegli la squadra e quanti punti togliere. La penalità si vede con * in classifica.</p>' +
+        '<div class="label">SQUADRA - SERIE A / B / B1 / B2</div>' +
+        '<select id="penTeam" style="width:100%"></select>' +
+        '<div class="label">PUNTI DA TOGLIERE</div>' +
+        '<input id="penPunti" type="number" min="0" placeholder="Es. 3" style="width:100%" />' +
+        '<div style="display:flex;gap:8px;margin-top:8px">' +
+        '<button class="big" type="button" style="background:#ef4444;color:#fff;flex:1" onclick="applicaPenalita()">⛔ Applica penalità</button>' +
+        '<button class="big" type="button" style="flex:1" onclick="azzeraPenalita()">↩️ Azzera penalità</button></div>' +
+        '<div id="penLista" class="small" style="margin-top:8px"></div>';
+      disc.appendChild(box);
+    }
+    var penSel = document.getElementById("penTeam");
+    if(penSel && !penSel.getAttribute("data-riempita")){
+      var ht = "";
+      teamNames().forEach(function(n){ ht += "<option>" + n + "</option>"; });
+      penSel.innerHTML = ht; penSel.setAttribute("data-riempita","1");
+    }
+    var penLista = document.getElementById("penLista");
+    if(penLista){
+      var pl = teams.filter(function(t){ return _pen(t.n) > 0; }).map(function(t){ return "⛔ " + t.n + " - " + _pen(t.n) + " punti di penalità"; });
+      penLista.innerHTML = pl.length ? pl.join("<br>") : "Nessuna penalità al momento.";
+    }
+    var tl = document.getElementById("teamsList");
+    if(tl){
+      var righe = tl.querySelectorAll(".row");
+      for(var r=0;r<righe.length && r<teams.length;r++){
+        var sq = teams[r];
+        if(righe[r].querySelector("[data-rit-btn]")) continue;
+        var btns = righe[r].querySelector("div:last-child") || righe[r];
+        var b = document.createElement("button");
+        b.setAttribute("data-rit-btn","1"); b.type = "button";
+        if(sq.ritirata){
+          b.textContent = "↩️ ANNULLA RITIRO"; b.style.cssText = "background:#22c55e;color:#000;font-weight:bold;margin-left:4px";
+          b.setAttribute("onclick","annullaRitiro("+r+")");
+          var sp = document.createElement("span"); sp.textContent = " ⛔ RITIRATA"; sp.style.cssText = "color:#ef4444;font-weight:bold;font-size:11px";
+          righe[r].querySelector("div").appendChild(sp);
+        } else {
+          b.textContent = "⛔ RITIRATA"; b.style.cssText = "background:#ef4444;color:#fff;margin-left:4px";
+          b.setAttribute("onclick","marcaRitirata("+r+")");
+        }
+        btns.appendChild(b);
+      }
+    }
+    var ritNomi = teams.filter(function(t){ return t.ritirata; }).map(function(t){ return t.n; });
+    if(ritNomi.length){
+      ["calList","risList","matchesList","pastMatches","upcomingMatches","nextMatch"].forEach(function(id){
+        var box = document.getElementById(id); if(!box) return;
+        var walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT, null, false);
+        var nodi = []; var nn; while(nn = walker.nextNode()){ nodi.push(nn); }
+        nodi.forEach(function(tn){
+          ritNomi.forEach(function(rn){ if(tn.nodeValue && tn.nodeValue.indexOf(rn) !== -1) tn.nodeValue = tn.nodeValue.split(rn).join("RIPOSA"); });
+        });
+        box.querySelectorAll(".row").forEach(function(row){
+          if(row.textContent.indexOf("RIPOSA") !== -1){
+            row.querySelectorAll("b").forEach(function(bEl){ if(/^\s*\d+\s*-\s*\d+\s*$/.test(bEl.textContent)) bEl.textContent = "RIPOSA"; });
+          }
+        });
+      });
+    }
+    var mapTabelle = [
+      {id:"classTableA", lega:"Serie A"},
+      {id:"classTableB", lega:"Serie B"},
+      {id:"classTableB1", lega:"Serie B1"},
+      {id:"classTableB2", lega:"Serie B2"}
+    ];
+    mapTabelle.forEach(function(cfg){
+      var tb = document.getElementById(cfg.id); if(!tb) return;
+      var table = tb.closest("table"); if(!table) return;
+      var headRow = table.querySelector("tr");
+      if(headRow){
+        var heads = Array.prototype.slice.call(headRow.querySelectorAll("th")).map(function(th){ return th.textContent.trim(); });
+        if(heads.indexOf("V") === -1 && heads.indexOf("G") !== -1){
+          var thG = null;
+          headRow.querySelectorAll("th").forEach(function(th){ if(th.textContent.trim() === "G") thG = th; });
+          if(thG){
+            ["P","N","V"].forEach(function(txt){ var nth = document.createElement("th"); nth.textContent = txt; thG.parentNode.insertBefore(nth, thG.nextSibling); });
+            var inserted = []; var cur = thG.nextSibling;
+            while(cur && inserted.length < 3){ inserted.push(cur); cur = cur.nextSibling; }
+            thG.parentNode.insertBefore(inserted[2], thG.nextSibling);
+            thG.parentNode.insertBefore(inserted[1], inserted[2].nextSibling);
+            thG.parentNode.insertBefore(inserted[0], inserted[1].nextSibling);
+          }
+        }
+        headRow.querySelectorAll("th").forEach(function(th){
+          if(th.textContent.trim() === "1a Fase" || th.textContent.trim() === "1a fase") th.remove();
+        });
+      }
+      var cl = calc().filter(function(x){ return teamLeague(x[0]) === cfg.lega; });
+      var righeTab = tb.querySelectorAll("tr");
+      righeTab.forEach(function(row, idx){
+        if(row.querySelector("[data-vnp]")) return;
+        var nomeEl = row.querySelector(".teamName");
+        if(!nomeEl) return;
+        var nome = nomeEl.textContent.trim();
+        var dato = null;
+        for(var d=0;d<cl.length;d++){ if(cl[d][0] === nome){ dato = cl[d][1]; break; } }
+        if(!dato) return;
+        var celle = row.querySelectorAll("td");
+        if(celle.length >= 4){
+          if(_pen(nome) > 0 && celle[2].textContent.indexOf("*") === -1){
+            celle[2].innerHTML = "<b>" + dato.pti + "*</b>";
+          }
+          [dato.p, dato.n, dato.v].forEach(function(val){
+            var ntd = document.createElement("td"); ntd.setAttribute("data-vnp","1"); ntd.textContent = val;
+            celle[3].parentNode.insertBefore(ntd, celle[3].nextSibling);
+          });
+          var ins = []; var c = celle[3].nextSibling;
+          while(c && ins.length < 3){ ins.push(c); c = c.nextSibling; }
+          celle[3].parentNode.insertBefore(ins[2], celle[3].nextSibling);
+          celle[3].parentNode.insertBefore(ins[1], ins[2].nextSibling);
+          celle[3].parentNode.insertBefore(ins[0], ins[1].nextSibling);
+        }
+        var headerCount = table.querySelector("tr").querySelectorAll("th").length;
+        var rowCells = row.querySelectorAll("td");
+        if(rowCells.length > headerCount){
+          rowCells[rowCells.length - 1].remove();
+        }
+      });
+      var card = table.closest(".card") || table.parentElement;
+      if(card){
+        var vecchia = card.querySelector("[data-leg-pen]");
+        if(vecchia) vecchia.remove();
+        var penInLega = cl.filter(function(x){ return _pen(x[0]) > 0; });
+        if(penInLega.length){
+          var leg = document.createElement("div");
+          leg.setAttribute("data-leg-pen","1");
+          leg.style.cssText = "font-size:12px;color:#fca5a5;margin-top:8px;text-align:left";
+          leg.innerHTML = penInLega.map(function(x){ return "* " + x[0] + " - " + _pen(x[0]) + " punti di penalità"; }).join("<br>");
+          card.appendChild(leg);
+        }
+      }
+    });
+  }
+  var _renderOrig = render;
+  render = function(){ _renderOrig(); try{ _fixDom(); }catch(e){} };
+  setInterval(function(){ try{ _fixDom(); }catch(e){} }, 1200);
+})();
+</script>
 </body>
 </html>

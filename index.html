@@ -4173,12 +4173,10 @@ function _nuovaPartitaCoppa(coppa,fase){
 })();
 </script>
 <script>
-/* FIX V6.4 - UN SOLO FILTRO SOPRA GIORNATA 1 */
+/* FIX V6.5 - FILTRO SOPRA matchesList */
 (function(){
-  var old1 = document.getElementById('barraFiltroGiornata');
-  if(old1) old1.remove();
-  var olds = document.querySelectorAll('.boxFiltroCalendarioAdmin, #unicoFiltroCalendario');
-  for(var v=0; v<olds.length; v++){ olds[v].remove(); }
+  if(window.__fixFiltro65) return;
+  window.__fixFiltro65 = true;
 
   function matchTesto(testo, g, c){
     if(g){
@@ -4196,63 +4194,64 @@ function _nuovaPartitaCoppa(coppa,fase){
     if(!box) return;
     var g = box.querySelector('.selFiltroGiornataUnico').value;
     var c = box.querySelector('.selFiltroCampUnico').value;
-    var righe = document.querySelectorAll('div, li, tr');
-    for(var k=0;k<righe.length;k++){
-      var el = righe[k];
-      if(el.id === 'unicoFiltroCalendario' || (el.closest && el.closest('#unicoFiltroCalendario'))) continue;
-      var txt = el.textContent || '';
-      if(txt.indexOf('Giornata') === -1) continue;
-      if(txt.length > 500) continue;
-      if(!el.querySelector('button')) continue;
-      if(el.querySelector('div, li, tr')) continue;
-      if(g === '' && c === ''){ el.style.display=''; continue; }
-      el.style.display = matchTesto(txt, g, c) ? '' : 'none';
+
+    // 1) Lista sotto i marcatori - quella di foto 3
+    var list = document.getElementById('matchesList');
+    if(list){
+      var righe = list.querySelectorAll(':scope > .row, :scope > div');
+      for(var k=0;k<righe.length;k++){
+        var el = righe[k];
+        var txt = el.textContent || '';
+        if(txt.indexOf('Giornata') === -1 && txt.indexOf('Coppa') === -1) continue;
+        if(g === '' && c === ''){ el.style.display=''; continue; }
+        el.style.display = matchTesto(txt, g, c) ? '' : 'none';
+      }
     }
-    var selects = document.querySelectorAll('select');
-    for(var s=0;s<selects.length;s++){
-      var sel = selects[s];
-      if(sel.className.indexOf('selFiltroGiornataUnico') !== -1 || sel.className.indexOf('selFiltroCampUnico') !== -1) continue;
+
+    // 2) Menu SCEGLI LA PARTITA
+    var sel = document.getElementById('fMatchSelect');
+    if(sel){
       if(!sel.dataset.origSalvato){
         sel.dataset.origSalvato = '1';
+        var arr = [];
+        for(var j=0;j<sel.options.length;j++){ arr.push({t: sel.options[j].text, v: sel.options[j].value}); }
+        sel.dataset.origOpzioni = JSON.stringify(arr);
+      }
+      // Se render() ha ricreato le opzioni, aggiorna l'originale
+      if(sel.options.length > 1 && sel.dataset.origCount !== String(sel.options.length)){
         var arr2 = [];
-        for(var j=0;j<sel.options.length;j++){ arr2.push({t: sel.options[j].text, v: sel.options[j].value}); }
-        sel.dataset.origOpzioni = JSON.stringify(arr2);
+        for(var j2=0;j2<sel.options.length;j2++){ arr2.push({t: sel.options[j2].text, v: sel.options[j2].value}); }
+        var haGiornata = false;
+        for(var q=0;q<arr2.length;q++){ if(arr2[q].t.indexOf('Giornata') !== -1){ haGiornata = true; break; } }
+        if(haGiornata){ sel.dataset.origOpzioni = JSON.stringify(arr2); sel.dataset.origCount = String(sel.options.length); }
       }
       var orig = [];
       try{ orig = JSON.parse(sel.dataset.origOpzioni || '[]'); }catch(e){ orig = []; }
-      var haPartita = false;
-      for(var q=0;q<orig.length;q++){ if(orig[q].t.indexOf('Giornata') !== -1 || orig[q].t.indexOf('Coppa') !== -1 || orig[q].t.indexOf('Playoff') !== -1 || orig[q].t.indexOf('Playout') !== -1 || orig[q].t.indexOf('Finale') !== -1){ haPartita = true; break; } }
-      if(!haPartita) continue;
-      var prima = orig[0];
-      sel.innerHTML = '';
-      var opt0 = document.createElement('option');
-      opt0.text = prima ? prima.t : 'Scegli partita';
-      opt0.value = prima ? prima.v : '';
-      sel.appendChild(opt0);
-      for(var z=1;z<orig.length;z++){
-        if(g === '' && c === ''){ var o1=document.createElement('option'); o1.text=orig[z].t; o1.value=orig[z].v; sel.appendChild(o1); }
-        else if(matchTesto(orig[z].t, g, c)){ var o2=document.createElement('option'); o2.text=orig[z].t; o2.value=orig[z].v; sel.appendChild(o2); }
+      if(orig.length > 1 && (g !== '' || c !== '')){
+        var cur = sel.value;
+        sel.innerHTML = '';
+        for(var z=0;z<orig.length;z++){
+          if(matchTesto(orig[z].t, g, c)){
+            var oo = document.createElement('option');
+            oo.text = orig[z].t; oo.value = orig[z].v;
+            sel.appendChild(oo);
+          }
+        }
+        if(sel.options.length === 0){
+          var oe = document.createElement('option');
+          oe.text = 'Nessuna partita con questo filtro'; oe.value = '';
+          sel.appendChild(oe);
+        }
+        sel.value = cur;
+        if(sel.selectedIndex < 0) sel.selectedIndex = 0;
       }
-      sel.selectedIndex = 0;
     }
   }
 
   function provaInserire(){
     if(document.getElementById('unicoFiltroCalendario')) return;
-    // Trova la PRIMA riga Giornata 1 con la X
-    var righe = document.querySelectorAll('div, li');
-    var primaRiga = null;
-    for(var i=0;i<righe.length;i++){
-      var el = righe[i];
-      var txt = (el.textContent || '').trim();
-      if(txt.indexOf('Giornata') !== 0) continue;
-      if(txt.length > 300) continue;
-      if(!el.querySelector('button')) continue;
-      if(el.querySelector('div, li')) continue;
-      primaRiga = el;
-      break;
-    }
-    if(!primaRiga || !primaRiga.parentElement) return;
+    var list = document.getElementById('matchesList');
+    if(!list || !list.parentElement) return;
 
     var box = document.createElement('div');
     box.id = 'unicoFiltroCalendario';
@@ -4261,14 +4260,19 @@ function _nuovaPartitaCoppa(coppa,fase){
     var sg = box.querySelector('.selFiltroGiornataUnico');
     for(var n=1;n<=30;n++){ var o=document.createElement('option'); o.value=String(n); o.textContent='Giornata '+n; sg.appendChild(o); }
 
-    primaRiga.parentElement.insertBefore(box, primaRiga);
+    list.parentElement.insertBefore(box, list);
 
     box.querySelector('.selFiltroGiornataUnico').addEventListener('change', filtra);
     box.querySelector('.selFiltroCampUnico').addEventListener('change', filtra);
     box.querySelector('.btnResetFiltroUnico').addEventListener('click', function(){
       box.querySelector('.selFiltroGiornataUnico').value = '';
       box.querySelector('.selFiltroCampUnico').value = '';
-      filtra();
+      var l2 = document.getElementById('matchesList');
+      if(l2){
+        var rr = l2.querySelectorAll(':scope > .row, :scope > div');
+        for(var i=0;i<rr.length;i++){ rr[i].style.display=''; }
+      }
+      if(typeof render === 'function'){ try{ render(); }catch(e){} }
     });
   }
 
@@ -4280,7 +4284,7 @@ function _nuovaPartitaCoppa(coppa,fase){
       var c = box.querySelector('.selFiltroCampUnico').value;
       if(g !== '' || c !== '') filtra();
     }
-  }, 1200);
+  }, 1000);
   provaInserire();
 })();
 </script>

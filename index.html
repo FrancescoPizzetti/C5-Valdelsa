@@ -4173,10 +4173,10 @@ function _nuovaPartitaCoppa(coppa,fase){
 })();
 </script>
 <script>
-/* FIX V6.5 - FILTRO SOPRA matchesList */
+/* FIX V6.6 - FILTRO SOLO LISTA, MAI IL MENU SCEGLI PARTITA */
 (function(){
-  if(window.__fixFiltro65) return;
-  window.__fixFiltro65 = true;
+  if(window.__fixFiltro66) return;
+  window.__fixFiltro66 = true;
 
   function matchTesto(testo, g, c){
     if(g){
@@ -4195,7 +4195,8 @@ function _nuovaPartitaCoppa(coppa,fase){
     var g = box.querySelector('.selFiltroGiornataUnico').value;
     var c = box.querySelector('.selFiltroCampUnico').value;
 
-    // 1) Lista sotto i marcatori - quella di foto 3
+    // SOLO la lista sotto i marcatori, quella con le X
+    // NON tocchiamo mai #fMatchSelect
     var list = document.getElementById('matchesList');
     if(list){
       var righe = list.querySelectorAll(':scope > .row, :scope > div');
@@ -4205,45 +4206,6 @@ function _nuovaPartitaCoppa(coppa,fase){
         if(txt.indexOf('Giornata') === -1 && txt.indexOf('Coppa') === -1) continue;
         if(g === '' && c === ''){ el.style.display=''; continue; }
         el.style.display = matchTesto(txt, g, c) ? '' : 'none';
-      }
-    }
-
-    // 2) Menu SCEGLI LA PARTITA
-    var sel = document.getElementById('fMatchSelect');
-    if(sel){
-      if(!sel.dataset.origSalvato){
-        sel.dataset.origSalvato = '1';
-        var arr = [];
-        for(var j=0;j<sel.options.length;j++){ arr.push({t: sel.options[j].text, v: sel.options[j].value}); }
-        sel.dataset.origOpzioni = JSON.stringify(arr);
-      }
-      // Se render() ha ricreato le opzioni, aggiorna l'originale
-      if(sel.options.length > 1 && sel.dataset.origCount !== String(sel.options.length)){
-        var arr2 = [];
-        for(var j2=0;j2<sel.options.length;j2++){ arr2.push({t: sel.options[j2].text, v: sel.options[j2].value}); }
-        var haGiornata = false;
-        for(var q=0;q<arr2.length;q++){ if(arr2[q].t.indexOf('Giornata') !== -1){ haGiornata = true; break; } }
-        if(haGiornata){ sel.dataset.origOpzioni = JSON.stringify(arr2); sel.dataset.origCount = String(sel.options.length); }
-      }
-      var orig = [];
-      try{ orig = JSON.parse(sel.dataset.origOpzioni || '[]'); }catch(e){ orig = []; }
-      if(orig.length > 1 && (g !== '' || c !== '')){
-        var cur = sel.value;
-        sel.innerHTML = '';
-        for(var z=0;z<orig.length;z++){
-          if(matchTesto(orig[z].t, g, c)){
-            var oo = document.createElement('option');
-            oo.text = orig[z].t; oo.value = orig[z].v;
-            sel.appendChild(oo);
-          }
-        }
-        if(sel.options.length === 0){
-          var oe = document.createElement('option');
-          oe.text = 'Nessuna partita con questo filtro'; oe.value = '';
-          sel.appendChild(oe);
-        }
-        sel.value = cur;
-        if(sel.selectedIndex < 0) sel.selectedIndex = 0;
       }
     }
   }
@@ -4272,9 +4234,15 @@ function _nuovaPartitaCoppa(coppa,fase){
         var rr = l2.querySelectorAll(':scope > .row, :scope > div');
         for(var i=0;i<rr.length;i++){ rr[i].style.display=''; }
       }
-      if(typeof render === 'function'){ try{ render(); }catch(e){} }
     });
   }
+
+  // Ripara il menù rovinato dal V6.5: lo fa ricreare da render()
+  setTimeout(function(){
+    var sel = document.getElementById('fMatchSelect');
+    if(sel){ delete sel.dataset.origSalvato; delete sel.dataset.origOpzioni; delete sel.dataset.origCount; }
+    if(typeof render === 'function'){ try{ render(); }catch(e){} }
+  }, 500);
 
   setInterval(function(){
     provaInserire();

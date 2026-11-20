@@ -4173,20 +4173,27 @@ function _nuovaPartitaCoppa(coppa,fase){
 })();
 </script>
 <script>
-/* FIX V6.6 - FILTRO SOLO LISTA, MAI IL MENU SCEGLI PARTITA */
+/* FIX V6.7 - FILTRO LISTA + MENU SCEGLI PARTITA, SENZA SVUOTARLO */
 (function(){
-  if(window.__fixFiltro66) return;
-  window.__fixFiltro66 = true;
+  if(window.__fixFiltro67) return;
+  window.__fixFiltro67 = true;
 
-  function matchTesto(testo, g, c){
+  function matchLista(testo, g, c){
     if(g){
       var mm = testo.match(/Giornata\s*(\d+)/i);
       if(!mm || mm[1] !== g) return false;
     }
-    if(c){
-      if(testo.indexOf(c) === -1) return false;
-    }
+    if(c && testo.indexOf(c) === -1) return false;
     return true;
+  }
+
+  function trovaMatch(casa, tras, giorn){
+    if(typeof matches === 'undefined') return null;
+    for(var i=0;i<matches.length;i++){
+      var m = matches[i];
+      if(m.casa === casa && m.tras === tras && String(m.giornata||1) === String(giorn)) return m;
+    }
+    return null;
   }
 
   function filtra(){
@@ -4195,8 +4202,7 @@ function _nuovaPartitaCoppa(coppa,fase){
     var g = box.querySelector('.selFiltroGiornataUnico').value;
     var c = box.querySelector('.selFiltroCampUnico').value;
 
-    // SOLO la lista sotto i marcatori, quella con le X
-    // NON tocchiamo mai #fMatchSelect
+    // 1) Lista sotto - come prima
     var list = document.getElementById('matchesList');
     if(list){
       var righe = list.querySelectorAll(':scope > .row, :scope > div');
@@ -4205,7 +4211,64 @@ function _nuovaPartitaCoppa(coppa,fase){
         var txt = el.textContent || '';
         if(txt.indexOf('Giornata') === -1 && txt.indexOf('Coppa') === -1) continue;
         if(g === '' && c === ''){ el.style.display=''; continue; }
-        el.style.display = matchTesto(txt, g, c) ? '' : 'none';
+        el.style.display = matchLista(txt, g, c) ? '' : 'none';
+      }
+    }
+
+    // 2) Menu SCEGLI LA PARTITA - filtrato dal VALORE, non dal testo
+    var sel = document.getElementById('fMatchSelect');
+    if(sel && sel.options.length > 1){
+      // Salva l'originale solo la prima volta che è completo
+      if(!sel.dataset.orig67){
+        var arr = [];
+        for(var j=0;j<sel.options.length;j++){ arr.push({t: sel.options[j].text, v: sel.options[j].value}); }
+        // Salva solo se è una lista vera, non quella vuota
+        if(arr.length > 5){ sel.dataset.orig67 = JSON.stringify(arr); }
+      }
+      // Se render() ha ricreato la lista completa, aggiorna l'originale
+      if(sel.options.length > 5 && (!sel.dataset.orig67 || JSON.parse(sel.dataset.orig67).length !== sel.options.length)){
+        // Se non stiamo filtrando, questa è la lista completa
+        if(g === '' && c === ''){
+          var arr2 = [];
+          for(var j2=0;j2<sel.options.length;j2++){ arr2.push({t: sel.options[j2].text, v: sel.options[j2].value}); }
+          sel.dataset.orig67 = JSON.stringify(arr2);
+        }
+      }
+      if(g !== '' || c !== ''){
+        var orig = [];
+        try{ orig = JSON.parse(sel.dataset.orig67 || '[]'); }catch(e){ orig = []; }
+        if(orig.length > 5){
+          var cur = sel.value;
+          var primaScelta = '';
+          sel.innerHTML = '';
+          for(var z=0;z<orig.length;z++){
+            var parts = (orig[z].v || '').split('||');
+            var casa = parts[0] || '', tras = parts[1] || '', giorn = parts[2] || '';
+            var m = trovaMatch(casa, tras, giorn);
+            var fase = m ? (m.fase || '') : '';
+            var okG = (g === '' || String(giorn) === String(g));
+            var okC = (c === '' || fase === c || fase.indexOf(c) !== -1);
+            // Se non trova il match in matches, usa il testo come fallback per la giornata
+            if(!m){ okC = true; var mm2 = orig[z].t.match(/Giornata\s*(\d+)/i); okG = (g === '' || (mm2 && mm2[1] === g)); }
+            if(okG && okC){
+              var oo = document.createElement('option');
+              oo.text = orig[z].t; oo.value = orig[z].v;
+              sel.appendChild(oo);
+              if(!primaScelta) primaScelta = oo.value;
+            }
+          }
+          if(sel.options.length === 0){
+            var oe = document.createElement('option');
+            oe.text = 'Nessuna partita Giornata ' + (g||'') + ' ' + (c||'') + ' - premi Mostra tutto'; oe.value = '';
+            sel.appendChild(oe);
+          } else {
+            // Se la partita che avevi scelto è ancora nel filtro, tienila. Altrimenti vai alla prima del filtro.
+            var resta = false;
+            for(var w=0;w<sel.options.length;w++){ if(sel.options[w].value === cur){ resta = true; break; } }
+            if(resta){ sel.value = cur; }
+            else { sel.value = primaScelta; sel.selectedIndex = 0; if(typeof refreshScorerPlayers === 'function'){ try{ refreshScorerPlayers(); }catch(e){} } }
+          }
+        }
       }
     }
   }
@@ -4214,35 +4277,25 @@ function _nuovaPartitaCoppa(coppa,fase){
     if(document.getElementById('unicoFiltroCalendario')) return;
     var list = document.getElementById('matchesList');
     if(!list || !list.parentElement) return;
-
     var box = document.createElement('div');
     box.id = 'unicoFiltroCalendario';
     box.style.cssText = 'background:#111;color:#fff;padding:12px;border:2px solid #FFD700;border-radius:12px;margin:12px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:sans-serif;font-size:14px;';
     box.innerHTML = '<b style="color:#FFD700;">FILTRA:</b><select class="selFiltroGiornataUnico" style="padding:8px;border-radius:8px;background:#000;color:#fff;min-width:110px;flex:1;"><option value="">Tutte le giornate</option></select><select class="selFiltroCampUnico" style="padding:8px;border-radius:8px;background:#000;color:#fff;min-width:130px;flex:1;"><option value="">Tutte le competizioni</option><option value="Serie A">Serie A</option><option value="Serie B">Serie B</option><option value="Serie B1">Serie B1</option><option value="Serie B2">Serie B2</option><option value="Coppa">Coppa</option><option value="Playoff">Playoff</option><option value="Playout">Playout</option><option value="Supercoppa">Supercoppa</option><option value="Finale">Finale</option><option value="Semifinale">Semifinale</option><option value="Quarti">Quarti di finale</option></select><button class="btnResetFiltroUnico" style="padding:8px 12px;border-radius:8px;background:#FFD700;color:#000;font-weight:bold;border:0;">Mostra tutto</button>';
     var sg = box.querySelector('.selFiltroGiornataUnico');
     for(var n=1;n<=30;n++){ var o=document.createElement('option'); o.value=String(n); o.textContent='Giornata '+n; sg.appendChild(o); }
-
     list.parentElement.insertBefore(box, list);
-
     box.querySelector('.selFiltroGiornataUnico').addEventListener('change', filtra);
     box.querySelector('.selFiltroCampUnico').addEventListener('change', filtra);
     box.querySelector('.btnResetFiltroUnico').addEventListener('click', function(){
       box.querySelector('.selFiltroGiornataUnico').value = '';
       box.querySelector('.selFiltroCampUnico').value = '';
       var l2 = document.getElementById('matchesList');
-      if(l2){
-        var rr = l2.querySelectorAll(':scope > .row, :scope > div');
-        for(var i=0;i<rr.length;i++){ rr[i].style.display=''; }
-      }
+      if(l2){ var rr = l2.querySelectorAll(':scope > .row, :scope > div'); for(var i=0;i<rr.length;i++){ rr[i].style.display=''; } }
+      var sel2 = document.getElementById('fMatchSelect');
+      if(sel2){ delete sel2.dataset.orig67; }
+      if(typeof render === 'function'){ try{ render(); }catch(e){} }
     });
   }
-
-  // Ripara il menù rovinato dal V6.5: lo fa ricreare da render()
-  setTimeout(function(){
-    var sel = document.getElementById('fMatchSelect');
-    if(sel){ delete sel.dataset.origSalvato; delete sel.dataset.origOpzioni; delete sel.dataset.origCount; }
-    if(typeof render === 'function'){ try{ render(); }catch(e){} }
-  }, 500);
 
   setInterval(function(){
     provaInserire();
@@ -4255,6 +4308,7 @@ function _nuovaPartitaCoppa(coppa,fase){
   }, 1000);
   provaInserire();
 })();
+</script>
 </script>
 </body>
 </html>

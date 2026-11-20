@@ -4173,22 +4173,13 @@ function _nuovaPartitaCoppa(coppa,fase){
 })();
 </script>
 <script>
-/* FIX V6.2 - FILTRO DENTRO CALENDARIO ADMIN */
+/* FIX V6.3 - UN SOLO FILTRO SOPRA LISTA GIORNATA */
 (function(){
-  var vecchio = document.getElementById('barraFiltroGiornata');
-  if(vecchio) vecchio.remove();
-  var vecchi = document.querySelectorAll('.boxFiltroCalendarioAdmin');
-  for(var v=0; v<vecchi.length; v++){ vecchi[v].remove(); }
-
-  function creaBoxFiltro(){
-    var box = document.createElement('div');
-    box.className = 'boxFiltroCalendarioAdmin';
-    box.style.cssText = 'background:#111;color:#fff;padding:12px;border:2px solid #FFD700;border-radius:12px;margin:12px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:sans-serif;font-size:14px;';
-    box.innerHTML = '<b style="color:#FFD700;">FILTRA:</b><select class="selFiltroGiornataAdmin" style="padding:8px;border-radius:8px;background:#000;color:#fff;min-width:110px;flex:1;"><option value="">Tutte le giornate</option></select><select class="selFiltroCampAdmin" style="padding:8px;border-radius:8px;background:#000;color:#fff;min-width:130px;flex:1;"><option value="">Tutte le competizioni</option><option value="Serie A">Serie A</option><option value="Serie B">Serie B</option><option value="Serie B1">Serie B1</option><option value="Serie B2">Serie B2</option><option value="Coppa">Coppa</option><option value="Playoff">Playoff</option><option value="Playout">Playout</option><option value="Supercoppa">Supercoppa</option><option value="Finale">Finale</option><option value="Semifinale">Semifinale</option><option value="Quarti">Quarti di finale</option></select><button class="btnResetFiltroAdmin" style="padding:8px 12px;border-radius:8px;background:#FFD700;color:#000;font-weight:bold;border:0;">Mostra tutto</button>';
-    var sg = box.querySelector('.selFiltroGiornataAdmin');
-    for(var i=1;i<=30;i++){ var o=document.createElement('option'); o.value=String(i); o.textContent='Giornata '+i; sg.appendChild(o); }
-    return box;
-  }
+  // Pulisci tutti i vecchi filtri
+  var old1 = document.getElementById('barraFiltroGiornata');
+  if(old1) old1.remove();
+  var olds = document.querySelectorAll('.boxFiltroCalendarioAdmin');
+  for(var v=0; v<olds.length; v++){ olds[v].remove(); }
 
   function matchTesto(testo, g, c){
     if(g){
@@ -4201,51 +4192,31 @@ function _nuovaPartitaCoppa(coppa,fase){
     return true;
   }
 
-  function leggiFiltro(){
-    var boxes = document.querySelectorAll('.boxFiltroCalendarioAdmin');
-    var g = '', c = '';
-    for(var b=0;b<boxes.length;b++){
-      var sg = boxes[b].querySelector('.selFiltroGiornataAdmin');
-      var sc = boxes[b].querySelector('.selFiltroCampAdmin');
-      if(sg && sg.value) g = sg.value;
-      if(sc && sc.value) c = sc.value;
-    }
-    return {g:g, c:c};
-  }
-
-  function sincronizza(testoG, testoC, chiHaCambiato){
-    var boxes = document.querySelectorAll('.boxFiltroCalendarioAdmin');
-    for(var b=0;b<boxes.length;b++){
-      var box = boxes[b];
-      if(box === chiHaCambiato) continue;
-      var sg = box.querySelector('.selFiltroGiornataAdmin');
-      var sc = box.querySelector('.selFiltroCampAdmin');
-      if(sg) sg.value = testoG;
-      if(sc) sc.value = testoC;
-    }
-  }
-
   function filtra(){
-    var f = leggiFiltro();
-    var g = f.g, c = f.c;
-    var els = document.querySelectorAll('div, li, tr');
-    for(var k=0;k<els.length;k++){
-      var el = els[k];
-      if(el.closest && el.closest('.boxFiltroCalendarioAdmin')) continue;
+    var box = document.getElementById('unicoFiltroCalendario');
+    if(!box) return;
+    var g = box.querySelector('.selFiltroGiornataUnico').value;
+    var c = box.querySelector('.selFiltroCampUnico').value;
+
+    // Filtra solo la lista con le X, quella di foto 3
+    var righe = document.querySelectorAll('div, li, tr');
+    for(var k=0;k<righe.length;k++){
+      var el = righe[k];
+      if(el.id === 'unicoFiltroCalendario' || el.closest('#unicoFiltroCalendario')) continue;
       var txt = el.textContent || '';
-      if(txt.indexOf('Giornata') === -1 && txt.indexOf('Coppa') === -1 && txt.indexOf('Playoff') === -1 && txt.indexOf('Playout') === -1 && txt.indexOf('Finale') === -1 && txt.indexOf('Semifinale') === -1) continue;
+      if(txt.indexOf('Giornata') === -1) continue;
       if(txt.length > 500) continue;
-      var haX = el.querySelector('button');
-      var sembraRiga = (el.tagName === 'LI' || el.tagName === 'TR' || (el.children.length <= 3 && haX));
-      if(!sembraRiga) continue;
+      if(!el.querySelector('button')) continue;
       if(el.querySelector('div, li, tr')) continue;
       if(g === '' && c === ''){ el.style.display=''; continue; }
       el.style.display = matchTesto(txt, g, c) ? '' : 'none';
     }
+
+    // Filtra solo il menu SCEGLI LA PARTITA
     var selects = document.querySelectorAll('select');
     for(var s=0;s<selects.length;s++){
       var sel = selects[s];
-      if(sel.className.indexOf('selFiltroGiornataAdmin') !== -1 || sel.className.indexOf('selFiltroCampAdmin') !== -1) continue;
+      if(sel.className.indexOf('selFiltroGiornataUnico') !== -1 || sel.className.indexOf('selFiltroCampUnico') !== -1) continue;
       if(!sel.dataset.origSalvato){
         sel.dataset.origSalvato = '1';
         var arr2 = [];
@@ -4271,66 +4242,51 @@ function _nuovaPartitaCoppa(coppa,fase){
     }
   }
 
-  function collegaBox(box){
-    var sg = box.querySelector('.selFiltroGiornataAdmin');
-    var sc = box.querySelector('.selFiltroCampAdmin');
-    var btn = box.querySelector('.btnResetFiltroAdmin');
-    sg.addEventListener('change', function(){ sincronizza(sg.value, sc.value, box); filtra(); });
-    sc.addEventListener('change', function(){ sincronizza(sg.value, sc.value, box); filtra(); });
-    btn.addEventListener('click', function(){
-      var boxes = document.querySelectorAll('.boxFiltroCalendarioAdmin');
-      for(var b=0;b<boxes.length;b++){
-        boxes[b].querySelector('.selFiltroGiornataAdmin').value = '';
-        boxes[b].querySelector('.selFiltroCampAdmin').value = '';
+  function provaInserire(){
+    if(document.getElementById('unicoFiltroCalendario')) return;
+
+    // Trova la lista vera: un contenitore che ha tante righe "Giornata ... X"
+    var candidati = document.querySelectorAll('div');
+    var listaTrovata = null;
+    for(var i=0;i<candidati.length;i++){
+      var txt = candidati[i].textContent || '';
+      var conta = (txt.match(/Giornata\s*\d+/g) || []).length;
+      // Deve avere almeno 5 partite e deve avere le X, e non deve essere tutto il body
+      if(conta >= 5 && candidati[i].querySelectorAll('button').length >= 5 && txt.length < 8000){
+        listaTrovata = candidati[i];
+        break;
       }
+    }
+    if(!listaTrovata) return;
+
+    // Crea UNA sola box
+    var box = document.createElement('div');
+    box.id = 'unicoFiltroCalendario';
+    box.style.cssText = 'background:#111;color:#fff;padding:12px;border:2px solid #FFD700;border-radius:12px;margin:12px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:sans-serif;font-size:14px;';
+    box.innerHTML = '<b style="color:#FFD700;">FILTRA:</b><select class="selFiltroGiornataUnico" style="padding:8px;border-radius:8px;background:#000;color:#fff;min-width:110px;flex:1;"><option value="">Tutte le giornate</option></select><select class="selFiltroCampUnico" style="padding:8px;border-radius:8px;background:#000;color:#fff;min-width:130px;flex:1;"><option value="">Tutte le competizioni</option><option value="Serie A">Serie A</option><option value="Serie B">Serie B</option><option value="Serie B1">Serie B1</option><option value="Serie B2">Serie B2</option><option value="Coppa">Coppa</option><option value="Playoff">Playoff</option><option value="Playout">Playout</option><option value="Supercoppa">Supercoppa</option><option value="Finale">Finale</option><option value="Semifinale">Semifinale</option><option value="Quarti">Quarti di finale</option></select><button class="btnResetFiltroUnico" style="padding:8px 12px;border-radius:8px;background:#FFD700;color:#000;font-weight:bold;border:0;">Mostra tutto</button>';
+    var sg = box.querySelector('.selFiltroGiornataUnico');
+    for(var n=1;n<=30;n++){ var o=document.createElement('option'); o.value=String(n); o.textContent='Giornata '+n; sg.appendChild(o); }
+
+    // Mettila SUBITO SOPRA la prima riga Giornata 1
+    listaTrovata.insertBefore(box, listaTrovata.firstChild);
+
+    box.querySelector('.selFiltroGiornataUnico').addEventListener('change', filtra);
+    box.querySelector('.selFiltroCampUnico').addEventListener('change', filtra);
+    box.querySelector('.btnResetFiltroUnico').addEventListener('click', function(){
+      box.querySelector('.selFiltroGiornataUnico').value = '';
+      box.querySelector('.selFiltroCampUnico').value = '';
       filtra();
     });
   }
 
-  function provaInserire(){
-    if(document.querySelectorAll('.boxFiltroCalendarioAdmin').length >= 2) return;
-    var tutti = document.querySelectorAll('h1,h2,h3,h4,div,p,button,summary');
-    var punti = [];
-    for(var i=0;i<tutti.length;i++){
-      var t = (tutti[i].textContent || '').toLowerCase();
-      if(t.indexOf('metti risultati') !== -1 || t.indexOf('crea / modifica calendario') !== -1 || t.indexOf('crea/modifica calendario') !== -1 || t.indexOf('modifica calendario') !== -1 || t.indexOf('scegli la partita') !== -1 || t.indexOf('gestisci calendario') !== -1){
-        punti.push(tutti[i]);
-      }
-    }
-    for(var p=0;p<punti.length;p++){
-      var el = punti[p];
-      var contenitore = el;
-      for(var lvl=0; lvl<5; lvl++){
-        if(!contenitore.parentElement) break;
-        contenitore = contenitore.parentElement;
-        if(contenitore.querySelector && contenitore.querySelector('select')) break;
-      }
-      if(contenitore.querySelector('.boxFiltroCalendarioAdmin')) continue;
-      var box = creaBoxFiltro();
-      collegaBox(box);
-      if(el.parentElement) el.parentElement.insertBefore(box, el);
-      else contenitore.insertBefore(box, contenitore.firstChild);
-      if(document.querySelectorAll('.boxFiltroCalendarioAdmin').length >= 2) return;
-    }
-    if(document.querySelectorAll('.boxFiltroCalendarioAdmin').length === 0){
-      var selPartita = null;
-      var sels = document.querySelectorAll('select');
-      for(var s2=0;s2<sels.length;s2++){
-        var txtOpt = sels[s2].textContent || '';
-        if(txtOpt.indexOf('Giornata') !== -1){ selPartita = sels[s2]; break; }
-      }
-      if(selPartita && selPartita.parentElement){
-        var box2 = creaBoxFiltro();
-        collegaBox(box2);
-        selPartita.parentElement.insertBefore(box2, selPartita);
-      }
-    }
-  }
-
   setInterval(function(){
     provaInserire();
-    var f = leggiFiltro();
-    if(f.g !== '' || f.c !== '') filtra();
+    var box = document.getElementById('unicoFiltroCalendario');
+    if(box){
+      var g = box.querySelector('.selFiltroGiornataUnico').value;
+      var c = box.querySelector('.selFiltroCampUnico').value;
+      if(g !== '' || c !== '') filtra();
+    }
   }, 1500);
   provaInserire();
 })();

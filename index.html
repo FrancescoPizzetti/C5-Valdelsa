@@ -4311,60 +4311,72 @@ function _nuovaPartitaCoppa(coppa,fase){
 </script>
 </script>
 <script>
-/* FIX V7 - CLASSIFICA DA P N V A V N P */
+/* FIX V7.1 - CLASSIFICA SEMPRE V N P, ALLINEATA */
 (function(){
-  if(window.__fixVNP7) return;
-  window.__fixVNP7 = true;
+  if(window.__fixVNP71) return;
+  window.__fixVNP71 = true;
 
-  function fixUnaTabella(table){
-    if(table.dataset.fixVnp === '1') return;
+  function riordinaRiga(riga, idxV, idxN, idxP){
+    var celle = riga.querySelectorAll('th, td');
+    if(celle.length <= Math.max(idxV, idxN, idxP)) return;
+    var cV = celle[idxV];
+    var cN = celle[idxN];
+    var cP = celle[idxP];
+    var indici = [idxV, idxN, idxP].sort(function(a,b){return a-b;});
+    var primo = indici[0];
+    var ultimo = indici[2];
+    // Il punto dove reinserire: la cella subito dopo il gruppo
+    var dopo = celle[ultimo].nextSibling;
+    var parent = riga;
+    // Reinserisci in ordine V - N - P
+    parent.insertBefore(cV, dopo);
+    parent.insertBefore(cN, dopo);
+    parent.insertBefore(cP, dopo);
+    // Nota: insertBefore con 'dopo' = null li mette in fondo al gruppo, nell'ordine giusto
+    // Se 'dopo' non è null, li mette subito prima di 'dopo', sempre in ordine V N P
+  }
+
+  function fixTabella(table){
     var head = table.querySelector('thead tr') || table.querySelector('tr');
     if(!head) return;
     var ths = head.querySelectorAll('th, td');
-    // Trova P - N - V consecutivi nell'intestazione
-    var idxP = -1;
-    for(var i=0;i<ths.length-2;i++){
-      var a = (ths[i].textContent||'').trim();
-      var b = (ths[i+1].textContent||'').trim();
-      var c = (ths[i+2].textContent||'').trim();
-      if(a === 'P' && b === 'N' && c === 'V'){ idxP = i; break; }
+    var idxV = -1, idxN = -1, idxP = -1;
+    for(var i=0;i<ths.length;i++){
+      var t = (ths[i].textContent||'').trim();
+      if(t === 'V' && idxV === -1) idxV = i;
+      else if(t === 'N' && idxN === -1) idxN = i;
+      else if(t === 'P' && idxP === -1) idxP = i;
     }
-    if(idxP === -1) return;
+    if(idxV === -1 || idxN === -1 || idxP === -1) return;
+    // Se è già V N P consecutivi, non fare niente
+    var indici = [idxV, idxN, idxP].sort(function(a,b){return a-b;});
+    if(idxV === indici[0] && idxN === indici[1] && idxP === indici[2]) return;
+    // Devono essere le 3 colonne dopo G, quindi vicine tra loro
+    if(indici[2] - indici[0] !== 2) return;
 
-    // 1) Sistema intestazione: P N V -> V N P
-    var cellaP = ths[idxP];
-    var cellaN = ths[idxP+1];
-    var cellaV = ths[idxP+2];
-    // Sposta V prima di P
-    head.insertBefore(cellaV, cellaP);
+    // 1) Sistema intestazione
+    riordinaRiga(head, idxV, idxN, idxP);
 
-    // 2) Sistema tutte le righe del corpo
+    // 2) Sistema tutte le righe con gli STESSI indici
     var righe = table.querySelectorAll('tbody tr');
     if(!righe.length){
-      // Se non c'è tbody, prendi tutte le tr tranne la prima
       var tutte = table.querySelectorAll('tr');
       righe = Array.prototype.slice.call(tutte, 1);
     }
     for(var r=0;r<righe.length;r++){
-      var celle = righe[r].querySelectorAll('td, th');
-      if(celle.length <= idxP+2) continue;
-      var p = celle[idxP];
-      var n = celle[idxP+1];
-      var v = celle[idxP+2];
-      righe[r].insertBefore(v, p);
+      riordinaRiga(righe[r], idxV, idxN, idxP);
     }
-
-    table.dataset.fixVnp = '1';
   }
 
   function fixTutte(){
     var tabelle = document.querySelectorAll('table');
-    for(var i=0;i<tabelle.length;i++){ fixUnaTabella(tabelle[i]); }
+    for(var i=0;i<tabelle.length;i++){ fixTabella(tabelle[i]); }
   }
 
   setInterval(fixTutte, 800);
   fixTutte();
 })();
+</script>
 </script>
 </body>
 </html>

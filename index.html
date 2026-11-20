@@ -4173,12 +4173,11 @@ function _nuovaPartitaCoppa(coppa,fase){
 })();
 </script>
 <script>
-/* FIX V6.3 - UN SOLO FILTRO SOPRA LISTA GIORNATA */
+/* FIX V6.4 - UN SOLO FILTRO SOPRA GIORNATA 1 */
 (function(){
-  // Pulisci tutti i vecchi filtri
   var old1 = document.getElementById('barraFiltroGiornata');
   if(old1) old1.remove();
-  var olds = document.querySelectorAll('.boxFiltroCalendarioAdmin');
+  var olds = document.querySelectorAll('.boxFiltroCalendarioAdmin, #unicoFiltroCalendario');
   for(var v=0; v<olds.length; v++){ olds[v].remove(); }
 
   function matchTesto(testo, g, c){
@@ -4197,12 +4196,10 @@ function _nuovaPartitaCoppa(coppa,fase){
     if(!box) return;
     var g = box.querySelector('.selFiltroGiornataUnico').value;
     var c = box.querySelector('.selFiltroCampUnico').value;
-
-    // Filtra solo la lista con le X, quella di foto 3
     var righe = document.querySelectorAll('div, li, tr');
     for(var k=0;k<righe.length;k++){
       var el = righe[k];
-      if(el.id === 'unicoFiltroCalendario' || el.closest('#unicoFiltroCalendario')) continue;
+      if(el.id === 'unicoFiltroCalendario' || (el.closest && el.closest('#unicoFiltroCalendario'))) continue;
       var txt = el.textContent || '';
       if(txt.indexOf('Giornata') === -1) continue;
       if(txt.length > 500) continue;
@@ -4211,8 +4208,6 @@ function _nuovaPartitaCoppa(coppa,fase){
       if(g === '' && c === ''){ el.style.display=''; continue; }
       el.style.display = matchTesto(txt, g, c) ? '' : 'none';
     }
-
-    // Filtra solo il menu SCEGLI LA PARTITA
     var selects = document.querySelectorAll('select');
     for(var s=0;s<selects.length;s++){
       var sel = selects[s];
@@ -4244,22 +4239,21 @@ function _nuovaPartitaCoppa(coppa,fase){
 
   function provaInserire(){
     if(document.getElementById('unicoFiltroCalendario')) return;
-
-    // Trova la lista vera: un contenitore che ha tante righe "Giornata ... X"
-    var candidati = document.querySelectorAll('div');
-    var listaTrovata = null;
-    for(var i=0;i<candidati.length;i++){
-      var txt = candidati[i].textContent || '';
-      var conta = (txt.match(/Giornata\s*\d+/g) || []).length;
-      // Deve avere almeno 5 partite e deve avere le X, e non deve essere tutto il body
-      if(conta >= 5 && candidati[i].querySelectorAll('button').length >= 5 && txt.length < 8000){
-        listaTrovata = candidati[i];
-        break;
-      }
+    // Trova la PRIMA riga Giornata 1 con la X
+    var righe = document.querySelectorAll('div, li');
+    var primaRiga = null;
+    for(var i=0;i<righe.length;i++){
+      var el = righe[i];
+      var txt = (el.textContent || '').trim();
+      if(txt.indexOf('Giornata') !== 0) continue;
+      if(txt.length > 300) continue;
+      if(!el.querySelector('button')) continue;
+      if(el.querySelector('div, li')) continue;
+      primaRiga = el;
+      break;
     }
-    if(!listaTrovata) return;
+    if(!primaRiga || !primaRiga.parentElement) return;
 
-    // Crea UNA sola box
     var box = document.createElement('div');
     box.id = 'unicoFiltroCalendario';
     box.style.cssText = 'background:#111;color:#fff;padding:12px;border:2px solid #FFD700;border-radius:12px;margin:12px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:sans-serif;font-size:14px;';
@@ -4267,8 +4261,7 @@ function _nuovaPartitaCoppa(coppa,fase){
     var sg = box.querySelector('.selFiltroGiornataUnico');
     for(var n=1;n<=30;n++){ var o=document.createElement('option'); o.value=String(n); o.textContent='Giornata '+n; sg.appendChild(o); }
 
-    // Mettila SUBITO SOPRA la prima riga Giornata 1
-    listaTrovata.insertBefore(box, listaTrovata.firstChild);
+    primaRiga.parentElement.insertBefore(box, primaRiga);
 
     box.querySelector('.selFiltroGiornataUnico').addEventListener('change', filtra);
     box.querySelector('.selFiltroCampUnico').addEventListener('change', filtra);
@@ -4287,7 +4280,7 @@ function _nuovaPartitaCoppa(coppa,fase){
       var c = box.querySelector('.selFiltroCampUnico').value;
       if(g !== '' || c !== '') filtra();
     }
-  }, 1500);
+  }, 1200);
   provaInserire();
 })();
 </script>

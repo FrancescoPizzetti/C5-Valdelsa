@@ -3650,6 +3650,10 @@ function _nuovaPartitaCoppa(coppa,fase){
   // ---------- 1) CALENDARIO COPPE: nascondi per ID, non per testo ----------
   function _pulisciCalendario(){
     function _hide(el){
+        // Nascondi anche la label RISULTATO rimasta
+    document.querySelectorAll("#adminSec-coppe .label").forEach(function(l){
+      if(l.textContent.trim().toUpperCase() === "RISULTATO") l.style.display = "none";
+    });
       if(!el) return;
       el.style.display = "none";
     }

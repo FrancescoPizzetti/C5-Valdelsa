@@ -4373,5 +4373,161 @@ function _nuovaPartitaCoppa(coppa,fase){
   setTimeout(_tutto, 1500);
 })();
 </script>
+<script>
+// ===== FIX SALVA DOPPIO - SINCRONIZZA I DUE BOX DCR =====
+(function(){
+  function _sincronizza(){
+    document.querySelectorAll("button").forEach(function(btn){
+      if(btn.textContent.trim() !== "Salva") return;
+      if(btn.dataset.fixSalvaDoppio) return;
+      btn.dataset.fixSalvaDoppio = "1";
+
+      var box = btn.closest("div");
+      if(box && box.parentElement) box = box.parentElement;
+      if(!box) return;
+
+      // Trova TUTTI i box DCR in questa card (ce ne sono 2 per colpa dei FIX vecchi)
+      function _tuttiDCR(){
+        return box.querySelectorAll("[data-dcr-row='1'] input");
+      }
+
+      // Ogni volta che scrivi in un casellino DCR, copia lo stesso valore nell'altro box
+      // Così qualsiasi FIX vecchio legga, trova sempre 4-1 e non ti blocca
+      box.querySelectorAll("[data-dcr-row='1'] input").forEach(function(inp){
+        inp.addEventListener("input", function(){
+          var tutti = _tuttiDCR();
+          // I casellini sono a coppie: 0=Casa, 1=Trasf, 2=Casa, 3=Trasf...
+          // Prendi il valore che hai appena scritto e copialo in tutti quelli della stessa posizione
+          var idx = Array.prototype.indexOf.call(tutti, inp);
+          var pos = idx % 2; // 0 = Casa, 1 = Trasf
+          tutti.forEach(function(altro, j){
+            if(j % 2 === pos && altro !== inp){
+              altro.value = inp.value;
+              // Fai scattare anche il suo controllo
+              altro.dispatchEvent(new Event("input", {bubbles:true}));
+            }
+          });
+          // Aggiorna anche il bottone Salva dei FIX vecchi, che puntano al primo box
+          if(tutti.length >= 2){
+            btn._rCasa = tutti[0];
+            btn._rTras = tutti[1];
+            // Se il primo box è vuoto ma il secondo è pieno, copialo lì
+            if(!tutti[0].value && tutti.length >= 4) tutti[0].value = tutti[2].value;
+            if(!tutti[1].value && tutti.length >= 4) tutti[1].value = tutti[3].value;
+          }
+        });
+      });
+
+      // --- SALVA A DUE FUNZIONI, come hai detto tu ---
+      // Lo mettiamo in cattura, prima degli altri, e sincronizziamo prima che gli altri controllino
+      btn.addEventListener("click", function(e){
+        var inps = box.querySelectorAll("input");
+        if(inps.length < 2) return;
+        var a = parseInt(inps[0].value), b = parseInt(inps[1].value);
+        if(isNaN(a) || isNaN(b)) return;
+
+        // Caso 1: NON pareggio -> Salva normale, manda avanti la vincente
+        if(a !== b){
+          setTimeout(function(){
+            var bold = box.querySelectorAll("b");
+            var casa = bold.length ? bold[0].textContent.trim() : "";
+            var tras = bold.length > 1 ? bold[1].textContent.trim() : "";
+            if(typeof coppaMatches !== "undefined"){
+              for(var i=0;i<coppaMatches.length;i++){
+                var m = coppaMatches[i];
+                if(m.casa === casa && m.tras === tras){
+                  m.golC = a; m.golT = b; m.stato = "Giocata";
+                  delete m.vincRigori; delete m.rigori;
+                  break;
+                }
+              }
+              if(typeof save === "function"){ try{ save(); }catch(err){} }
+              if(typeof render === "function"){ try{ render(); }catch(err){} }
+            }
+          }, 400);
+          return; // lascia fare al Salva originale
+        }
+
+        // Caso 2: PAREGGIO -> serve DCR. Prendi il DCR da QUALSIASI box che è pieno
+        var tutti = _tuttiDCR();
+        var rc = NaN, rt = NaN;
+        for(var k=0;k<tutti.length;k+=2){
+          var v1 = parseInt(tutti[k].value), v2 = parseInt(tutti[k+1] ? tutti[k+1].value : "");
+          if(!isNaN(v1) && !isNaN(v2)){ rc = v1; rt = v2; break; }
+        }
+        if(isNaN(rc) || isNaN(rt)){
+          // Nessun DCR scritto -> lascia che i FIX vecchi mostrino il messaggio, non blocchiamo noi
+          return;
+        }
+        if(rc === rt){
+          alert("Ai rigori non può finire pari. Metti un vincitore, es. 4-2");
+          e.stopPropagation(); e.preventDefault();
+          return;
+        }
+        // Sincronizza tutti i box con questi valori, così i FIX vecchi non ti bloccano
+        tutti.forEach(function(inp, j){
+          inp.value = (j % 2 === 0 ? rc : rt);
+        });
+        if(btn._rCasa) btn._rCasa.value = rc;
+        if(btn._rTras) btn._rTras.value = rt;
+
+        // Dopo il Salva originale, ri-salva il DCR e manda avanti la vincente
+        setTimeout(function(){
+          var bold2 = box.querySelectorAll("b");
+          var casa2 = bold2.length ? bold2[0].textContent.trim() : "";
+          var tras2 = bold2.length > 1 ? bold2[1].textContent.trim() : "";
+          if(typeof coppaMatches !== "undefined"){
+            for(var j2=0;j2<coppaMatches.length;j2++){
+              var m2 = coppaMatches[j2];
+              if(m2.casa === casa2 && m2.tras === tras2){
+                m2.golC = a; m2.golT = b; m2.stato = "Giocata";
+                m2.rigoriCasa = rc; m2.rigoriTras = rt; m2.rigori = rc + "-" + rt;
+                m2.vincRigori = (rc > rt ? casa2 : tras2);
+                break;
+              }
+            }
+            if(typeof save === "function"){ try{ save(); }catch(err){} }
+            // Propaga: vincente va nel turno dopo
+            if(typeof coppaMatches !== "undefined"){
+              var fasi = ["Sedicesimi di Finale","Ottavi di Finale","Quarti di Finale","Semifinale","Finale"];
+              for(var fi=0;fi<fasi.length-1;fi++){
+                var curr = coppaMatches.filter(function(x){ return x.fase === fasi[fi]; });
+                var next = coppaMatches.filter(function(x){ return x.fase === fasi[fi+1]; });
+                curr.forEach(function(mm, idx){
+                  var v = null;
+                  if(mm.tras === "BYE") v = mm.casa;
+                  else if(mm.casa === "BYE") v = mm.tras;
+                  else {
+                    var ga = parseInt(mm.golC), gb = parseInt(mm.golT);
+                    if(!isNaN(ga) && !isNaN(gb)){
+                      if(ga > gb) v = mm.casa;
+                      else if(gb > ga) v = mm.tras;
+                      else v = mm.vincRigori || null;
+                    }
+                  }
+                  if(!v) return;
+                  var dest = next[Math.floor(idx/2)];
+                  if(!dest) return;
+                  if(idx % 2 === 0){ if(!dest.casa || dest.casa === "—" || dest.casa === "") dest.casa = v; }
+                  else { if(!dest.tras || dest.tras === "—" || dest.tras === "") dest.tras = v; }
+                });
+              }
+            }
+            if(typeof save === "function"){ try{ save(); }catch(err){} }
+            if(typeof render === "function"){ try{ render(); }catch(err){} }
+          }
+        }, 500);
+      }, true); // true = in cattura, prima degli altri
+    });
+  }
+
+  var _r = window.render;
+  if(typeof _r === "function"){
+    window.render = function(){ _r(); setTimeout(_sincronizza, 100); };
+  }
+  setTimeout(_sincronizza, 600);
+  setTimeout(_sincronizza, 1500);
+})();
+</script>
 </body>
 </html>

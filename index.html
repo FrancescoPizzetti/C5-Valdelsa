@@ -3656,5 +3656,199 @@ function _nuovaPartitaCoppa(coppa,fase){
   o.stato = "Da giocare";
   coppaMatches.push(o);
 }
+<script>
+// ===== FIX TABELLONI + BYE + PROPAGAZIONE - UN SOLO BLOCCO =====
+// Incollare in fondo al file. Non tocca FASI FINALI A / B.
+
+(function(){
+  // 1) FIX BYE per coppe da 6 - generaTabellone mette in BYE le ULTIME,
+  // noi vogliamo in BYE le PRIME 2 della lista che gli arriva.
+  // Quindi le spostiamo in fondo prima che lui le elabori.
+  var _origGenera = window.generaTabellone;
+  if(typeof _origGenera === "function"){
+    window.generaTabellone = function(coppa, squadre){
+      squadre = squadre || [];
+      var is6 = squadre.length === 6 && (
+        coppa === "Coppa Campioni" ||
+        coppa === "Coppa Mitropa" ||
+        coppa === "Conference"
+      );
+      if(is6){
+        // [BYE1,BYE2, Q1,Q2,Q3,Q4] -> [Q1,Q2,Q3,Q4, BYE1,BYE2]
+        squadre = squadre.slice(2).concat(squadre.slice(0,2));
+      }
+      return _origGenera(coppa, squadre);
+    };
+  }
+
+  // 2) ORDINE FASI PER IL TABELLONE
+  var ORDINE = ["Sedicesimi di Finale","Ottavi di Finale","Quarti di Finale","Semifinale","Finale"];
+
+  function _winner(m){
+    if(!m || m.stato !== "Giocata") return "";
+    var a = parseInt(m.golC), b = parseInt(m.golT);
+    if(isNaN(a) || isNaN(b)) return "";
+    if(a > b) return m.casa;
+    if(b > a) return m.tras;
+    return m.vincRigori || "";
+  }
+
+  // 3) PROPAGAZIONE AUTOMATICA + BYE IN SEMIFINALE
+  // La chiamiamo dentro render(): se una partita è finita e la dopo è vuota, la riempie.
+  function _propaga(coppa){
+    if(typeof coppaMatches === "undefined") return false;
+    var list = coppaMatches.filter(function(m){ return m.coppa === coppa; });
+    if(!list.length) return false;
+    var changed = false;
+
+    // a) BYE: le righe fase="BYE" vanno in Semifinale come trasferta, se vuota
+    var byes = list.filter(function(m){ return m.fase === "BYE" && m.casa; });
+    var semis = list.filter(function(m){ return m.fase === "Semifinale"; });
+    // Solo se ci sono 2 semifinali e 2 BYE (coppe da 6)
+    if(byes.length === 2 && semis.length === 2){
+      for(var i=0;i<2;i++){
+        if(!semis[i].tras){ semis[i].tras = byes[i].casa; changed = true; }
+      }
+    }
+
+    // b) Vincitori -> turno dopo
+    // Quarti 1,2 -> Semifinale 1,2 casa | Quarti 3,4 -> Semifinale 1,2 casa (per 8 squadre)
+    // Semifinale 1,2 -> Finale casa / trasferta
+    function _vincitoriDi(fase){
+      return list.filter(function(m){ return m.fase === fase; }).map(_winner);
+    }
+    function _riempi(faseDest, valori){
+      var dest = list.filter(function(m){ return m.fase === faseDest; });
+      for(var k=0;k<valori.length && k<dest.length;k++){
+        if(valori[k] && !dest[k].casa){ dest[k].casa = valori[k]; changed = true; }
+      }
+    }
+    function _riempiFinale(){
+      var s = _vincitoriDi("Semifinale");
+      var fin = list.filter(function(m){ return m.fase === "Finale"; });
+      if(fin.length && s[0] && !fin[0].casa){ fin[0].casa = s[0]; changed = true; }
+      if(fin.length && s[1] && !fin[0].tras){ fin[0].tras = s[1]; changed = true; }
+    }
+
+    // Da Quarti a Semifinale
+    var q = _vincitoriDi("Quarti di Finale");
+    if(q.length){
+      // Se semifinali già hanno BYE in trasferta, i vincitori vanno in casa
+      // Se sono 2 quarti (6 squadre): Q1->Semi1, Q2->Semi2
+      // Se sono 4 quarti (8 squadre): Q1->Semi1 casa, Q2->Semi1 tras, Q3->Semi2 casa, Q4->Semi2 tras
+      if(q.length === 2){
+        _riempi("Semifinale", q);
+      } else if(q.length === 4){
+        if(semis.length >= 2){
+          if(q[0] && !semis[0].casa){ semis[0].casa = q[0]; changed = true; }
+          if(q[1] && !semis[0].tras){ semis[0].tras = q[1]; changed = true; }
+          if(q[2] && !semis[1].casa){ semis[1].casa = q[2]; changed = true; }
+          if(q[3] && !semis[1].tras){ semis[1].tras = q[3]; changed = true; }
+        }
+      }
+    }
+    // Da Ottavi / Sedicesimi a turno dopo - generico: vincitore va nella prima cella vuota del turno dopo
+    ["Sedicesimi di Finale","Ottavi di Finale"].forEach(function(fase, idx){
+      var vinc = _vincitoriDi(fase);
+      if(!vinc.length) return;
+      var nextFase = ORDINE[ORDINE.indexOf(fase) + 1];
+      if(!nextFase) return;
+      var dest = list.filter(function(m){ return m.fase === nextFase; });
+      var di = 0;
+      for(var v=0; v<vinc.length; v++){
+        if(!vinc[v]) continue;
+        // cerca prima cella vuota in ordine casa, tras, casa, tras...
+        var messo = false;
+        while(di < dest.length * 2 && !messo){
+          var mi = Math.floor(di / 2), campo = (di % 2 === 0 ? "casa" : "tras");
+          if(dest[mi] && !dest[mi][campo]){ dest[mi][campo] = vinc[v]; changed = true; messo = true; }
+          di++;
+        }
+      }
+    });
+
+    _riempiFinale();
+
+    // c) Playout speciale: non serve niente in più, è già Semifinale -> Finale
+    return changed;
+  }
+
+  // 4) DISEGNO TABELLONE A COLONNE - stessa grafica Lega
+  function _tabelloneHtml(coppa){
+    if(typeof coppaMatches === "undefined") return "";
+    var list = coppaMatches.filter(function(m){
+      return m.coppa === coppa && m.fase !== "BYE" && m.fase !== "Girone";
+    });
+    if(!list.length) return "";
+    var h = '<div class="card" style="border-color:#facc15"><h3>🏆 ' + coppa + ' - Tabellone</h3>';
+    h += '<div style="display:flex;gap:10px;overflow-x:auto">';
+    ORDINE.forEach(function(fase){
+      var fm = list.filter(function(m){ return m.fase === fase; });
+      if(!fm.length) return;
+      h += '<div style="min-width:190px;flex:1"><h4 style="text-align:center">' + fase + '</h4>';
+      fm.forEach(function(mm){
+        var casa = mm.casa || "—", tras = mm.tras || "—";
+        var w = _winner(mm);
+        h += '<div style="background:#111827;border:1px solid #374151;border-radius:12px;padding:8px;margin-bottom:10px"><b>' + casa + '</b><div style="text-align:center">vs</div><b>' + tras + '</b>';
+        if(mm.data || mm.ora || mm.luogo) h += '<div class="small" style="text-align:center;margin-top:4px">📅 ' + (mm.data||"") + ' ' + (mm.ora||"") + ' - ' + (mm.luogo||"") + '</div>';
+        if(mm.stato === "Giocata") h += '<div style="text-align:center;margin-top:6px"><b>' + mm.golC + " - " + mm.golT + '</b> ✅ ' + (w||"") + '</div>';
+        else if(casa === "—" || tras === "—") h += '<div class="small" style="text-align:center">In attesa</div>';
+        else h += '<div style="text-align:center"><span class="badge">Da giocare</span></div>';
+        h += '</div>';
+      });
+      h += '</div>';
+    });
+    h += '</div></div>';
+    // Riga BYE, se c'è
+    var byes = coppaMatches.filter(function(m){ return m.coppa === coppa && m.fase === "BYE" && m.casa; });
+    if(byes.length) h += '<p class="small" style="text-align:center">BYE - passano in Semifinale: <b>' + byes.map(function(b){ return b.casa; }).join(" - ") + '</b></p>';
+    return h;
+  }
+
+  // 5) AGGANCIO A RENDER() - dopo il render vecchio, sostituisco la lista con il tabellone
+  var _origRender = window.render;
+  if(typeof _origRender === "function"){
+    window.render = function(){
+      // Prima propago, per tutte le coppe
+      var tutte = ["Coppa Campioni","Coppa Mitropa","Conference","Playoff Serie B","Playout Serie A","Supercoppa","Playoff","Playout"];
+      var daSalvare = false;
+      // Normalizza nomi Playoff / Playout che a volte sono senza "Serie B / Serie A"
+      tutte.forEach(function(c){
+        // prova anche le varianti
+        ["", " Serie B", " Serie A"].forEach(function(suf){
+          // no-op, _propaga lavora sul nome esatto
+        });
+        if(_propaga(c)) daSalvare = true;
+      });
+      // Prova anche le varianti reali presenti in coppaMatches
+      if(typeof coppaMatches !== "undefined"){
+        var visti = {};
+        coppaMatches.forEach(function(m){
+          if(!visti[m.coppa]){ visti[m.coppa] = 1; if(_propaga(m.coppa)) daSalvare = true; }
+        });
+      }
+      if(daSalvare && typeof save === "function"){ try{ save(); }catch(e){} }
+
+      _origRender();
+
+      // Dopo il render, se siamo in una coppa NON-Lega, metto il tabellone sopra la lista
+      try{
+        var cur = (typeof curCoppa !== "undefined" ? curCoppa : "");
+        if(cur && cur !== "Coppa di Lega" && document.getElementById("coppeList")){
+          // Trova il nome reale in coppaMatches che contiene curCoppa
+          var reale = cur;
+          if(typeof coppaMatches !== "undefined"){
+            for(var i=0;i<coppaMatches.length;i++){
+              if(coppaMatches[i].coppa.indexOf(cur) !== -1){ reale = coppaMatches[i].coppa; break; }
+            }
+          }
+          var tab = _tabelloneHtml(reale);
+          if(tab) document.getElementById("coppeList").innerHTML = tab + document.getElementById("coppeList").innerHTML;
+        }
+      }catch(e){}
+    };
+  }
+})();
+</script>
 </body>
 </html>

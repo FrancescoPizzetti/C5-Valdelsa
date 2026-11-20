@@ -3823,5 +3823,268 @@ function _nuovaPartitaCoppa(coppa,fase){
           }
           if(rc2 === rt2){
             msg.textContent = "
+<script>
+// ===== FIX UNICO v2 - CERCA PER TESTO, SI RIPETE DA SOLO =====
+(function(){
+  if(window.__fixUnico2) return;
+  window.__fixUnico2 = true;
+
+  function _liste(){
+    var out = [];
+    Object.keys(window).forEach(function(k){
+      var v = window[k];
+      if(Array.isArray(v) && v.length > 0 && v[0] && v[0].casa !== undefined && v[0].tras !== undefined){
+        var lk = k.toLowerCase();
+        if(lk.indexOf("match") !== -1 || lk.indexOf("coppa") !== -1 || lk.indexOf("play") !== -1 || lk.indexOf("mitropa") !== -1 || lk.indexOf("supercoppa") !== -1){
+          if(out.indexOf(v) === -1) out.push(v);
+        }
+      }
+    });
+    return out;
+  }
+  function _vincitore(m){
+    if(!m) return null;
+    if(m.tras === "BYE") return m.casa;
+    if(m.casa === "BYE") return m.tras;
+    var a = parseInt(m.golC), b = parseInt(m.golT);
+    if(isNaN(a) || isNaN(b)) return null;
+    if(a > b) return m.casa;
+    if(b > a) return m.tras;
+    return m.vincRigori || null;
+  }
+  function _propaga(){
+    _liste().forEach(function(list){
+      var fasi = [];
+      list.forEach(function(m){ if(m.fase && fasi.indexOf(m.fase) === -1) fasi.push(m.fase); });
+      if(fasi.length < 2) return;
+      fasi.forEach(function(fase, fi){
+        if(fi === fasi.length - 1) return;
+        var curr = list.filter(function(m){ return m.fase === fase; });
+        var next = list.filter(function(m){ return m.fase === fasi[fi+1]; });
+        curr.forEach(function(m, idx){
+          var v = _vincitore(m);
+          if(!v) return;
+          var dest = next[Math.floor(idx/2)];
+          if(!dest) return;
+          if(idx % 2 === 0){ if(!dest.casa || dest.casa === "—" || dest.casa === "") dest.casa = v; }
+          else { if(!dest.tras || dest.tras === "—" || dest.tras === "") dest.tras = v; }
+        });
+      });
+    });
+    if(typeof save === "function"){ try{ save(); }catch(e){} }
+  }
+
+  // ---------- CALENDARIO: nascondi per TESTO, qualsiasi tag sia ----------
+  function _pulisciCalendario(){
+    // Trova il bottone Salva Partita di Coppa
+    var btnCoppa = null;
+    document.querySelectorAll("button").forEach(function(b){
+      if(b.textContent.indexOf("Salva Partita di Coppa") !== -1) btnCoppa = b;
+    });
+    if(!btnCoppa) return;
+    // Il form è tutto quello che sta SOPRA quel bottone, nella stessa sezione
+    // Invece di salire di N genitori, nascondiamo per testo in tutta la pagina
+    // MA solo se l'elemento è vicino al bottone (stessa sezione) - usiamo il contenitore grande
+    var sezione = btnCoppa;
+    for(var i=0;i<6 && sezione.parentElement;i++) sezione = sezione.parentElement;
+
+    // 1) Nascondi le scritte per testo esatto, qualsiasi tag siano: div, label, span, p
+    sezione.querySelectorAll("div, label, span, p, h3, h4").forEach(function(el){
+      // Solo elementi che hanno SOLO testo, non contenitori grandi
+      var t = (el.textContent || "").trim().toUpperCase();
+      if(t === "RISULTATO" || t === "CALCI DI RIGORE? (SOLO SE PAREGGIO)" || t.indexOf("CALCI DI RIGORE?") === 0 || t === "CHI HA VINTO AI RIGORI?" || t === "PROGRAMMATA"){
+        el.style.display = "none";
+        // Nascondi anche il fratello dopo (il campo)
+        var nxt = el.nextElementSibling;
+        if(nxt) nxt.style.display = "none";
+      }
+    });
+    // 2) Nascondi gli input Gol Casa / Gol Trasferta del Calendario
+    sezione.querySelectorAll("input").forEach(function(inp){
+      var ph = (inp.getAttribute("placeholder") || "");
+      if(ph === "Gol Casa" || ph === "Gol Trasferta"){
+        inp.style.display = "none";
+        if(inp.parentElement) inp.parentElement.style.display = "none";
+      }
+    });
+    // 3) Nascondi i select Programmata e "No - partita normale" - SOLO in questa sezione
+    sezione.querySelectorAll("select").forEach(function(s){
+      var txt = s.textContent || "";
+      // Programmata: ha Programmata ma NON ha nomi di coppe
+      if(txt.indexOf("Programmata") !== -1 && txt.indexOf("Coppa di Lega") === -1 && txt.indexOf("Mitropa") === -1){
+        s.style.display = "none";
+        if(s.previousElementSibling) s.previousElementSibling.style.display = "none";
+        if(s.parentElement && s.parentElement.textContent.trim().toUpperCase().indexOf("PROGRAMMATA") !== -1) s.parentElement.style.display = "none";
+      }
+      if(txt.indexOf("No - partita normale") !== -1){
+        s.style.display = "none";
+        if(s.previousElementSibling) s.previousElementSibling.style.display = "none";
+        if(s.parentElement) s.parentElement.style.display = "none";
+      }
+      // Chi ha vinto ai rigori: select con solo "-" e nomi squadra, vicino alla scritta
+      if(txt.trim() === "-" || (txt.indexOf("-") === 0 && txt.length < 100)){
+        // Lo nascondiamo solo se è l'ultimo select prima di Salva Partita di Coppa
+        s.style.display = "none";
+        if(s.previousElementSibling) s.previousElementSibling.style.display = "none";
+      }
+    });
+    // 4) Nascondi anche il select "-" di Chi ha vinto ai rigori in modo sicuro:
+    // prendi tutti i select della sezione, l'ultimo prima del bottone Salva è quello dei rigori
+    var selects = sezione.querySelectorAll("select");
+    // Non tocchiamo i primi 4: Coppa, Casa, Trasferta, Data/Ora/Luogo sono select
+    // Il select dei rigori è quello che sta subito prima del bottone
+    var cur = btnCoppa.previousElementSibling;
+    while(cur){
+      if(cur.tagName === "SELECT"){ cur.style.display = "none"; break; }
+      if(cur.querySelector && cur.querySelector("select")){ cur.querySelector("select").style.display = "none"; break; }
+      cur = cur.previousElementSibling;
+    }
+  }
+
+  // ---------- TABELLONE: trova la card salendo finché trovi 2 input + Salva ----------
+  function _sistemaTabellone(){
+    document.querySelectorAll("button").forEach(function(btn){
+      if(btn.textContent.trim() !== "Salva") return;
+      // Sali finché trovi un contenitore con almeno 2 input e il bottone Salva
+      var card = btn.parentElement;
+      for(var i=0;i<5 && card;i++){
+        var inps = card.querySelectorAll("input");
+        if(inps.length >= 2) break;
+        card = card.parentElement;
+      }
+      if(!card) return;
+      // Se è la card del Calendario (ha Gol Casa), salta
+      var tutti = card.querySelectorAll("input");
+      if(tutti.length === 0) return;
+      var primoPH = tutti[0].getAttribute("placeholder") || "";
+      if(primoPH === "Gol Casa") return;
+      // Prendi SOLO i primi 2 input della card, che sono i gol del Tabellone
+      // Se la card è troppo grande (tutto il tabellone), prendi quelli vicini al bottone
+      var rigaGol = btn.parentElement;
+      var inCasa = null, inTras = null;
+      if(rigaGol){
+        var vicini = rigaGol.querySelectorAll("input");
+        if(vicini.length >= 2){ inCasa = vicini[0]; inTras = vicini[1]; }
+      }
+      if(!inCasa){
+        inCasa = tutti[0]; inTras = tutti[1];
+      }
+      // Il contenitore per il box DCR è la card che contiene la riga gol
+      var box = rigaGol.parentElement || card;
+      if(!box) box = card;
+
+      [inCasa, inTras].forEach(function(inp){
+        inp.style.minWidth = "0"; inp.style.width = "100%";
+        inp.style.padding = "12px 8px"; inp.style.fontSize = "16px"; inp.style.textAlign = "center";
+      });
+
+      var riga = box.querySelector("[data-dcr-unico='1']");
+      if(!riga){
+        riga = document.createElement("div");
+        riga.setAttribute("data-dcr-unico", "1");
+        riga.style.cssText = "display:none;margin-top:8px;background:#1f2937;border:1px solid #facc15;border-radius:10px;padding:10px";
+        riga.innerHTML =
+          '<div style="text-align:center;font-size:13px;margin-bottom:6px">⚽ <b>Calci di rigore - dcr</b></div>' +
+          '<div style="display:flex;gap:6px;align-items:center">' +
+          '<input type="number" min="0" placeholder="Rig. Casa" style="flex:1;min-width:0;background:#000;color:#fff;padding:12px;border-radius:10px;text-align:center;font-size:16px;border:1px solid #444" />' +
+          '<span style="color:#fff"><b>-</b></span>' +
+          '<input type="number" min="0" placeholder="Rig. Trasf." style="flex:1;min-width:0;background:#000;color:#fff;padding:12px;border-radius:10px;text-align:center;font-size:16px;border:1px solid #444" />' +
+          '</div><div class="dcr-msg" style="text-align:center;font-size:12px;margin-top:6px;color:#facc15"></div>';
+        box.appendChild(riga);
+      }
+      var rCasa = riga.querySelectorAll("input")[0];
+      var rTras = riga.querySelectorAll("input")[1];
+      var msg = riga.querySelector(".dcr-msg");
+
+      if(!box.querySelector("[data-annulla-unico='1']")){
+        var ann = document.createElement("button");
+        ann.setAttribute("data-annulla-unico", "1");
+        ann.textContent = "Annulla";
+        ann.style.cssText = "margin-top:8px;width:100%;padding:8px;border-radius:10px;background:#374151;color:#fff;border:1px solid #555";
+        ann.addEventListener("click", function(){
+          inCasa.value = ""; inTras.value = "";
+          rCasa.value = ""; rTras.value = "";
+          riga.style.display = "none"; msg.textContent = "";
+          if(typeof render === "function"){ try{ render(); }catch(e){} }
+        });
+        box.appendChild(ann);
+      }
+
+      function _check(){
+        var a = parseInt(inCasa.value), b = parseInt(inTras.value);
+        if(!isNaN(a) && !isNaN(b) && a === b){
+          riga.style.display = "block";
+          var rc = parseInt(rCasa.value), rt = parseInt(rTras.value);
+          var bold = box.querySelectorAll("b");
+          var casa = bold.length ? bold[0].textContent.trim() : "";
+          var tras = bold.length > 1 ? bold[1].textContent.trim() : "";
+          if(!isNaN(rc) && !isNaN(rt)){
+            if(rc === rt) msg.textContent = "⚠️ Ai rigori non può finire pari";
+            else if(rc > rt) msg.textContent = "✅ Passa " + casa + " - dcr " + rc + "-" + rt;
+            else msg.textContent = "✅ Passa " + tras + " - dcr " + rc + "-" + rt;
+          } else msg.textContent = "Scrivi il risultato ai rigori, es. 4-2";
+        } else {
+          riga.style.display = "none"; msg.textContent = "";
+        }
+      }
+      if(!inCasa.dataset.unico2){
+        inCasa.dataset.unico2 = "1";
+        inCasa.addEventListener("input", _check);
+        inTras.addEventListener("input", _check);
+        rCasa.addEventListener("input", _check);
+        rTras.addEventListener("input", _check);
+      }
+      _check();
+
+      if(!btn.dataset.unico2Salva){
+        btn.dataset.unico2Salva = "1";
+        btn.addEventListener("click", function(e){
+          var a = parseInt(inCasa.value), b = parseInt(inTras.value);
+          if(isNaN(a) || isNaN(b)) return;
+          var bold2 = box.querySelectorAll("b");
+          var casa2 = bold2.length ? bold2[0].textContent.trim() : "";
+          var tras2 = bold2.length > 1 ? bold2[1].textContent.trim() : "";
+          var trovato = null;
+          _liste().forEach(function(list){
+            list.forEach(function(m){ if(m.casa === casa2 && m.tras === tras2) trovato = m; });
+          });
+          if(!trovato) return;
+          if(a !== b){
+            trovato.golC = a; trovato.golT = b; trovato.stato = "Giocata";
+            delete trovato.vincRigori; delete trovato.rigori;
+            setTimeout(function(){ _propaga(); if(typeof render === "function"){ try{ render(); }catch(err){} } }, 100);
+            return;
+          }
+          var rc2 = parseInt(rCasa.value), rt2 = parseInt(rTras.value);
+          if(isNaN(rc2) || isNaN(rt2)){
+            riga.style.display = "block";
+            msg.textContent = "Scrivi il risultato ai rigori, es. 4-2";
+            e.stopPropagation(); e.preventDefault();
+            return;
+          }
+          if(rc2 === rt2){
+            msg.textContent = "⚠️ Ai rigori non può finire pari";
+            e.stopPropagation(); e.preventDefault();
+            return;
+          }
+          trovato.golC = a; trovato.golT = b; trovato.stato = "Giocata";
+          trovato.rigoriCasa = rc2; trovato.rigoriTras = rt2; trovato.rigori = rc2 + "-" + rt2;
+          trovato.vincRigori = (rc2 > rt2 ? casa2 : tras2);
+          setTimeout(function(){ _propaga(); if(typeof render === "function"){ try{ render(); }catch(err){} } }, 100);
+        }, true);
+      }
+    });
+  }
+
+  function _tutto(){
+    _pulisciCalendario();
+    _sistemaTabellone();
+  }
+
+  // Si ripete da solo ogni 800ms, così non dipende da render
+  setInterval(_tutto, 800);
+  setTimeout(_tutto, 600);
+})();
+</script>
 </body>
 </html>

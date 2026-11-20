@@ -3641,5 +3641,187 @@ function _nuovaPartitaCoppa(coppa,fase){
   coppaMatches.push(o);
 }
   </script>
+<script>
+// ===== FIX UNICO - TUTTE LE MODIFICHE IN UN SOLO BLOCCO - v1 =====
+(function(){
+  if(window.__fixUnico) return;
+  window.__fixUnico = true;
+
+  function _liste(){
+    var out = [];
+    var visti = {};
+    Object.keys(window).forEach(function(k){
+      var v = window[k];
+      if(Array.isArray(v) && v.length > 0 && v[0] && v[0].casa !== undefined && v[0].tras !== undefined){
+        var lk = k.toLowerCase();
+        if(lk.indexOf("match") !== -1 || lk.indexOf("coppa") !== -1 || lk.indexOf("play") !== -1 || lk.indexOf("mitropa") !== -1 || lk.indexOf("supercoppa") !== -1){
+          if(!visti[k]){ visti[k] = 1; out.push(v); }
+        }
+      }
+    });
+    return out;
+  }
+  function _vincitore(m){
+    if(!m) return null;
+    if(m.tras === "BYE") return m.casa;
+    if(m.casa === "BYE") return m.tras;
+    var a = parseInt(m.golC), b = parseInt(m.golT);
+    if(isNaN(a) || isNaN(b)) return null;
+    if(a > b) return m.casa;
+    if(b > a) return m.tras;
+    return m.vincRigori || null;
+  }
+  function _propaga(){
+    _liste().forEach(function(list){
+      var fasi = [];
+      list.forEach(function(m){ if(m.fase && fasi.indexOf(m.fase) === -1) fasi.push(m.fase); });
+      if(fasi.length < 2) return;
+      fasi.forEach(function(fase, fi){
+        if(fi === fasi.length - 1) return;
+        var curr = list.filter(function(m){ return m.fase === fase; });
+        var next = list.filter(function(m){ return m.fase === fasi[fi+1]; });
+        curr.forEach(function(m, idx){
+          var v = _vincitore(m);
+          if(!v) return;
+          var dest = next[Math.floor(idx/2)];
+          if(!dest) return;
+          if(idx % 2 === 0){ if(!dest.casa || dest.casa === "—" || dest.casa === "") dest.casa = v; }
+          else { if(!dest.tras || dest.tras === "—" || dest.tras === "") dest.tras = v; }
+        });
+      });
+    });
+    if(typeof save === "function"){ try{ save(); }catch(e){} }
+  }
+
+  function _pulisciCalendario(){
+    var btn = null;
+    document.querySelectorAll("button").forEach(function(b){
+      if(b.textContent.indexOf("Salva Partita di Coppa") !== -1) btn = b;
+    });
+    if(!btn) return;
+    var form = btn.closest("div");
+    for(var i=0;i<5 && form && form.parentElement;i++) form = form.parentElement;
+    if(!form) return;
+    form.querySelectorAll("label").forEach(function(l){
+      var t = (l.textContent || "").trim().toUpperCase();
+      if(t === "RISULTATO" || t.indexOf("CALCI DI RIGORE") !== -1 || t.indexOf("CHI HA VINTO AI RIGORI") !== -1){
+        l.style.display = "none";
+        if(l.nextElementSibling) l.nextElementSibling.style.display = "none";
+      }
+    });
+    form.querySelectorAll("input").forEach(function(inp){
+      var ph = inp.getAttribute("placeholder") || "";
+      if(ph.indexOf("Gol Casa") !== -1 || ph.indexOf("Gol Trasferta") !== -1) inp.style.display = "none";
+    });
+    form.querySelectorAll("select").forEach(function(s){
+      var txt = s.textContent || "";
+      if(txt.indexOf("Programmata") !== -1 && txt.indexOf("Coppa di Lega") === -1 && txt.indexOf("Mitropa") === -1 && txt.indexOf("Playoff") === -1){
+        s.style.display = "none";
+        var prev = s.previousElementSibling;
+        if(prev && prev.tagName === "LABEL") prev.style.display = "none";
+      }
+      if(txt.indexOf("partita normale") !== -1) s.style.display = "none";
+    });
+  }
+
+  function _sistemaTabellone(){
+    document.querySelectorAll("button").forEach(function(btn){
+      if(btn.textContent.trim() !== "Salva") return;
+      var card = btn.closest("div");
+      if(card && card.parentElement) card = card.parentElement;
+      if(!card) return;
+      var golInputs = card.querySelectorAll("input");
+      if(golInputs.length < 2) return;
+      var inCasa = golInputs[0], inTras = golInputs[1];
+      if((inCasa.getAttribute("placeholder") || "").indexOf("Gol Casa") !== -1) return;
+      [inCasa, inTras].forEach(function(inp){
+        inp.style.minWidth = "0"; inp.style.width = "100%"; inp.style.flex = "1";
+        inp.style.padding = "12px 8px"; inp.style.fontSize = "16px"; inp.style.textAlign = "center";
+      });
+      var riga = card.querySelector("[data-dcr-unico='1']");
+      if(!riga){
+        riga = document.createElement("div");
+        riga.setAttribute("data-dcr-unico", "1");
+        riga.style.cssText = "display:none;margin-top:8px;background:#1f2937;border:1px solid #facc15;border-radius:10px;padding:10px";
+        riga.innerHTML =
+          '<div style="text-align:center;font-size:13px;margin-bottom:6px">⚽ <b>Calci di rigore - dcr</b></div>' +
+          '<div style="display:flex;gap:6px;align-items:center">' +
+          '<input type="number" min="0" placeholder="Rig. Casa" style="flex:1;min-width:0;background:#000;color:#fff;padding:12px;border-radius:10px;text-align:center;font-size:16px;border:1px solid #444" />' +
+          '<span style="color:#fff"><b>-</b></span>' +
+          '<input type="number" min="0" placeholder="Rig. Trasf." style="flex:1;min-width:0;background:#000;color:#fff;padding:12px;border-radius:10px;text-align:center;font-size:16px;border:1px solid #444" />' +
+          '</div><div class="dcr-msg" style="text-align:center;font-size:12px;margin-top:6px;color:#facc15"></div>';
+        card.appendChild(riga);
+      }
+      var rCasa = riga.querySelectorAll("input")[0];
+      var rTras = riga.querySelectorAll("input")[1];
+      var msg = riga.querySelector(".dcr-msg");
+      if(!card.querySelector("[data-annulla-unico='1']")){
+        var ann = document.createElement("button");
+        ann.setAttribute("data-annulla-unico", "1");
+        ann.textContent = "Annulla";
+        ann.style.cssText = "margin-top:8px;width:100%;padding:8px;border-radius:10px;background:#374151;color:#fff;border:1px solid #555";
+        ann.addEventListener("click", function(){
+          inCasa.value = ""; inTras.value = "";
+          rCasa.value = ""; rTras.value = "";
+          riga.style.display = "none"; msg.textContent = "";
+          if(typeof render === "function"){ try{ render(); }catch(e){} }
+        });
+        card.appendChild(ann);
+      }
+      function _check(){
+        var a = parseInt(inCasa.value), b = parseInt(inTras.value);
+        if(!isNaN(a) && !isNaN(b) && a === b){
+          riga.style.display = "block";
+          var rc = parseInt(rCasa.value), rt = parseInt(rTras.value);
+          var bold = card.querySelectorAll("b");
+          var casa = bold.length ? bold[0].textContent.trim() : "";
+          var tras = bold.length > 1 ? bold[1].textContent.trim() : "";
+          if(!isNaN(rc) && !isNaN(rt)){
+            if(rc === rt) msg.textContent = "⚠️ Ai rigori non può finire pari";
+            else if(rc > rt) msg.textContent = "✅ Passa " + casa + " - dcr " + rc + "-" + rt;
+            else msg.textContent = "✅ Passa " + tras + " - dcr " + rc + "-" + rt;
+          } else {
+            msg.textContent = "Scrivi il risultato ai rigori, es. 4-2";
+          }
+        } else {
+          riga.style.display = "none"; msg.textContent = "";
+        }
+      }
+      if(!btn.dataset.unicoCheck){
+        btn.dataset.unicoCheck = "1";
+        inCasa.addEventListener("input", _check);
+        inTras.addEventListener("input", _check);
+        rCasa.addEventListener("input", _check);
+        rTras.addEventListener("input", _check);
+      }
+      _check();
+      if(!btn.dataset.unicoSalva){
+        btn.dataset.unicoSalva = "1";
+        btn.addEventListener("click", function(e){
+          var a = parseInt(inCasa.value), b = parseInt(inTras.value);
+          if(isNaN(a) || isNaN(b)) return;
+          var bold2 = card.querySelectorAll("b");
+          var casa2 = bold2.length ? bold2[0].textContent.trim() : "";
+          var tras2 = bold2.length > 1 ? bold2[1].textContent.trim() : "";
+          var trovato = null;
+          _liste().forEach(function(list){
+            list.forEach(function(m){ if(m.casa === casa2 && m.tras === tras2) trovato = m; });
+          });
+          if(!trovato) return;
+          if(a !== b){
+            trovato.golC = a; trovato.golT = b; trovato.stato = "Giocata";
+            delete trovato.vincRigori; delete trovato.rigori;
+            setTimeout(function(){ _propaga(); if(typeof render === "function"){ try{ render(); }catch(err){} } }, 100);
+            return;
+          }
+          var rc2 = parseInt(rCasa.value), rt2 = parseInt(rTras.value);
+          if(isNaN(rc2) || isNaN(rt2)){
+            riga.style.display = "block";
+            msg.textContent = "Scrivi il risultato ai rigori, es. 4-2";
+            e.stopPropagation(); e.preventDefault();
+            return;
+          }
+          if(rc2 === rt2){
+            msg.textContent = "
 </body>
 </html>

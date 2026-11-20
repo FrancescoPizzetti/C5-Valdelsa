@@ -4262,6 +4262,14 @@ function _nuovaPartitaCoppa(coppa,fase){
   provaInserire();
 })();
 function p3home(c){try{document.getElementById('p3tabA').className=c==='A'?'on':'';document.getElementById('p3tabB').className=c==='B'?'on':'';document.getElementById('p3boxA').style.display=c==='A'?'block':'none';document.getElementById('p3boxB').style.display=c==='B'?'block':'none';}catch(e){}}
+function p3nav(btn){try{var b=document.querySelectorAll('.p3-bottom button');for(var i=0;i<b.length;i++)b[i].classList.remove('on');btn.classList.add('on');}catch(e){}}
 </script>
+<div class="p3-bottom">
+  <button type="button" class="on" onclick="show('home');p3nav(this)"> <b>⌂</b>Home</button>
+  <button type="button" onclick="show('class');p3nav(this)"> <b>▂▃▅</b>Classifica</button>
+  <button type="button" onclick="show('cal');p3nav(this)"> <b>📅</b>Calendario</button>
+  <button type="button" onclick="show('coppe');p3nav(this)"> <b>🏆</b>Coppe</button>
+  <button type="button" onclick="toggleDrawer();p3nav(this)"> <b>•••</b>Altro</button>
+</div>
 </body>
 </html>

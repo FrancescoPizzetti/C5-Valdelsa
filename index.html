@@ -4172,5 +4172,111 @@ function _nuovaPartitaCoppa(coppa,fase){
   setInterval(function(){ try{ _fixDom(); }catch(e){} }, 1200);
 })();
 </script>
+<script>
+/* FIX V6.1 - FILTRO TUTTE LE COMPETIZIONI */
+(function(){
+  var vecchio = document.getElementById('barraFiltroGiornata');
+  if(vecchio) vecchio.remove();
+  var bar = document.createElement('div');
+  bar.id = 'barraFiltroGiornata';
+  bar.style.cssText = 'position:sticky;top:0;z-index:9999;background:#111;color:#fff;padding:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:sans-serif;font-size:14px;border-bottom:2px solid #FFD700;';
+  bar.innerHTML = '<b style="color:#FFD700;">FILTRA:</b><select id="selFiltroGiornata" style="padding:8px;border-radius:8px;background:#000;color:#fff;min-width:110px;"><option value="">Tutte le giornate</option></select><select id="selFiltroCamp" style="padding:8px;border-radius:8px;background:#000;color:#fff;min-width:130px;"><option value="">Tutte le competizioni</option><option value="Serie A">Serie A</option><option value="Serie B">Serie B</option><option value="Serie B1">Serie B1</option><option value="Serie B2">Serie B2</option><option value="Coppa">Coppa</option><option value="Playoff">Playoff</option><option value="Playout">Playout</option><option value="Supercoppa">Supercoppa</option><option value="Finale">Finale</option><option value="Semifinale">Semifinale</option><option value="Quarti">Quarti di finale</option></select><button id="btnResetFiltro" style="padding:8px 12px;border-radius:8px;background:#FFD700;color:#000;font-weight:bold;border:0;">Mostra tutto</button>';
+  document.body.insertBefore(bar, document.body.firstChild);
+  var selG = document.getElementById('selFiltroGiornata');
+  for(var i=1;i<=30;i++){ var o=document.createElement('option'); o.value=String(i); o.textContent='Giornata '+i; selG.appendChild(o); }
+  function aggiungiCompetizioniAutomatiche(){
+    var selC = document.getElementById('selFiltroCamp');
+    var gia = {};
+    for(var k=0;k<selC.options.length;k++){ gia[selC.options[k].value] = 1; }
+    var testi = document.body.innerText || '';
+    var candidati = ['Serie C','Coppa Valdesa','Coppa Italia','Torneo','Amichevole','Girone','Andata','Ritorno'];
+    for(var c=0;c<candidati.length;c++){
+      if(testi.indexOf(candidati[c]) !== -1 && !gia[candidati[c]]){
+        var oo=document.createElement('option'); oo.value=candidati[c]; oo.textContent=candidati[c]; selC.appendChild(oo);
+      }
+    }
+    try{
+      var arr = [];
+      if(typeof matches !== 'undefined' && matches) arr = arr.concat(matches);
+      if(typeof coppaMatches !== 'undefined' && coppaMatches) arr = arr.concat(coppaMatches);
+      for(var m=0;m<arr.length;m++){
+        var comp = arr[m].serie || arr[m].campionato || arr[m].coppa || arr[m].competizione || '';
+        if(comp && !gia[comp]){
+          var o2=document.createElement('option'); o2.value=comp; o2.textContent=comp; selC.appendChild(o2); gia[comp]=1;
+        }
+      }
+    }catch(e){}
+  }
+  aggiungiCompetizioniAutomatiche();
+  function matchTesto(testo, g, c){
+    if(g){
+      var mm = testo.match(/Giornata\s*(\d+)/i);
+      if(!mm || mm[1] !== g) return false;
+    }
+    if(c){
+      if(testo.indexOf(c) === -1) return false;
+    }
+    return true;
+  }
+  function filtra(){
+    var g = document.getElementById('selFiltroGiornata').value;
+    var c = document.getElementById('selFiltroCamp').value;
+    var els = document.querySelectorAll('div, li, tr');
+    for(var k=0;k<els.length;k++){
+      var el = els[k];
+      var txt = el.textContent || '';
+      if(txt.indexOf('Giornata') === -1 && txt.indexOf('Coppa') === -1 && txt.indexOf('Playoff') === -1 && txt.indexOf('Playout') === -1 && txt.indexOf('Finale') === -1 && txt.indexOf('Semifinale') === -1) continue;
+      if(txt.length > 500) continue;
+      var haX = el.querySelector('button');
+      var sembraRiga = (el.tagName === 'LI' || el.tagName === 'TR' || (el.children.length <= 3 && haX));
+      if(!sembraRiga) continue;
+      if(el.querySelector('div, li, tr')) continue;
+      if(g === '' && c === ''){ el.style.display=''; continue; }
+      el.style.display = matchTesto(txt, g, c) ? '' : 'none';
+    }
+    var selects = document.querySelectorAll('select');
+    for(var s=0;s<selects.length;s++){
+      var sel = selects[s];
+      if(sel.id === 'selFiltroGiornata' || sel.id === 'selFiltroCamp') continue;
+      if(!sel.dataset.origSalvato){
+        sel.dataset.origSalvato = '1';
+        var arr2 = [];
+        for(var j=0;j<sel.options.length;j++){ arr2.push({t: sel.options[j].text, v: sel.options[j].value}); }
+        sel.dataset.origOpzioni = JSON.stringify(arr2);
+      }
+      var orig = [];
+      try{ orig = JSON.parse(sel.dataset.origOpzioni || '[]'); }catch(e){ orig = []; }
+      var haPartita = false;
+      for(var q=0;q<orig.length;q++){ if(orig[q].t.indexOf('Giornata') !== -1 || orig[q].t.indexOf('Coppa') !== -1 || orig[q].t.indexOf('Playoff') !== -1 || orig[q].t.indexOf('Playout') !== -1 || orig[q].t.indexOf('Finale') !== -1){ haPartita = true; break; } }
+      if(!haPartita) continue;
+      var prima = orig[0];
+      sel.innerHTML = '';
+      var opt0 = document.createElement('option');
+      opt0.text = prima ? prima.t : 'Scegli partita';
+      opt0.value = prima ? prima.v : '';
+      sel.appendChild(opt0);
+      for(var z=1;z<orig.length;z++){
+        if(g === '' && c === ''){ var o1=document.createElement('option'); o1.text=orig[z].t; o1.value=orig[z].v; sel.appendChild(o1); }
+        else if(matchTesto(orig[z].t, g, c)){ var o2=document.createElement('option'); o2.text=orig[z].t; o2.value=orig[z].v; sel.appendChild(o2); }
+      }
+      sel.selectedIndex = 0;
+      sel.dispatchEvent(new Event('change'));
+    }
+  }
+  document.getElementById('selFiltroGiornata').addEventListener('change', filtra);
+  document.getElementById('selFiltroCamp').addEventListener('change', filtra);
+  document.getElementById('btnResetFiltro').addEventListener('click', function(){
+    document.getElementById('selFiltroGiornata').value = '';
+    document.getElementById('selFiltroCamp').value = '';
+    filtra();
+  });
+  setInterval(function(){
+    var g = document.getElementById('selFiltroGiornata').value;
+    var c = document.getElementById('selFiltroCamp').value;
+    if(g !== '' || c !== '') filtra();
+    aggiungiCompetizioniAutomatiche();
+  }, 2000);
+})();
+</script>
 </body>
 </html>

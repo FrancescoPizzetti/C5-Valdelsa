@@ -3850,5 +3850,115 @@ function _nuovaPartitaCoppa(coppa,fase){
   }
 })();
 </script>
+<script>
+// ===== FIX 3 - PUNTEGGIO DCR 4-2 ecc. =====
+// Dopo il blocco 2, prima di </body>
+(function(){
+  function _refreshDCR(){
+    var bottoni = document.querySelectorAll("button");
+    bottoni.forEach(function(btn){
+      if(btn.textContent.trim() !== "Salva") return;
+      if(btn.dataset.dcrFix) return;
+      btn.dataset.dcrFix = "1";
+      var box = btn.closest("div");
+      if(box && box.parentElement) box = box.parentElement;
+      if(!box) return;
+      var inps = box.querySelectorAll("input");
+      if(inps.length < 2) return;
+      var inCasa = inps[0], inTras = inps[1];
+
+      // Crea la riga DCR, nascosta all'inizio
+      var riga = document.createElement("div");
+      riga.style.cssText = "display:none;margin-top:6px;background:#1f2937;border:1px solid #facc15;border-radius:8px;padding:8px";
+      riga.innerHTML = '<div style="text-align:center;font-size:13px;margin-bottom:6px">⚽ <b>Calci di rigore - dcr</b></div>' +
+        '<div style="display:flex;gap:6px;align-items:center">' +
+        '<input type="number" min="0" placeholder="Rig. Casa" style="flex:1;background:#000;color:#fff;padding:8px;border-radius:8px;text-align:center" />' +
+        '<span><b>-</b></span>' +
+        '<input type="number" min="0" placeholder="Rig. Trasf." style="flex:1;background:#000;color:#fff;padding:8px;border-radius:8px;text-align:center" />' +
+        '</div><div class="dcr-msg" style="text-align:center;font-size:12px;margin-top:4px;color:#facc15"></div>';
+      box.appendChild(riga);
+      var rCasa = riga.querySelectorAll("input")[0];
+      var rTras = riga.querySelectorAll("input")[1];
+      var msg = riga.querySelector(".dcr-msg");
+
+      function _check(){
+        var a = parseInt(inCasa.value), b = parseInt(inTras.value);
+        if(!isNaN(a) && !isNaN(b) && a === b){
+          riga.style.display = "block";
+          // Se hai già messo i rigori, mostra chi passa
+          var rc = parseInt(rCasa.value), rt = parseInt(rTras.value);
+          var bold = box.querySelectorAll("b");
+          var casa = bold.length ? bold[0].textContent.trim() : "";
+          var tras = bold.length > 1 ? bold[1].textContent.trim() : "";
+          if(!isNaN(rc) && !isNaN(rt)){
+            if(rc === rt) msg.textContent = "⚠️ Ai rigori non può finire pari, metti un vincitore";
+            else if(rc > rt) msg.textContent = "✅ Passa " + casa + " - dcr " + rc + "-" + rt;
+            else msg.textContent = "✅ Passa " + tras + " - dcr " + rc + "-" + rt;
+          } else {
+            msg.textContent = "Scrivi il risultato ai rigori, es. 4-2";
+          }
+        } else {
+          riga.style.display = "none";
+          rCasa.value = ""; rTras.value = ""; msg.textContent = "";
+        }
+      }
+      inCasa.addEventListener("input", _check);
+      inTras.addEventListener("input", _check);
+      rCasa.addEventListener("input", _check);
+      rTras.addEventListener("input", _check);
+
+      btn.addEventListener("click", function(e){
+        var a = parseInt(inCasa.value), b = parseInt(inTras.value);
+        if(!isNaN(a) && !isNaN(b) && a === b){
+          var rc = parseInt(rCasa.value), rt = parseInt(rTras.value);
+          if(isNaN(rc) || isNaN(rt)){
+            e.stopPropagation(); e.preventDefault();
+            alert("Pareggio " + a + "-" + b + ": scrivi anche il risultato ai rigori, es. 4-2");
+            riga.style.display = "block"; rCasa.focus();
+            return false;
+          }
+          if(rc === rt){
+            e.stopPropagation(); e.preventDefault();
+            alert("Ai rigori non può finire pari. Metti un vincitore, es. 4-2 o 5-4");
+            return false;
+          }
+          // Salva dcr nel match
+          var bold = box.querySelectorAll("b");
+          var casa = bold.length ? bold[0].textContent.trim() : "";
+          var tras = bold.length > 1 ? bold[1].textContent.trim() : "";
+          if(typeof coppaMatches !== "undefined"){
+            for(var i=0;i<coppaMatches.length;i++){
+              var m = coppaMatches[i];
+              if(m.casa === casa && m.tras === tras && m.fase !== "BYE"){
+                m.vincRigori = (rc > rt ? casa : tras);
+                m.rigoriCasa = rc;
+                m.rigoriTras = rt;
+                m.rigori = rc + "-" + rt;
+                if(typeof save === "function"){ try{ save(); }catch(err){} }
+                break;
+              }
+            }
+          }
+          // Mostra subito dcr nella card
+          var old = box.querySelector(".dcr-risultato");
+          if(!old){
+            old = document.createElement("div");
+            old.className = "dcr-risultato";
+            old.style.cssText = "text-align:center;margin-top:6px";
+            box.appendChild(old);
+          }
+          old.innerHTML = "<b>" + a + "-" + b + " dcr " + rc + "-" + rt + " ✅ " + (rc > rt ? casa : tras) + "</b>";
+        }
+      }, true);
+    });
+  }
+
+  var _r = window.render;
+  if(typeof _r === "function"){
+    window.render = function(){ _r(); setTimeout(_refreshDCR, 60); };
+  }
+  setTimeout(_refreshDCR, 400);
+})();
+</script>
 </body>
 </html>

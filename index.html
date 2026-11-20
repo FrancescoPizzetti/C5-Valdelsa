@@ -4529,5 +4529,265 @@ function _nuovaPartitaCoppa(coppa,fase){
   setTimeout(_sincronizza, 1500);
 })();
 </script>
+<script>
+// ===== FIX SICURO + FILTRO COPPE - NON CANCELLARE NIENTE, VA DOPO TUTTI GLI ALTRI =====
+(function(){
+  // ---------- 1) ZITTISCI L'ALERT VECCHIO CHE TI BLOCCA ANCHE SE HAI MESSO I RIGORI ----------
+  var _alertOrig = window.alert;
+  window.alert = function(msg){
+    var m = String(msg || "");
+    // Se è l'alert del pareggio, NON lo far vedere se in pagina c'è già un DCR scritto
+    if(m.indexOf("Pareggio") !== -1 && m.indexOf("rigori") !== -1){
+      var dcrPieno = false;
+      document.querySelectorAll("[data-dcr-row='1'] input").forEach(function(inp){
+        if(inp.value !== "" && inp.value !== null) dcrPieno = true;
+      });
+      // Se c'è anche un "Passa ... dcr" visibile, vuol dire che hai già messo i rigori
+      var passa = document.body.innerText.indexOf("Passa") !== -1 && document.body.innerText.indexOf("dcr") !== -1;
+      if(dcrPieno || passa){
+        console.log("Alert vecchio bloccato, DCR già presente");
+        return; // non mostrare l'alert, lascia andare avanti Salva
+      }
+    }
+    return _alertOrig(msg);
+  };
+
+  // ---------- 2) TROVA TUTTE LE COPPE, QUALSIASI NOME ABBIANO ----------
+  function _listeCoppe(){
+    var out = [];
+    Object.keys(window).forEach(function(k){
+      var v = window[k];
+      if(Array.isArray(v) && v.length > 0 && v[0] && v[0].casa !== undefined && v[0].tras !== undefined){
+        // Solo array che sembrano partite di coppa
+        if(k.toLowerCase().indexOf("match") !== -1 || k.toLowerCase().indexOf("coppa") !== -1 || k.toLowerCase().indexOf("play") !== -1 || k.toLowerCase().indexOf("mitropa") !== -1 || k.toLowerCase().indexOf("supercoppa") !== -1){
+          out.push({nome:k, list:v});
+        }
+      }
+    });
+    // Sempre includi coppaMatches anche se vuota
+    if(window.coppaMatches && out.every(function(x){ return x.nome !== "coppaMatches"; })) out.push({nome:"coppaMatches", list:window.coppaMatches});
+    return out;
+  }
+
+  function _vincitore(m){
+    if(!m) return null;
+    if(m.tras === "BYE") return m.casa;
+    if(m.casa === "BYE") return m.tras;
+    var a = parseInt(m.golC), b = parseInt(m.golT);
+    if(isNaN(a) || isNaN(b)) return null;
+    if(a > b) return m.casa;
+    if(b > a) return m.tras;
+    return m.vincRigori || null;
+  }
+
+  function _propaga(){
+    _listeCoppe().forEach(function(obj){
+      var list = obj.list;
+      var fasi = [];
+      list.forEach(function(m){ if(m.fase && fasi.indexOf(m.fase) === -1) fasi.push(m.fase); });
+      if(fasi.length < 2) return; // Finale secca, non c'è turno dopo
+      fasi.forEach(function(fase, fi){
+        if(fi === fasi.length-1) return;
+        var curr = list.filter(function(m){ return m.fase === fase; });
+        var next = list.filter(function(m){ return m.fase === fasi[fi+1]; });
+        curr.forEach(function(m, idx){
+          var v = _vincitore(m);
+          if(!v) return;
+          var dest = next[Math.floor(idx/2)];
+          if(!dest) return;
+          if(idx % 2 === 0){ if(!dest.casa || dest.casa === "—" || dest.casa === "") dest.casa = v; }
+          else { if(!dest.tras || dest.tras === "—" || dest.tras === "") dest.tras = v; }
+        });
+      });
+    });
+    if(typeof save === "function"){ try{ save(); }catch(e){} }
+  }
+
+  // ---------- 3) SALVA A DUE FUNZIONI - PER TUTTE LE COPPE ----------
+  function _sistemaSalva(){
+    document.querySelectorAll("button").forEach(function(btn){
+      if(btn.textContent.trim() !== "Salva") return;
+      if(btn.dataset.fixSicuro) return;
+      btn.dataset.fixSicuro = "1";
+
+      var box = btn.closest("div");
+      if(box && box.parentElement) box = box.parentElement;
+      if(!box) return;
+
+      // Sincronizza tutti i box DCR della card: se scrivi in uno, copia nell'altro
+      box.querySelectorAll("[data-dcr-row='1'] input").forEach(function(inp){
+        inp.addEventListener("input", function(){
+          var tutti = box.querySelectorAll("[data-dcr-row='1'] input");
+          var idx = Array.prototype.indexOf.call(tutti, inp);
+          var pos = idx % 2;
+          tutti.forEach(function(a, j){ if(j % 2 === pos && a !== inp) a.value = inp.value; });
+        });
+      });
+
+      btn.addEventListener("click", function(e){
+        var inps = box.querySelectorAll("input");
+        if(inps.length < 2) return;
+        var a = parseInt(inps[0].value), b = parseInt(inps[1].value);
+        if(isNaN(a) || isNaN(b)) return;
+        var bold = box.querySelectorAll("b");
+        var casa = bold.length ? bold[0].textContent.trim() : "";
+        var tras = bold.length > 1 ? bold[1].textContent.trim() : "";
+        if(!casa || !tras) return;
+
+        // Trova il match in QUALSIASI coppa
+        var trovato = null;
+        _listeCoppe().forEach(function(obj){
+          obj.list.forEach(function(m){ if(m.casa === casa && m.tras === tras) trovato = m; });
+        });
+        if(!trovato) return;
+
+        if(a !== b){
+          // Caso 1: non pareggio -> Salva normale
+          setTimeout(function(){
+            trovato.golC = a; trovato.golT = b; trovato.stato = "Giocata";
+            delete trovato.vincRigori; delete trovato.rigori;
+            _propaga();
+            if(typeof render === "function"){ try{ render(); }catch(err){} }
+          }, 450);
+          return;
+        }
+        // Caso 2: pareggio -> prendi DCR da qualsiasi box pieno
+        var dcr = box.querySelectorAll("[data-dcr-row='1'] input");
+        var rc = NaN, rt = NaN;
+        for(var k=0;k<dcr.length;k+=2){
+          var v1 = parseInt(dcr[k].value), v2 = parseInt(dcr[k+1] ? dcr[k+1].value : "");
+          if(!isNaN(v1) && !isNaN(v2)){ rc = v1; rt = v2; break; }
+        }
+        if(isNaN(rc) || isNaN(rt)) return; // lascia che i vecchi FIX mostrino il messaggio
+        if(rc === rt){
+          _alertOrig("Ai rigori non può finire pari. Metti un vincitore, es. 4-2");
+          e.stopPropagation(); e.preventDefault();
+          return;
+        }
+        // Sincronizza tutti i box, così i FIX vecchi vedono 1-3 e non bloccano
+        dcr.forEach(function(inp, j){ inp.value = (j % 2 === 0 ? rc : rt); });
+        setTimeout(function(){
+          trovato.golC = a; trovato.golT = b; trovato.stato = "Giocata";
+          trovato.rigoriCasa = rc; trovato.rigoriTras = rt; trovato.rigori = rc + "-" + rt;
+          trovato.vincRigori = (rc > rt ? casa : tras);
+          _propaga();
+          if(typeof render === "function"){ try{ render(); }catch(err){} }
+        }, 500);
+      }, true);
+    });
+  }
+
+  // ---------- 4) CALENDARIO: TOGLI RISULTATO / PROGRAMMATA / RIGORI ----------
+  function _pulisciCalendario(){
+    var btnCoppa = null;
+    document.querySelectorAll("button").forEach(function(b){
+      if(b.textContent.indexOf("Salva Partita di Coppa") !== -1) btnCoppa = b;
+    });
+    if(!btnCoppa) return;
+    var cont = btnCoppa;
+    for(var i=0;i<5;i++){ if(cont.parentElement) cont = cont.parentElement; }
+    if(!cont) return;
+    cont.querySelectorAll("label, div, span, p").forEach(function(el){
+      var t = (el.textContent || "").trim().toUpperCase();
+      if(t === "RISULTATO"){
+        el.style.display = "none";
+        if(el.nextElementSibling) el.nextElementSibling.style.display = "none";
+      }
+      if(t.indexOf("CALCI DI RIGORE") !== -1 || t.indexOf("CHI HA VINTO AI RIGORI") !== -1){
+        el.style.display = "none";
+        if(el.nextElementSibling) el.nextElementSibling.style.display = "none";
+      }
+    });
+    cont.querySelectorAll("input").forEach(function(inp){
+      var ph = inp.getAttribute("placeholder") || "";
+      if(ph.indexOf("Gol Casa") !== -1 || ph.indexOf("Gol Trasferta") !== -1){
+        inp.style.display = "none";
+        if(inp.parentElement) inp.parentElement.style.display = "none";
+      }
+    });
+    cont.querySelectorAll("select").forEach(function(s){
+      var txt = s.textContent || "";
+      if(txt.indexOf("Programmata") !== -1 && txt.indexOf("Coppa di Lega") === -1 && txt.indexOf("Mitropa") === -1 && txt.indexOf("Playoff") === -1){
+        // È il select Programmata / Giocata, non quello della Coppa
+        s.style.display = "none";
+        if(s.previousElementSibling) s.previousElementSibling.style.display = "none";
+      }
+      if(txt.indexOf("partita normale") !== -1) s.style.display = "none";
+    });
+  }
+
+  // ---------- 5) FILTRO COPPE - QUELLO CHE MI HAI CHIESTO ----------
+  // Se nel menù a tendina c'è "Coppa di Lega", sotto vedi solo Coppa di Lega.
+  // Se metti Playoff, Mitropa, ecc, vedi solo quella. Sennò è un bordello.
+  function _filtroCoppe(){
+    // Trova il select COPPA nel Calendario Coppe (quello con Coppa di Lega, Playoff, Mitropa...)
+    var selectCoppa = null;
+    document.querySelectorAll("select").forEach(function(s){
+      var txt = s.textContent || "";
+      if(txt.indexOf("Coppa di Lega") !== -1 && txt.indexOf("Playoff") !== -1){
+        selectCoppa = s;
+      }
+      // Anche se c'è solo Coppa di Lega + altre coppe
+      if(txt.indexOf("Coppa di Lega") !== -1 && (txt.indexOf("Mitropa") !== -1 || txt.indexOf("Supercoppa") !== -1) && !selectCoppa){
+        selectCoppa = s;
+      }
+    });
+    if(!selectCoppa) return;
+    if(selectCoppa.dataset.fixFiltro) return;
+    selectCoppa.dataset.fixFiltro = "1";
+
+    function _applica(){
+      var scelta = selectCoppa.options && selectCoppa.selectedIndex >= 0 ? selectCoppa.options[selectCoppa.selectedIndex].text.trim() : selectCoppa.value;
+      // Salva la scelta così resta anche dopo render
+      try{ localStorage.setItem("filtroCoppaScelta", scelta); }catch(e){}
+      // Cerca tutti i titoli tipo "COPPA DI LEGA - CELLE", "PLAYOFF", "MITROPA" sotto il form
+      document.querySelectorAll("h2, h3, h4, div").forEach(function(el){
+        var t = (el.textContent || "").trim().toUpperCase();
+        // È un titolo di sezione coppa se contiene COPPA / PLAYOFF / MITROPA / SUPERCOPPA e è corto
+        var eCoppa = t.indexOf("COPPA") !== -1 || t.indexOf("PLAYOFF") !== -1 || t.indexOf("MITROPA") !== -1 || t.indexOf("SUPERCOPPA") !== -1 || t.indexOf("PLAYOUT") !== -1;
+        if(eCoppa && t.length < 60 && el.children.length < 5){
+          var mostra = t.indexOf(scelta.toUpperCase()) !== -1;
+          // Il blocco intero è il genitore: lo nascondiamo / mostriamo
+          var blocco = el.closest("div");
+          // Sali 2 livelli per prendere tutta la card della coppa
+          if(blocco && blocco.parentElement) blocco = blocco.parentElement;
+          if(blocco){
+            blocco.style.display = mostra ? "" : "none";
+          } else {
+            el.style.display = mostra ? "" : "none";
+          }
+        }
+      });
+    }
+    selectCoppa.addEventListener("change", function(){
+      setTimeout(_applica, 100);
+      setTimeout(function(){ if(typeof render === "function"){ try{ render(); }catch(e){} } setTimeout(_applica, 200); }, 50);
+    });
+    // Ripristina la scelta salvata
+    try{
+      var salvata = localStorage.getItem("filtroCoppaScelta");
+      if(salvata){
+        for(var i=0;i<selectCoppa.options.length;i++){
+          if(selectCoppa.options[i].text.trim() === salvata) selectCoppa.selectedIndex = i;
+        }
+      }
+    }catch(e){}
+    setTimeout(_applica, 200);
+  }
+
+  function _tutto(){
+    _pulisciCalendario();
+    _sistemaSalva();
+    _filtroCoppe();
+  }
+
+  var _r = window.render;
+  if(typeof _r === "function"){
+    window.render = function(){ _r(); setTimeout(_tutto, 100); };
+  }
+  setTimeout(_tutto, 600);
+  setTimeout(_tutto, 1500);
+})();
+</script>
 </body>
 </html>

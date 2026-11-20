@@ -3960,5 +3960,106 @@ function _nuovaPartitaCoppa(coppa,fase){
   setTimeout(_refreshDCR, 400);
 })();
 </script>
+<script>
+// ===== FIX 4 - ANNULLA + DCR CHE RESTA SALVATO + PASSA DAVVERO =====
+// Dopo FIX 3, prima di </body>
+(function(){
+  function _salvaMatch(casa, tras, golC, golT, rc, rt){
+    if(typeof coppaMatches === "undefined") return;
+    for(var i=0;i<coppaMatches.length;i++){
+      var m = coppaMatches[i];
+      if(m.casa === casa && m.tras === tras && m.fase !== "BYE"){
+        // Se è Annulla
+        if(golC === null){
+          m.golC = ""; m.golT = ""; m.stato = "Da giocare";
+          delete m.vincRigori; delete m.rigori; delete m.rigoriCasa; delete m.rigoriTras;
+        } else {
+          m.golC = golC; m.golT = golT; m.stato = "Giocata";
+          if(rc !== null && rt !== null){
+            m.rigoriCasa = rc; m.rigoriTras = rt; m.rigori = rc + "-" + rt;
+            m.vincRigori = (rc > rt ? casa : tras);
+          }
+        }
+        break;
+      }
+    }
+    if(typeof save === "function"){ try{ save(); }catch(e){} }
+    if(typeof render === "function"){ try{ render(); }catch(e){} }
+  }
+
+  function _fix(){
+    var bottoni = document.querySelectorAll("button");
+    bottoni.forEach(function(btn){
+      if(btn.textContent.trim() !== "Salva") return;
+      if(btn.dataset.fix4) return;
+      btn.dataset.fix4 = "1";
+
+      var box = btn.closest("div");
+      if(box && box.parentElement) box = box.parentElement;
+      if(!box) return;
+      var inps = box.querySelectorAll("input");
+      // I primi 2 sono Casa / Trasf. - gli altri 2 sono DCR se ci sono
+      if(inps.length < 2) return;
+      var inCasa = inps[0], inTras = inps[1];
+
+      // 1) TASTO ANNULLA - lo metto accanto a Salva, solo se c'è già un risultato
+      var bold = box.querySelectorAll("b");
+      var casa = bold.length ? bold[0].textContent.trim() : "";
+      var tras = bold.length > 1 ? bold[1].textContent.trim() : "";
+      // Controlla se la partita è già giocata
+      var giaGiocata = box.textContent.indexOf("✅") !== -1 && inCasa.value === "" && inTras.value === "";
+      // In realtà per Lega il Salva si vede solo se non giocata, quindi aggiungo Annulla sempre:
+      // lo metto dopo Salva, piccolo e rosso
+      if(!box.querySelector("[data-annulla='1']")){
+        var ann = document.createElement("button");
+        ann.textContent = "Annulla";
+        ann.setAttribute("data-annulla","1");
+        ann.style.cssText = "margin-left:6px;margin-top:6px;background:#7f1d1d;color:#fff;border:1px solid #ef4444;padding:8px 10px;border-radius:8px;font-size:13px";
+        ann.onclick = function(e){
+          e.preventDefault(); e.stopPropagation();
+          if(!confirm("Annullare il risultato di " + casa + " vs " + tras + " ?")) return;
+          _salvaMatch(casa, tras, null, null, null, null);
+        };
+        // Mettilo sotto Salva
+        var parent = btn.parentElement;
+        if(parent) parent.appendChild(ann);
+      }
+
+      // 2) DOPO il Salva originale, ri-salva il DCR (perché il Salva vecchio lo cancella)
+      btn.addEventListener("click", function(){
+        setTimeout(function(){
+          // Rileggi i valori dalla card - dopo il Salva originale la card si ricarica,
+          // quindi rileggiamo da inCasa / inTras che l'utente aveva scritto
+          var a = parseInt(inCasa.value), b = parseInt(inTras.value);
+          if(isNaN(a) || isNaN(b)) return;
+          if(a !== b) return; // non è pareggio, niente dcr
+          // Cerca gli input DCR in questa card
+          var tutti = box.querySelectorAll("input");
+          // tutti[0]=Casa, tutti[1]=Trasf, tutti[2]=Rig Casa, tutti[3]=Rig Trasf
+          var rc = tutti.length >= 4 ? parseInt(tutti[2].value) : NaN;
+          var rt = tutti.length >= 4 ? parseInt(tutti[3].value) : NaN;
+          if(isNaN(rc) || isNaN(rt)) return;
+          if(rc === rt) return;
+          // Ri-applica DCR che il Salva vecchio aveva cancellato
+          _salvaMatch(casa, tras, a, b, rc, rt);
+        }, 300);
+      });
+    });
+
+    // 3) Aggiungi Annulla anche sulle partite già giocate (quelle che mostrano solo ✅ e non hanno Salva)
+    // Le troviamo dalle card che hanno "✅" ma non hanno input
+    var cards = document.querySelectorAll("div");
+    // Non facciamo niente qui, il punto 1 copre già le card con Salva.
+    // Per le card già giocate, l'Annulla si fa da Admin > Risultati, oppure ricaricando:
+    // se vedi una partita già salvata e vuoi annullarla, vai in Admin e premi Annulla lì.
+  }
+
+  var _r = window.render;
+  if(typeof _r === "function"){
+    window.render = function(){ _r(); setTimeout(_fix, 80); };
+  }
+  setTimeout(_fix, 500);
+})();
+</script>
 </body>
 </html>

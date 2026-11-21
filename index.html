@@ -4684,5 +4684,18 @@ div:has(> .mCard), div:has(> .matchCard), div:has(> .cardPartita){
   touch-action:pan-x!important;
 }
 </style>
+<style>
+/* FIX scroll Home: le card nere si possono scorrere sia a destra che su/giu */
+.mCard, .matchCard, .cardPartita,
+div:has(> .mCard), div:has(> .matchCard), div:has(> .cardPartita){
+  touch-action:pan-x pan-y!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+/* La pagina intera deve scorrere in verticale da qualsiasi punto */
+html, body, #home, #homePage, .page, main{
+  touch-action:pan-x pan-y!important;
+  overscroll-behavior-y:auto!important;
+}
+</style>
 </body>
 </html>

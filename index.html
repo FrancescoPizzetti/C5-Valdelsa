@@ -6440,18 +6440,78 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
   background:rgba(0,0,0,0.5) !important; border-radius:14px !important; padding:20px !important;
 }
 </style>
+<style>
+/* FIX Capocannonieri V2 - sostituisce il vecchio */
+#paginaCap{
+  background-color:#000 !important;
+  padding:20px 16px 40px !important;
+}
+#paginaCap .chiudiCap{
+  display:block !important; margin:0 auto 22px !important;
+  background:#E8D48A !important; color:#000 !important;
+  border:none !important; border-radius:999px !important;
+  padding:12px 22px !important; font-size:15px !important;
+  font-weight:900 !important; text-transform:uppercase !important;
+}
+#paginaCap .titoloCap{
+  font-size:30px !important; line-height:1.1 !important;
+  color:#E8C86A !important; text-align:center !important;
+  margin-bottom:8px !important;
+}
+#paginaCap .sottoCap{
+  text-align:center !important; color:#B8C4C0 !important;
+  font-size:14px !important; margin-bottom:26px !important;
+}
+#paginaCap .rigaCap2{
+  display:flex !important; align-items:stretch !important;
+  background:rgba(20,35,30,0.82) !important;
+  border:1px solid rgba(255,255,255,0.25) !important;
+  border-radius:12px !important; overflow:hidden !important;
+  margin-bottom:12px !important; min-height:76px !important;
+}
+#paginaCap .rigaCap2.primo{
+  background:rgba(30,35,20,0.88) !important;
+  border:1px solid #E8C86A !important;
+}
+#paginaCap .bloccoPos{
+  width:72px !important; min-width:72px !important;
+  display:flex !important; align-items:center !important; justify-content:center !important;
+  font-size:32px !important; font-weight:900 !important; color:#fff !important;
+}
+#paginaCap .rigaCap2.pos1 .bloccoPos{ background:#D4AF4A !important; }
+#paginaCap .rigaCap2.pos2 .bloccoPos{ background:#9AA8A6 !important; }
+#paginaCap .rigaCap2.pos3 .bloccoPos{ background:#B07B2E !important; }
+#paginaCap .rigaCap2.pos4 .bloccoPos,
+#paginaCap .rigaCap2.pos5 .bloccoPos{ background:#B8BFB9 !important; }
+#paginaCap .testoCap2{ flex:1 !important; padding:12px 12px !important; display:flex !important; flex-direction:column !important; justify-content:center !important; }
+#paginaCap .nomeCap2{ font-size:20px !important; font-weight:900 !important; color:#fff !important; }
+#paginaCap .rigaCap2.primo .nomeCap2{ color:#E8C86A !important; }
+#paginaCap .sottoCap2{ font-size:14px !important; color:#E8E8E8 !important; margin-top:3px !important; }
+#paginaCap .palloneCap2{
+  width:52px !important; min-width:52px !important;
+  display:flex !important; align-items:center !important; justify-content:center !important;
+  font-size:30px !important;
+}
+</style>
 <script>
-// FIX Stile finale: riscrive le righe capocannonieri come nell'anteprima
+// FIX Capocannonieri V2
 (function(){
-  if(window.__fixCapStileFinale) return;
-  window.__fixCapStileFinale = true;
+  if(window.__fixCapV2) return;
+  window.__fixCapV2 = true;
 
   function riscrivi(){
     var pagina = document.getElementById("paginaCap");
-    if(!pagina || pagina.dataset.stileFinale) return;
+    if(!pagina) return;
+
+    // Sfondo forzato da JS, non solo da CSS
+    pagina.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.85)), url('capocannonieri.jpg')";
+    pagina.style.backgroundSize = "cover";
+    pagina.style.backgroundPosition = "center top";
+    pagina.style.backgroundRepeat = "no-repeat";
+    pagina.style.backgroundColor = "#000";
+
+    // Riscrive SEMPRE le righe vecchie, senza blocco
     var righe = pagina.querySelectorAll(".rigaCap");
-    if(!righe.length) return;
-    pagina.dataset.stileFinale = "1";
     righe.forEach(function(r, i){
       var nomeEl = r.querySelector(".nomeCap");
       var squadraEl = r.querySelector(".squadraCap");
@@ -6468,18 +6528,9 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
         "<div class='palloneCap2'>⚽</div>";
       r.parentNode.replaceChild(nuova, r);
     });
-    // Sottotitolo come nell'anteprima
-    var sotto = pagina.querySelector(".sottoCap");
-    if(sotto && sotto.textContent.indexOf("Stagione") < 0){
-      var stagione = "";
-      try{ if(window.settings && window.settings.stagione) stagione = window.settings.stagione; }catch(e){}
-      if(!stagione) stagione = "2026/27";
-      sotto.textContent = "Stagione " + stagione + " • Solo gol di campionato";
-    }
   }
-  var obs = new MutationObserver(function(){ try{ riscrivi(); }catch(e){} });
-  obs.observe(document.body, { childList: true, subtree: true });
-  setInterval(riscrivi, 500);
+  setInterval(riscrivi, 300);
+  new MutationObserver(riscrivi).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 </body>

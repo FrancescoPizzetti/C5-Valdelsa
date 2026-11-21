@@ -4366,5 +4366,26 @@ try{
   <button type="button" onclick="show('coppe');p3nav(this)"> <b>🏆</b>Coppe</button>
   <button type="button" onclick="toggleDrawer();p3nav(this)"> <b>•••</b>Altro</button>
 </div>
+<script>
+// Data italiana ovunque: 2026-09-28 -> 28/09/2026
+function dataIT(d){
+  if(!d) return '';
+  d = String(d).trim();
+  // Se è già 28/09/2026, lascia così
+  if(d.indexOf('/') !== -1) return d;
+  var p = d.split('-');
+  if(p.length === 3) return p[2] + '/' + p[1] + '/' + p[0];
+  return d;
+}
+function fixDateItalian(){
+  var els = document.querySelectorAll('#upcomingMatches, #pastMatches, #cal, #home');
+  els.forEach(function(box){
+    box.innerHTML = box.innerHTML.replace(/(\d{4})-(\d{2})-(\d{2})/g, '$3/$2/$1');
+  });
+}
+// Lo rilancia ogni volta che la pagina ridisegna le partite
+var _oldRender = window.render;
+window.render = function(){ _oldRender(); fixDateItalian(); };
+</script>
 </body>
 </html>

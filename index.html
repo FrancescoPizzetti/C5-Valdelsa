@@ -5654,5 +5654,31 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
   setInterval(fixTop5, 2000);
 })();
 </script>
+  <style>
+/* V7.5.1 - Loghi competizioni su sfondo TRASPARENTE */
+#upcomingMatches .mComp, #pastMatches .mComp{
+  background-color: transparent !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+/* Il logo dentro deve stare trasparente */
+#upcomingMatches .mComp.a, #pastMatches .mComp.a,
+#upcomingMatches .mComp.b, #pastMatches .mComp.b,
+#upcomingMatches .mComp.coppa, #pastMatches .mComp.coppa{
+  background-color: transparent !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+/* Schermata settimana nera: anche lì trasparente, non cerchietto bianco */
+#mostraAltroScreen .logo-lega,
+#mostraAltroScreen .partitaSettimana img.logo-lega{
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+  </style>
 </body>
 </html>

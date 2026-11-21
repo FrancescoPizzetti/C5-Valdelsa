@@ -4507,5 +4507,87 @@ setTimeout(ridisegnaHome, 500);
 .calGiornataTitle:first-child{ margin-top:4px!important; }
 #cal h2{ text-align:center!important; }
 </style>
+<script>
+// CALENDARIO V4 - unico
+(function(){
+  var ordineFasi = {"girone":0,"sedicesimi di finale":1,"sedicesimi":1,"ottavi di finale":2,"ottavi":2,"quarti di finale":3,"quarti":3,"semifinale":4,"semifinali":4,"finale":5,"finali":5};
+  function norm(s){ return String(s||"").trim().toLowerCase().replace(/\s+/g," "); }
+  function dataIT(d){ if(!d) return ""; var p=String(d).split("-"); if(p.length===3) return p[2]+"/"+p[1]+"/"+p[0]; return d; }
+  function rigaCal(m){
+    var score = (m.stato==="Giocata"||m.stato==="Disputata") ? "<b>"+(m.golC??"")+" - "+(m.golT??"")+"</b>" : "<span class='badge'>Da giocare</span>";
+    return "<div class='row'><div><b>"+(m.casa||"")+" vs "+(m.tras||"")+"</b><br><span class='small'>"+dataIT(m.data)+" "+(m.ora||"")+" - "+(m.luogo||"")+"</span></div>"+score+"</div>";
+  }
+  function renderCalV4(){
+    var box = document.getElementById("calList");
+    var sel = document.getElementById("calFilter");
+    if(!box || !sel) return;
+    var optVuoto = sel.querySelector('option[value=""]');
+    if(optVuoto) optVuoto.remove();
+    if(!sel.value) sel.value = "Serie A";
+    var cf = sel.value;
+    var isCoppa = norm(cf).indexOf("coppa")!==-1 || norm(cf)==="conference" || norm(cf).indexOf("playoff")!==-1 || norm(cf).indexOf("playout")!==-1;
+    var h = "";
+    var debug = "DEBUG: matches="+(window.matches||[]).length+" coppaMatches="+(window.coppaMatches||[]).length+" | filtro="+cf;
+    if(!isCoppa){
+      var list = (window.matches||[]).filter(function(m){
+        var lega1 = norm(m.fase||"");
+        var lega2 = "";
+        try{ lega2 = norm(window.teamLeague ? teamLeague(m.casa) : ""); }catch(e){}
+        return lega1===norm(cf) || lega2===norm(cf) || norm(m.lega||"")===norm(cf);
+      });
+      debug += " | trovate="+list.length;
+      if((window.matches||[]).length>0){
+        var m0 = window.matches[0];
+        debug += " | esempio1: fase='"+(m0.fase||"")+"' casa='"+(m0.casa||"")+"' legaTeam='"+(window.teamLeague?teamLeague(m0.casa):"")+"'";
+      }
+      list.sort(function(a,b){ return (a.giornata||99)-(b.giornata||99) || String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")); });
+      var lastG = -1;
+      list.forEach(function(m){
+        var g = m.giornata||1;
+        if(g!==lastG){ h += "<div class='calGiornataTitle'>GIORNATA "+g+"</div>"; lastG=g; }
+        h += rigaCal(m);
+      });
+    } else {
+      var listC = [];
+      (window.coppaMatches||[]).forEach(function(m){
+        var nome = norm(m.coppa||m.competizione||m.lega||"");
+        if(nome===norm(cf) || (norm(cf)==="coppa di lega" && nome.indexOf("lega")!==-1)) listC.push(m);
+      });
+      var LB = window.legaBracket;
+      var rounds = LB ? (LB.rounds || (Array.isArray(LB)?LB:null) || LB.matches || null) : null;
+      debug += " | coppa trovate="+listC.length+" legaBracket="+(LB?"SI":"NO")+" rounds="+(rounds?rounds.length:"0");
+      if(rounds){
+        var nomiFasi = ["Sedicesimi di Finale","Ottavi di Finale","Quarti di Finale","Semifinale","Finale"];
+        rounds.forEach(function(round, idx){
+          var partite = (round && round.matches) ? round.matches : (round && round.games ? round.games : round);
+          if(!Array.isArray(partite)) return;
+          partite.forEach(function(mm){
+            if(!mm || !mm.casa || mm.casa==="BYE" || mm.casa==="") return;
+            var fase = mm.fase || mm.round || mm.turno || nomiFasi[idx] || "";
+            var dup = listC.some(function(x){ return x.casa===mm.casa && x.tras===mm.tras; });
+            if(!dup) listC.push({coppa:"Coppa di Lega", fase:fase, casa:mm.casa, tras:mm.tras, data:mm.data||"", ora:mm.ora||"", luogo:mm.luogo||"", golC:mm.golC, golT:mm.golT, stato:mm.stato||"Programmata"});
+          });
+        });
+      }
+      debug += " | dopo bracket="+listC.length;
+      listC.sort(function(a,b){
+        var oa = ordineFasi[norm(a.fase)] ?? 99; var ob = ordineFasi[norm(b.fase)] ?? 99;
+        return oa-ob || String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||""));
+      });
+      var lastF = "";
+      listC.forEach(function(m){
+        var f = (m.fase||"").trim();
+        if(norm(f)!==norm(lastF)){ h += "<div class='calGiornataTitle'>"+(f?f.toUpperCase():"TURNO")+"</div>"; lastF=f; }
+        h += rigaCal(m);
+      });
+    }
+    if(!h) h = "<p class='small'>Calendario vuoto.</p><p class='small' style='color:#facc15'>"+debug+"</p>";
+    box.innerHTML = h;
+  }
+  var _old = window.render;
+  window.render = function(){ if(_old) _old(); renderCalV4(); };
+  setTimeout(renderCalV4, 800);
+})();
+</script>
 </body>
 </html>

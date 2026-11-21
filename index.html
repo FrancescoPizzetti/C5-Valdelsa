@@ -127,12 +127,8 @@ body{padding-bottom:62px}
 <div class="overlay" id="overlay" onclick="chiudiDrawer()"></div>
 <div class="drawer" id="drawer">
 <h3>☰ MENÙ LEGA</h3>
-<button type="button" onclick="goMenu('home')">🏠 Home</button>
 <button typr="button" onclick="goMenu('chiSiamo')">ℹ️ Chi Siamo</button>
-<button type="button" onclick="goMenu('cal')">📅 Calendario</button>
 <button type="button" onclick="goMenu('ris')">📋 Risultati</button>
-<button type="button" onclick="goMenu('class')">📊 Classifica</button>
-<button type="button" onclick="goMenu('coppe')">🏆 Coppe</button>
 <button type="button" onclick="goMenu('team')">👥 Squadre e Rose</button>
 <button type="button" onclick="goMenu('albo')">👑 Albo d'oro</button>
 <button type="button" onclick="goMenu('contatti')">📞 Contatti</button>
@@ -4266,6 +4262,35 @@ function _nuovaPartitaCoppa(coppa,fase){
 })();
 function p3home(c){try{document.getElementById('p3tabA').className=c==='A'?'on':'';document.getElementById('p3tabB').className=c==='B'?'on':'';document.getElementById('p3boxA').style.display=c==='A'?'block':'none';document.getElementById('p3boxB').style.display=c==='B'?'block':'none';}catch(e){}}
 function p3nav(btn){try{var b=document.querySelectorAll('.p3-bottom button');for(var i=0;i<b.length;i++)b[i].classList.remove('on');btn.classList.add('on');}catch(e){}}
+function p3Prossime(){
+  try{
+    var box=document.getElementById('upcomingMatches');
+    if(!box) return;
+    var list=[];
+    var camp=(window.matches||[]).filter(function(m){return m && m.stato==='Programmata' && m.data;});
+    for(var i=0;i<camp.length;i++){
+      list.push({data:camp[i].data, ora:camp[i].ora||'', casa:camp[i].casa, tras:camp[i].tras, luogo:camp[i].luogo||'', etichetta:'Giornata '+(camp[i].giornata||1)});
+    }
+    var cop=(window.coppaMatches||[]).filter(function(m){return m && m.stato==='Programmata' && m.data;});
+    for(var j=0;j<cop.length;j++){
+      list.push({data:cop[j].data, ora:cop[j].ora||'', casa:cop[j].casa, tras:cop[j].tras, luogo:cop[j].luogo||'', etichetta:(cop[j].coppa||'Coppa')+' - '+(cop[j].fase||'')});
+    }
+    list.sort(function(a,b){return String(a.data+a.ora).localeCompare(String(b.data+b.ora));});
+    list=list.slice(0,4);
+    if(!list.length) return;
+    var h="";
+    for(var k=0;k<list.length;k++){
+      var m=list[k];
+      h+="<div class='row'><div><b>"+m.casa+" vs "+m.tras+"</b><br><span class='small'>"+m.etichetta+" - "+m.data+" "+m.ora+" - "+m.luogo+"</span></div><span class='badge'>Da giocare</span></div>";
+    }
+    box.innerHTML=h;
+  }catch(e){}
+  }
+  // PARQUET 3: Prossime Partite = prossime 4 in ordine di data+ora, anche di giorni diversi
+try{
+  var p3oldRender = window.render;
+  window.render = function(){ p3oldRender(); p3Prossime(); };
+}catch(e){}
 </script>
 <div class="p3-bottom">
   <button type="button" class="on" onclick="show('home');p3nav(this)"> <b>⌂</b>Home</button>

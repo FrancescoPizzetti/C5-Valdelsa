@@ -4738,5 +4738,51 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
   letter-spacing:-2px!important;
 }
 </style>
+<script>
+// V4.8 - PASSO 2: rifà SCEGLI LA PARTITA pulito, blocca Altra squadra e V6.7
+(function(){
+  function rebuild(){
+    var sel = document.getElementById("fMatchSelect");
+    if(!sel) return;
+    // 1) Blocca lo script Altra squadra su questo menù
+    sel.dataset.altraSquadra = "1";
+    // 2) Azzera il filtro giallo V6.7, così non rifiltra più
+    var box = document.getElementById("unicoFiltroCalendario");
+    if(box){
+      var g = box.querySelector(".selFiltroGiornataUnico");
+      var c = box.querySelector(".selFiltroCampUnico");
+      if(g) g.value = "";
+      if(c) c.value = "";
+      box.style.display = "none";
+    }
+    // 3) Ricostruisci il menù dalle partite vere
+    var lega = document.getElementById("fLegaMatch") ? document.getElementById("fLegaMatch").value : "";
+    var cur = sel.value;
+    var h = "";
+    var list = (window.matches||[]).slice();
+    list.sort(function(a,b){ return (a.giornata||1)-(b.giornata||1); });
+    for(var i=0;i<list.length;i++){
+      var m = list[i];
+      if(lega && (m.fase||m.lega||"") !== lega) continue;
+      var val = (m.casa||"") + "||" + (m.tras||"") + "||" + (m.giornata||1);
+      var txt = "Giornata " + (m.giornata||1) + " " + (m.casa||"") + " vs " + (m.tras||"");
+      if(m.data) txt += " - " + m.data;
+      if(m.stato === "Giocata") txt += " [" + m.golC + "-" + m.golT + "]";
+      h += "<option value='" + val + "'>" + txt + "</option>";
+    }
+    if(!h) h = "<option value=''>Nessuna partita</option>";
+    // Aggiorna solo se è cambiato o se è sporco con Altra / Nessuna partita finta
+    if(sel.innerHTML !== h || sel.innerHTML.indexOf("Altra squadra") !== -1 || sel.innerHTML.indexOf("Nessuna partita Giornata") !== -1){
+      sel.innerHTML = h;
+      if(cur) sel.value = cur;
+    }
+  }
+  // Lo rifà dopo ogni render e ogni secondo, così V6.7 e Altra non lo sporcano più
+  var _oldR = window.render;
+  window.render = function(){ if(_oldR) _oldR(); setTimeout(rebuild, 50); };
+  setInterval(rebuild, 900);
+  setTimeout(rebuild, 500);
+})();
+</script>
 </body>
 </html>

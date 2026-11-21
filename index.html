@@ -4603,5 +4603,16 @@ var _oldRenderCal = window.render;
 window.render = function(){ if(_oldRenderCal) _oldRenderCal(); renderCal421(); };
 setTimeout(renderCal421, 800);
 </script>
+<style>
+/* Calendario: via contorno giallo intorno alle partite */
+#calList .row{
+  border:none!important;
+  border-bottom:1px solid rgba(255,255,255,0.15)!important;
+  background:transparent!important;
+}
+#calList .row:last-child{
+  border-bottom:none!important;
+}
+</style>
 </body>
 </html>

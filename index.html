@@ -6475,5 +6475,20 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
   setInterval(aggiungiBottoni, 500);
 })();
 </script>
+<style>
+/* FIX - Nasconde la lista capocannonieri in Classifica, resta solo il bottone */
+.capBox h3,
+.capBox .capRow,
+.capBox .capVuoto{
+  display:none !important;
+}
+.capBox{
+  padding:14px !important;
+  background:#1a1a1a !important;
+}
+.capBox .btnApriCap{
+  margin-top:0 !important;
+}
+</style>
 </body>
 </html>

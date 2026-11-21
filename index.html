@@ -4739,30 +4739,27 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
 }
 </style>
 <script>
-// V4.8 - PASSO 2: rifà SCEGLI LA PARTITA pulito, blocca Altra squadra e V6.7
+// V4.9 - FILTRO PASSO 2 in alto, prima di SCEGLI LA PARTITA, senza lampeggio
 (function(){
+  if(window.__v49) return;
+  window.__v49 = true;
+
   function rebuild(){
     var sel = document.getElementById("fMatchSelect");
     if(!sel) return;
-    // 1) Blocca lo script Altra squadra su questo menù
+    // Blocca Altra squadra su questo menù
     sel.dataset.altraSquadra = "1";
-    // 2) Azzera il filtro giallo V6.7, così non rifiltra più
-    var box = document.getElementById("unicoFiltroCalendario");
-    if(box){
-      var g = box.querySelector(".selFiltroGiornataUnico");
-      var c = box.querySelector(".selFiltroCampUnico");
-      if(g) g.value = "";
-      if(c) c.value = "";
-      box.style.display = "none";
-    }
-    // 3) Ricostruisci il menù dalle partite vere
-    var lega = document.getElementById("fLegaMatch") ? document.getElementById("fLegaMatch").value : "";
+    var gSel = document.getElementById("filtroP2Giornata");
+    var lSel = document.getElementById("filtroP2Lega");
+    var g = gSel ? gSel.value : "";
+    var lega = lSel ? lSel.value : "";
     var cur = sel.value;
     var h = "";
     var list = (window.matches||[]).slice();
     list.sort(function(a,b){ return (a.giornata||1)-(b.giornata||1); });
     for(var i=0;i<list.length;i++){
       var m = list[i];
+      if(g && String(m.giornata||1) !== String(g)) continue;
       if(lega && (m.fase||m.lega||"") !== lega) continue;
       var val = (m.casa||"") + "||" + (m.tras||"") + "||" + (m.giornata||1);
       var txt = "Giornata " + (m.giornata||1) + " " + (m.casa||"") + " vs " + (m.tras||"");
@@ -4771,17 +4768,71 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
       h += "<option value='" + val + "'>" + txt + "</option>";
     }
     if(!h) h = "<option value=''>Nessuna partita</option>";
-    // Aggiorna solo se è cambiato o se è sporco con Altra / Nessuna partita finta
-    if(sel.innerHTML !== h || sel.innerHTML.indexOf("Altra squadra") !== -1 || sel.innerHTML.indexOf("Nessuna partita Giornata") !== -1){
+    // Riscrive SOLO se è cambiato davvero, così non lampeggia
+    if(sel.innerHTML !== h){
       sel.innerHTML = h;
       if(cur) sel.value = cur;
+      if(typeof refreshScorerPlayers === "function"){ try{ refreshScorerPlayers(); }catch(e){} }
     }
   }
-  // Lo rifà dopo ogni render e ogni secondo, così V6.7 e Altra non lo sporcano più
-  var _oldR = window.render;
-  window.render = function(){ if(_oldR) _oldR(); setTimeout(rebuild, 50); };
-  setInterval(rebuild, 900);
-  setTimeout(rebuild, 500);
+
+  function iniettaFiltro(){
+    var sel = document.getElementById("fMatchSelect");
+    if(!sel || document.getElementById("filtroP2Box")) return;
+    var box = document.createElement("div");
+    box.id = "filtroP2Box";
+    box.style.cssText = "background:#111;color:#fff;padding:10px;border:2px solid #FFD700;border-radius:12px;margin:0 0 10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;";
+    box.innerHTML = "<b style='color:#FFD700;'>FILTRA:</b>"
+      + "<select id='filtroP2Giornata' style='flex:1;padding:8px;border-radius:8px;background:#000;color:#fff;'><option value=''>Tutte le giornate</option></select>"
+      + "<select id='filtroP2Lega' style='flex:1;padding:8px;border-radius:8px;background:#000;color:#fff;'><option value=''>Tutte le leghe</option><option>Serie A</option><option>Serie B</option><option>Serie B1</option><option>Serie B2</option></select>"
+      + "<button type='button' id='filtroP2Reset' style='padding:8px 12px;border-radius:8px;background:#FFD700;color:#000;font-weight:900;border:0;'>Mostra tutto</button>";
+    // Lo mette PRIMA di SCEGLI LA PARTITA
+    sel.parentNode.insertBefore(box, sel);
+    var gSel = box.querySelector("#filtroP2Giornata");
+    for(var n=1;n<=30;n++){ var o=document.createElement("option"); o.value=String(n); o.textContent="Giornata "+n; gSel.appendChild(o); }
+    // Se Passo 1 ha già una lega, la copia qui
+    var lega1 = document.getElementById("fLegaMatch");
+    if(lega1 && lega1.value) box.querySelector("#filtroP2Lega").value = lega1.value;
+    gSel.addEventListener("change", rebuild);
+    box.querySelector("#filtroP2Lega").addEventListener("change", rebuild);
+    box.querySelector("#filtroP2Reset").addEventListener("click", function(){
+      gSel.value = ""; box.querySelector("#filtroP2Lega").value = "";
+      // Azzera anche il vecchio filtro giallo V6.7 così non rompe più
+      var old = document.getElementById("unicoFiltroCalendario");
+      if(old){
+        var og = old.querySelector(".selFiltroGiornataUnico"); if(og) og.value = "";
+        var oc = old.querySelector(".selFiltroCampUnico"); if(oc) oc.value = "";
+        old.style.display = "none";
+      }
+      rebuild();
+    });
+  }
+
+  // Nascondi il vecchio filtro giallo V6.7, una volta sola, non ogni secondo
+  function nascondiVecchio(){
+    var old = document.getElementById("unicoFiltroCalendario");
+    if(old){
+      var og = old.querySelector(".selFiltroGiornataUnico"); if(og) og.value = "";
+      var oc = old.querySelector(".selFiltroCampUnico"); if(oc) oc.value = "";
+      old.style.display = "none";
+    }
+  }
+
+  // Parte quando apri Passo 2, non ogni secondo
+  document.addEventListener("click", function(e){
+    if(e.target && e.target.textContent && e.target.textContent.indexOf("METTI RISULTATI") !== -1){
+      setTimeout(function(){ iniettaFiltro(); nascondiVecchio(); rebuild(); }, 300);
+    }
+  });
+  // Se sei già in Passo 2, inietta subito
+  setTimeout(function(){ iniettaFiltro(); nascondiVecchio(); rebuild(); }, 800);
+  // Quando cambi lega in Passo 1, sincronizza il filtro
+  var lega1 = document.getElementById("fLegaMatch");
+  if(lega1) lega1.addEventListener("change", function(){
+    var l = document.getElementById("filtroP2Lega");
+    if(l) l.value = lega1.value;
+    rebuild();
+  });
 })();
 </script>
 </body>

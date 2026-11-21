@@ -6123,5 +6123,89 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
   setInterval(sistema, 800);
 })();
 </script>
+<style>
+/* FIX DEFINITIVO - Solo dentro Chi Siamo visibile, tutti gli altri nascosti */
+.btnCompetizioni{ display:none !important; }
+#chiSiamo:not(.hidden) .btnCompetizioni{ display:block !important; }
+#btnCompV76, #btnCompV77, #btnCompV78, #btnCompV79{ display:none !important; }
+</style>
+<script>
+// FIX FINALE - Ancorato a #chiSiamo, non alla scritta
+(function(){
+  if(window.__fixFinale) return;
+  window.__fixFinale = true;
+
+  var IMG_COMP = "competizioni.jpg";
+  var AUDIO_COMP = "canzone.mp3";
+  var TESTO_COMP = `
+<div class="titoloComp">LE NOSTRE COMPETIZIONI:</div>
+<div class="sezioneComp"><div class="nomeComp">SERIE A</div>Girone unico a 14 squadre. Nessuna retrocessione diretta. Playout: partecipano le ultime 4 classificate. Si salva solo chi lo vince, le altre retrocedono.</div>
+<div class="sezioneComp"><div class="nomeComp">SERIE B</div>Girone unico di sola andata. Dopodiché la prima metà si qualifica alla Serie B1, l'altra metà alla Serie B2 sempre con girone di sola andata.<br>Le prime 2 classificate di B1 saranno promosse in Serie A. Tutte le altre squadre di B1 e le prime 2 di B2 parteciperanno ai Play Off. La vincente sale in Serie A.</div>
+<div class="sezioneComp"><div class="nomeComp">COPPA DI LEGA</div>Partecipano tutte le squadre di Serie A e Serie B in un tabellone ad eliminazione diretta.</div>
+<div class="sezioneComp"><div class="nomeComp">COPPA DEI CAMPIONI</div>Vi partecipano le prime 6 classificate di Serie A. Tabellone a eliminazione diretta. La 1° e la 2° classificata saranno teste di serie.</div>
+<div class="sezioneComp"><div class="nomeComp">COPPA MITROPA</div>Vi partecipano dalla 7° alla 10° classificata di Serie A e le prime due classificate di Serie B1. Tabellone a eliminazione diretta, la 7° e l'8° classificata saranno teste di serie.</div>
+<div class="sezioneComp"><div class="nomeComp">CONFERENCE CUP</div>Vi partecipano dalla 3° all'ultima classificata di Serie B2. Tabellone a eliminazione diretta con 3° e 4° classificata di Serie B2 come teste di serie.</div>
+<div class="sezioneComp"><div class="nomeComp">SUPERCOPPA</div>Si gioca nella stagione successiva, nella settimana che precede l'inizio del nuovo campionato.<br>Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Campioni, la vincente della Mitropa e la vincente della Coppa di Lega.</div>
+`;
+  var audioEl = null;
+  function apri(){
+    chiudi();
+    var div = document.createElement("div");
+    div.id = "schedaCompetizioni";
+    div.innerHTML =
+      "<button class='chiudiComp' type='button'>← TORNA INDIETRO</button>" +
+      "<img class='imgComp' src='" + IMG_COMP + "' onerror=\"this.style.display='none'\" />" +
+      "<div class='testoComp'></div>" +
+      "<div class='boxAudio'><div style='font-weight:900'>🎵 La nostra canzone</div>" +
+      "<button class='playComp' type='button'>▶️</button>" +
+      "<div class='statoAudio' style='color:#aaa;font-size:13px'>Premi Play per ascoltare</div>" +
+      "<audio controls loop preload='none' src='" + AUDIO_COMP + "'></audio></div>";
+    div.querySelector(".testoComp").innerHTML = TESTO_COMP;
+    document.body.appendChild(div);
+    document.body.classList.add("comp-aperta");
+    window.scrollTo(0,0);
+    audioEl = div.querySelector("audio");
+    var btnPlay = div.querySelector(".playComp");
+    var stato = div.querySelector(".statoAudio");
+    btnPlay.addEventListener("click", function(){
+      if(audioEl.paused){ audioEl.play(); btnPlay.textContent="⏸️"; stato.textContent="In riproduzione..."; }
+      else { audioEl.pause(); btnPlay.textContent="▶️"; stato.textContent="In pausa"; }
+    });
+    div.querySelector(".chiudiComp").addEventListener("click", chiudi);
+  }
+  function chiudi(){
+    if(audioEl){ try{ audioEl.pause(); }catch(e){} audioEl = null; }
+    var v = document.getElementById("schedaCompetizioni");
+    if(v) v.remove();
+    document.body.classList.remove("comp-aperta");
+  }
+  function sistema(){
+    // 1. Togli tutti i bottoni vecchi, anche se V7.6 li ricrea
+    document.querySelectorAll("#btnCompV76, #btnCompV77, #btnCompV78, #btnCompV79").forEach(function(b){ b.remove(); });
+    // 2. Togli anche qualsiasi bottone competizioni finito fuori da Chi Siamo (es. in body)
+    document.querySelectorAll(".btnCompetizioni").forEach(function(b){
+      if(!document.getElementById("chiSiamo") || !document.getElementById("chiSiamo").contains(b)) b.remove();
+    });
+    var box = document.getElementById("chiSiamo");
+    var vecchio = document.getElementById("btnCompFINALE");
+    // 3. Se Chi Siamo è nascosta (ha class hidden), togli il bottone e stop
+    if(!box || box.classList.contains("hidden")){
+      if(vecchio) vecchio.remove();
+      return;
+    }
+    if(vecchio) return;
+    // 4. Mettilo dentro la card di Chi Siamo, non in body
+    var card = box.querySelector(".card") || box;
+    var btn = document.createElement("button");
+    btn.id = "btnCompFINALE";
+    btn.className = "btnCompetizioni";
+    btn.type = "button";
+    btn.textContent = "🏆 Le nostre competizioni";
+    btn.addEventListener("click", apri);
+    card.appendChild(btn);
+  }
+  setInterval(sistema, 800);
+})();
+</script>
 </body>
 </html>

@@ -4508,10 +4508,40 @@ setTimeout(ridisegnaHome, 500);
 #cal h2{ text-align:center!important; }
 </style>
 <script>
-// CALENDARIO V4.2 - sintassi semplice
-function setCalFilter(v){
-  try{ localStorage.setItem("c5_calFilter", v); }catch(e){}
-  renderCal421();
+<script>
+// CALENDARIO + ADMIN FILTRO V4.3 - lega robusta
+function normTesto(s){
+  return String(s||"").toLowerCase().trim().replace(/\s+/g," ").replace("serie  b","serie b").replace("serie  a","serie a");
+}
+function legaDiMatch(m){
+  var c = [];
+  var campi = [m.fase, m.lega, m.campionato, m.competizione, m.divisione, m.categoria, m.torneo];
+  for(var i=0;i<campi.length;i++){ var n=normTesto(campi[i]); if(n) c.push(n); }
+  // teamLeague solo se non abbiamo gia' una lega, e mai di default Serie A
+  try{
+    var tl1 = normTesto(window.teamLeague ? teamLeague(m.casa) : "");
+    var tl2 = normTesto(window.teamLeague ? teamLeague(m.tras) : "");
+    if(tl1 && tl1!=="serie a") c.push(tl1);
+    if(tl2 && tl2!=="serie a") c.push(tl2);
+    // se non abbiamo niente, e teamLeague dice Serie A, lo teniamo solo come ultima spiaggia
+    if(!c.length && tl1) c.push(tl1);
+  }catch(e){}
+  return c;
+}
+function matchDiLega(m, cfLow){
+  var leghe = legaDiMatch(m);
+  for(var i=0;i<leghe.length;i++){
+    if(leghe[i]===cfLow) return true;
+    if(leghe[i].indexOf(cfLow)!==-1 && cfLow.length>=5) return true;
+  }
+  // fallback: se il filtro e' Serie B e la partita non ha lega, non la mostrare come Serie A
+  return false;
+}
+function numGiornata(g){
+  if(g==null) return -1;
+  var s = String(g).toLowerCase().replace("giornata","").trim();
+  var n = parseInt(s,10);
+  return isNaN(n) ? -1 : n;
 }
 function renderCal421(){
   var box = document.getElementById("calList");
@@ -4525,25 +4555,20 @@ function renderCal421(){
   if(!sel.value) sel.value = "Serie A";
   var cf = sel.value;
   try{ localStorage.setItem("c5_calFilter", cf); }catch(e){}
-  var cfLow = String(cf).toLowerCase();
+  var cfLow = normTesto(cf);
   var isCoppa = cfLow.indexOf("coppa")!==-1 || cfLow==="conference" || cfLow.indexOf("playoff")!==-1 || cfLow.indexOf("playout")!==-1;
   var h = "";
-  var debug = "DEBUG: matches="+(window.matches||[]).length+" coppaMatches="+(window.coppaMatches||[]).length+" filtro="+cf;
   if(!isCoppa){
     var list = [];
     for(var a=0;a<(window.matches||[]).length;a++){
       var m = window.matches[a];
-      var lega1 = String(m.fase||"").toLowerCase();
-      var lega2 = "";
-      try{ lega2 = String(window.teamLeague ? teamLeague(m.casa) : "").toLowerCase(); }catch(e){}
-      if(lega1===cfLow || lega2===cfLow) list.push(m);
+      if(matchDiLega(m, cfLow)) list.push(m);
     }
-    debug += " trovate="+list.length;
-    list.sort(function(x,y){ return (x.giornata||99)-(y.giornata||99); });
+    list.sort(function(x,y){ return numGiornata(x.giornata)-numGiornata(y.giornata); });
     var lastG = -1;
     for(var b=0;b<list.length;b++){
       var mm = list[b];
-      var g = mm.giornata||1;
+      var g = numGiornata(mm.giornata); if(g<0) g=1;
       if(g!==lastG){ h += "<div class='calGiornataTitle'>GIORNATA "+g+"</div>"; lastG=g; }
       var sc = (mm.stato==="Giocata") ? "<b>"+(mm.golC==null?"":mm.golC)+" - "+(mm.golT==null?"":mm.golT)+"</b>" : "<span class='badge'>Da giocare</span>";
       h += "<div class='row'><div><b>"+(mm.casa||"")+" vs "+(mm.tras||"")+"</b><br><span class='small'>"+(mm.data||"")+" "+(mm.ora||"")+" - "+(mm.luogo||"")+"</span></div>"+sc+"</div>";
@@ -4552,10 +4577,9 @@ function renderCal421(){
     var listC = [];
     for(var c=0;c<(window.coppaMatches||[]).length;c++){
       var mc = window.coppaMatches[c];
-      var nome = String(mc.coppa||mc.competizione||mc.lega||"").toLowerCase();
+      var nome = normTesto(mc.coppa||mc.competizione||mc.lega||"");
       if(nome===cfLow || (cfLow==="coppa di lega" && nome.indexOf("lega")!==-1)) listC.push(mc);
     }
-    debug += " coppa trovate="+listC.length;
     var LB = window.legaBracket;
     var rounds = null;
     if(LB){
@@ -4563,7 +4587,6 @@ function renderCal421(){
       else if(LB.length!==undefined && typeof LB.length==="number") rounds = LB;
       else if(LB.matches) rounds = LB.matches;
     }
-    debug += " legaBracket="+(LB?"SI":"NO")+" rounds="+(rounds?rounds.length:"0");
     if(rounds && rounds.length){
       var nomiFasi = ["Sedicesimi di Finale","Ottavi di Finale","Quarti di Finale","Semifinale","Finale"];
       for(var r=0;r<rounds.length;r++){
@@ -4580,27 +4603,40 @@ function renderCal421(){
         }
       }
     }
-    debug += " dopo bracket="+listC.length;
     var ordine = {"girone":0,"sedicesimi di finale":1,"sedicesimi":1,"ottavi di finale":2,"ottavi":2,"quarti di finale":3,"quarti":3,"semifinale":4,"semifinali":4,"finale":5,"finali":5};
     listC.sort(function(x,y){
-      var ox = ordine[String(x.fase||"").toLowerCase()]; if(ox==null) ox=99;
-      var oy = ordine[String(y.fase||"").toLowerCase()]; if(oy==null) oy=99;
+      var ox = ordine[normTesto(x.fase)]; if(ox==null) ox=99;
+      var oy = ordine[normTesto(y.fase)]; if(oy==null) oy=99;
       return ox-oy;
     });
     var lastF = "";
     for(var e=0;e<listC.length;e++){
       var m2 = listC[e];
       var f = String(m2.fase||"").trim();
-      if(f.toLowerCase()!==lastF.toLowerCase()){ h += "<div class='calGiornataTitle'>"+(f?f.toUpperCase():"TURNO")+"</div>"; lastF=f; }
+      if(normTesto(f)!==normTesto(lastF)){ h += "<div class='calGiornataTitle'>"+(f?f.toUpperCase():"TURNO")+"</div>"; lastF=f; }
       var sc2 = (m2.stato==="Giocata") ? "<b>"+(m2.golC==null?"":m2.golC)+" - "+(m2.golT==null?"":m2.golT)+"</b>" : "<span class='badge'>Da giocare</span>";
       h += "<div class='row'><div><b>"+(m2.casa||"")+" vs "+(m2.tras||"")+"</b><br><span class='small'>"+(m2.data||"")+" "+(m2.ora||"")+" - "+(m2.luogo||"")+"</span></div>"+sc2+"</div>";
     }
   }
-  if(!h) h = "<p class='small'>Calendario vuoto.</p><p class='small' style='color:#facc15'>"+debug+"</p>";
+  if(!h) h = "<p class='small'>Calendario vuoto.</p>";
   box.innerHTML = h;
 }
-var _oldRenderCal = window.render;
-window.render = function(){ if(_oldRenderCal) _oldRenderCal(); renderCal421(); };
+// FIX ADMIN: quando Admin filtra per Giornata + Lega, usa la stessa logica
+function adminMatchOk(m, giornataSel, legaSel){
+  if(giornataSel && String(giornataSel).toLowerCase().indexOf("tutt") === -1){
+    var gSel = numGiornata(giornataSel);
+    if(gSel>=0 && numGiornata(m.giornata)!==gSel) return false;
+  }
+  if(legaSel && String(legaSel).toLowerCase().indexOf("tutt") === -1){
+    if(!matchDiLega(m, normTesto(legaSel))) return false;
+  }
+  return true;
+}
+// Esponi la funzione perche' i filtri Admin esistenti la possano usare
+window._adminMatchOk = adminMatchOk;
+window._legaDiMatch = legaDiMatch;
+var _oldRenderCal43 = window.render;
+window.render = function(){ if(_oldRenderCal43) _oldRenderCal43(); renderCal421(); };
 setTimeout(renderCal421, 800);
 </script>
 <style>

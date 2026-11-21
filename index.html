@@ -697,7 +697,31 @@ function changeAlboYear(){
 curAlboYear=el('alboYearFilter').value;
 render();
 }
-function changeAlboYearInd(){
+var curIndTrofeo="Miglior Allenatore";
+
+function showIndTrofeo(which){
+  curIndTrofeo=which;
+  aggiornaIndHero();
+  render();
+}
+
+function aggiornaIndHero(){
+  var mapImg={
+    "Miglior Allenatore":"panchina-d-oro.png",
+    "Miglior Giocatore":"miglior-giocatore.png",
+    "Miglior Portiere":"miglior-portiere.png",
+    "Capocannoniere":"capocannoniere.jpg"
+  };
+  var mapTitolo={
+    "Miglior Allenatore":"Panchina d'oro",
+    "Miglior Giocatore":"Miglior giocatore",
+    "Miglior Portiere":"Miglior portiere",
+    "Capocannoniere":"Capocannoniere"
+  };
+  if(el('indHero')) el('indHero').src = mapImg[curIndTrofeo];
+  if(el('indHeroTitle')) el('indHeroTitle').textContent = mapTitolo[curIndTrofeo];
+}
+  function changeAlboYearInd(){
 curAlboYearInd=el('alboYearFilterInd').value;
 render();
 }

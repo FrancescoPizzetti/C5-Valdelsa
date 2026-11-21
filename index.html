@@ -149,15 +149,22 @@ div:has(> img){
   box-shadow:none!important;
   padding:0!important;
 }
-/* Via quadrato nero SOLO in Home - Classifica resta com'è */
-div[id*="Home"] div[class*="p3"]:not(button):not(.p3-btn):not(.p3-btn-ghost){
+/* FIX VERO - via quadrato grande SOLO in Home per Prossime e Ultimi */
+#home .card:has(#upcomingMatches),
+#home .card:has(#pastMatches){
   border:none!important;
   background:transparent!important;
   box-shadow:none!important;
+  padding:0!important;
 }
-div[id*="Home"] .card{
+/* Ogni singola partita diventa un quadratino come nel mockup */
+#home #upcomingMatches .row,
+#home #pastMatches .row{
   border:1px solid rgba(201,162,39,0.6)!important;
   background:rgba(0,0,0,0.88)!important;
+  border-radius:14px!important;
+  margin-bottom:10px!important;
+  padding:12px!important;
 }
 </style>
 </head>

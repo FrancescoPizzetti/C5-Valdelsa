@@ -6379,158 +6379,100 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
 })();
 </script>
 <style>
-/* FIX Stile finale Capocannonieri - uguale all'anteprima */
+/* FIX Capocannonieri - pagina vera, creata dal box esistente */
+.btnApriCap{
+  display:block !important; width:100% !important; margin-top:12px !important;
+  background:#E8D48A !important; color:#000 !important; border:none !important;
+  border-radius:999px !important; padding:12px !important;
+  font-size:14px !important; font-weight:900 !important; text-transform:uppercase !important;
+}
 #paginaCap{
-  background:
-    linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.85)),
-    url("capocannonieri.jpg") center top / cover no-repeat fixed !important;
-  background-color:#000 !important;
+  position:fixed !important; inset:0 !important; z-index:999999 !important;
+  overflow-y:auto !important; background-color:#000 !important;
+  background-image:linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.85)), url("capocannonieri.jpg") !important;
+  background-size:cover !important; background-position:center top !important; background-repeat:no-repeat !important;
   padding:20px 16px 40px !important;
 }
 #paginaCap .chiudiCap{
   display:block !important; margin:0 auto 22px !important;
-  background:#E8D48A !important; color:#000 !important;
-  border:none !important; border-radius:999px !important;
-  padding:12px 22px !important; font-size:15px !important;
-  font-weight:900 !important; text-transform:uppercase !important;
+  background:#E8D48A !important; color:#000 !important; border:none !important;
+  border-radius:999px !important; padding:12px 22px !important;
+  font-size:15px !important; font-weight:900 !important; text-transform:uppercase !important;
 }
 #paginaCap .titoloCap{
-  font-size:30px !important; line-height:1.1 !important;
-  color:#E8C86A !important; text-align:center !important;
-  margin-bottom:8px !important; letter-spacing:0.5px !important;
+  font-size:30px !important; line-height:1.1 !important; color:#E8C86A !important;
+  text-align:center !important; margin-bottom:8px !important;
 }
 #paginaCap .sottoCap{
-  text-align:center !important; color:#B8C4C0 !important;
-  font-size:14px !important; margin-bottom:26px !important;
-}
-/* Rig he nuove, uguali all'anteprima */
-#paginaCap .rigaCap2{
-  display:flex !important; align-items:stretch !important;
-  background:rgba(20,35,30,0.82) !important;
-  border:1px solid rgba(255,255,255,0.25) !important;
-  border-radius:12px !important; overflow:hidden !important;
-  margin-bottom:12px !important; min-height:76px !important;
-}
-#paginaCap .rigaCap2.primo{
-  background:rgba(30,35,20,0.88) !important;
-  border:1px solid #E8C86A !important;
-}
-#paginaCap .bloccoPos{
-  width:72px !important; min-width:72px !important;
-  display:flex !important; align-items:center !important; justify-content:center !important;
-  font-size:32px !important; font-weight:900 !important; color:#fff !important;
-}
-#paginaCap .rigaCap2.pos1 .bloccoPos{ background:#D4AF4A !important; }
-#paginaCap .rigaCap2.pos2 .bloccoPos{ background:#9AA8A6 !important; }
-#paginaCap .rigaCap2.pos3 .bloccoPos{ background:#B07B2E !important; }
-#paginaCap .rigaCap2.pos4 .bloccoPos,
-#paginaCap .rigaCap2.pos5 .bloccoPos{ background:#B8BFB9 !important; }
-#paginaCap .testoCap2{ flex:1 !important; padding:12px 12px !important; display:flex !important; flex-direction:column !important; justify-content:center !important; }
-#paginaCap .nomeCap2{ font-size:20px !important; font-weight:900 !important; color:#fff !important; line-height:1.2 !important; }
-#paginaCap .rigaCap2.primo .nomeCap2{ color:#E8C86A !important; }
-#paginaCap .sottoCap2{ font-size:14px !important; color:#E8E8E8 !important; margin-top:3px !important; }
-#paginaCap .palloneCap2{
-  width:52px !important; min-width:52px !important;
-  display:flex !important; align-items:center !important; justify-content:center !important;
-  font-size:30px !important;
-}
-#paginaCap .rigaCap2.primo .palloneCap2{ color:#E8C86A !important; }
-#paginaCap .vuotoCap{
-  text-align:center !important; color:#ddd !important;
-  background:rgba(0,0,0,0.5) !important; border-radius:14px !important; padding:20px !important;
-}
-</style>
-<style>
-/* FIX Capocannonieri V2 - sostituisce il vecchio */
-#paginaCap{
-  background-color:#000 !important;
-  padding:20px 16px 40px !important;
-}
-#paginaCap .chiudiCap{
-  display:block !important; margin:0 auto 22px !important;
-  background:#E8D48A !important; color:#000 !important;
-  border:none !important; border-radius:999px !important;
-  padding:12px 22px !important; font-size:15px !important;
-  font-weight:900 !important; text-transform:uppercase !important;
-}
-#paginaCap .titoloCap{
-  font-size:30px !important; line-height:1.1 !important;
-  color:#E8C86A !important; text-align:center !important;
-  margin-bottom:8px !important;
-}
-#paginaCap .sottoCap{
-  text-align:center !important; color:#B8C4C0 !important;
-  font-size:14px !important; margin-bottom:26px !important;
+  text-align:center !important; color:#B8C4C0 !important; font-size:14px !important; margin-bottom:26px !important;
 }
 #paginaCap .rigaCap2{
   display:flex !important; align-items:stretch !important;
-  background:rgba(20,35,30,0.82) !important;
-  border:1px solid rgba(255,255,255,0.25) !important;
-  border-radius:12px !important; overflow:hidden !important;
-  margin-bottom:12px !important; min-height:76px !important;
+  background:rgba(20,35,30,0.82) !important; border:1px solid rgba(255,255,255,0.25) !important;
+  border-radius:12px !important; overflow:hidden !important; margin-bottom:12px !important; min-height:76px !important;
 }
-#paginaCap .rigaCap2.primo{
-  background:rgba(30,35,20,0.88) !important;
-  border:1px solid #E8C86A !important;
-}
+#paginaCap .rigaCap2.primo{ background:rgba(30,35,20,0.88) !important; border-color:#E8C86A !important; }
 #paginaCap .bloccoPos{
-  width:72px !important; min-width:72px !important;
-  display:flex !important; align-items:center !important; justify-content:center !important;
+  width:72px !important; min-width:72px !important; display:flex !important;
+  align-items:center !important; justify-content:center !important;
   font-size:32px !important; font-weight:900 !important; color:#fff !important;
 }
-#paginaCap .rigaCap2.pos1 .bloccoPos{ background:#D4AF4A !important; }
-#paginaCap .rigaCap2.pos2 .bloccoPos{ background:#9AA8A6 !important; }
-#paginaCap .rigaCap2.pos3 .bloccoPos{ background:#B07B2E !important; }
-#paginaCap .rigaCap2.pos4 .bloccoPos,
-#paginaCap .rigaCap2.pos5 .bloccoPos{ background:#B8BFB9 !important; }
-#paginaCap .testoCap2{ flex:1 !important; padding:12px 12px !important; display:flex !important; flex-direction:column !important; justify-content:center !important; }
+#paginaCap .pos1 .bloccoPos{ background:#D4AF4A !important; }
+#paginaCap .pos2 .bloccoPos{ background:#9AA8A6 !important; }
+#paginaCap .pos3 .bloccoPos{ background:#B07B2E !important; }
+#paginaCap .pos4 .bloccoPos, #paginaCap .pos5 .bloccoPos{ background:#B8BFB9 !important; }
+#paginaCap .testoCap2{ flex:1 !important; padding:12px !important; display:flex !important; flex-direction:column !important; justify-content:center !important; }
 #paginaCap .nomeCap2{ font-size:20px !important; font-weight:900 !important; color:#fff !important; }
-#paginaCap .rigaCap2.primo .nomeCap2{ color:#E8C86A !important; }
+#paginaCap .primo .nomeCap2{ color:#E8C86A !important; }
 #paginaCap .sottoCap2{ font-size:14px !important; color:#E8E8E8 !important; margin-top:3px !important; }
-#paginaCap .palloneCap2{
-  width:52px !important; min-width:52px !important;
-  display:flex !important; align-items:center !important; justify-content:center !important;
-  font-size:30px !important;
-}
+#paginaCap .palloneCap2{ width:52px !important; display:flex !important; align-items:center !important; justify-content:center !important; font-size:30px !important; }
 </style>
 <script>
-// FIX Capocannonieri V2
+// FIX Capocannonieri - crea la pagina dai dati veri del .capBox
 (function(){
-  if(window.__fixCapV2) return;
-  window.__fixCapV2 = true;
+  if(window.__fixCapV3) return;
+  window.__fixCapV3 = true;
 
-  function riscrivi(){
-    var pagina = document.getElementById("paginaCap");
-    if(!pagina) return;
-
-    // Sfondo forzato da JS, non solo da CSS
-    pagina.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.85)), url('capocannonieri.jpg')";
-    pagina.style.backgroundSize = "cover";
-    pagina.style.backgroundPosition = "center top";
-    pagina.style.backgroundRepeat = "no-repeat";
-    pagina.style.backgroundColor = "#000";
-
-    // Riscrive SEMPRE le righe vecchie, senza blocco
-    var righe = pagina.querySelectorAll(".rigaCap");
+  function apriPaginaCap(box){
+    var vecchia = document.getElementById("paginaCap");
+    if(vecchia) vecchia.remove();
+    var titolo = (box.querySelector("h3") ? box.querySelector("h3").textContent : "CAPOCANNONIERI").replace(" - TOP 5","").replace("⚽","").trim();
+    var righe = box.querySelectorAll(".capRow");
+    var html = "<button type='button' class='chiudiCap'>← Torna alla classifica</button>" +
+      "<div class='titoloCap'>" + titolo + "</div>" +
+      "<div class='sottoCap'>Stagione 2026/27 • Solo gol di campionato</div>";
+    if(!righe.length){
+      html += "<div style='text-align:center;color:#ddd;background:rgba(0,0,0,0.5);border-radius:14px;padding:20px'>Ancora nessun gol registrato.</div>";
+    }
     righe.forEach(function(r, i){
-      var nomeEl = r.querySelector(".nomeCap");
-      var squadraEl = r.querySelector(".squadraCap");
-      var golEl = r.querySelector(".golCap");
-      var nome = nomeEl ? nomeEl.childNodes[0].textContent.trim() : "";
-      var squadra = squadraEl ? squadraEl.textContent.trim() : "";
-      var gol = golEl ? golEl.textContent.replace("⚽","").trim() : "";
-      var nuova = document.createElement("div");
-      nuova.className = "rigaCap2 pos" + (i+1) + (i===0 ? " primo" : "");
-      nuova.innerHTML =
+      var nome = r.querySelector(".capNome") ? r.querySelector(".capNome").childNodes[0].textContent.trim() : "";
+      var squadra = r.querySelector(".capSquadra") ? r.querySelector(".capSquadra").textContent.trim() : "";
+      var gol = r.querySelector(".capGol") ? r.querySelector(".capGol").textContent.replace("⚽","").trim() : "";
+      html += "<div class='rigaCap2 pos" + (i+1) + (i===0 ? " primo" : "") + "'>" +
         "<div class='bloccoPos'>" + (i+1) + "°</div>" +
         "<div class='testoCap2'><div class='nomeCap2'>" + nome + "</div>" +
         "<div class='sottoCap2'>" + squadra + " • " + gol + " GOL</div></div>" +
-        "<div class='palloneCap2'>⚽</div>";
-      r.parentNode.replaceChild(nuova, r);
+        "<div class='palloneCap2'>⚽</div></div>";
+    });
+    var pagina = document.createElement("div");
+    pagina.id = "paginaCap";
+    pagina.innerHTML = html;
+    document.body.appendChild(pagina);
+    pagina.querySelector(".chiudiCap").addEventListener("click", function(){ pagina.remove(); });
+  }
+
+  function aggiungiBottoni(){
+    document.querySelectorAll(".capBox").forEach(function(box){
+      if(box.querySelector(".btnApriCap")) return;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btnApriCap";
+      btn.textContent = "⚽ Vedi tutti i capocannonieri";
+      btn.addEventListener("click", function(){ apriPaginaCap(box); });
+      box.appendChild(btn);
     });
   }
-  setInterval(riscrivi, 300);
-  new MutationObserver(riscrivi).observe(document.body, { childList: true, subtree: true });
+  setInterval(aggiungiBottoni, 500);
 })();
 </script>
 </body>

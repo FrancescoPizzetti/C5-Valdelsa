@@ -3163,8 +3163,8 @@ if(!hsel)hsel="<option value=''>Nessuna partita</option>";
 el('fMatchSelect').innerHTML=hsel;
 if(curM)el('fMatchSelect').value=curM;
 }
-if(el('fData')){
-try{el('fData').value=new Date().toISOString().slice(0,10);}catch(e){}
+if(el('fData') && !el('fData').value){
+  try{el('fData').value=new Date().toISOString().slice(0,10);}catch(e){}
 }
 if(el('fCoppaData')){
 try{el('fCoppaData').value=new Date().toISOString().slice(0,10);}catch(e){}

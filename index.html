@@ -5680,5 +5680,179 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
   border-radius: 0 !important;
 }
   </style>
+<style>
+/* V7.6 COMPLETO - Le nostre competizioni */
+.btnCompetizioni{
+  width:100%; margin-top:16px; padding:14px;
+  background:#FFD700; color:#000; border:none; border-radius:12px;
+  font-size:16px; font-weight:900; text-transform:uppercase;
+  cursor:pointer;
+}
+#schedaCompetizioni{
+  position:fixed; inset:0; z-index:9999;
+  background:#111; color:#fff; overflow-y:auto;
+  padding:18px 16px 30px;
+}
+#schedaCompetizioni .chiudiComp{
+  background:#FFD700; color:#000; border:none; border-radius:10px;
+  padding:10px 16px; font-weight:900; cursor:pointer; margin-bottom:14px;
+}
+#schedaCompetizioni .imgComp{
+  width:100%; border-radius:14px; display:block; margin-bottom:16px;
+  border:1px solid #333;
+}
+#schedaCompetizioni .testoComp{
+  font-size:18px; line-height:1.6; color:#fff;
+  text-align:center;
+}
+#schedaCompetizioni .titoloComp{
+  text-align:center;
+  font-size:26px;
+  font-weight:900;
+  color:#FFD700;
+  margin-bottom:22px;
+  line-height:1.2;
+}
+#schedaCompetizioni .sezioneComp{
+  margin-bottom:22px;
+}
+#schedaCompetizioni .nomeComp{
+  font-size:20px;
+  font-weight:900;
+  color:#FFD700;
+  margin-bottom:6px;
+}
+#schedaCompetizioni .boxAudio{
+  margin-top:22px; background:#1e1e1e; border:1px solid #333;
+  border-radius:14px; padding:16px; text-align:center;
+}
+#schedaCompetizioni .playComp{
+  background:#FFD700; color:#000; border:none; border-radius:50%;
+  width:68px; height:68px; font-size:28px; cursor:pointer; margin:10px 0;
+}
+#schedaCompetizioni audio{ width:100%; margin-top:8px; }
+</style>
+<script>
+// V7.6 COMPLETO - Le nostre competizioni
+(function(){
+  if(window.__v76) return;
+  window.__v76 = true;
+
+  // ===== NOMI FILE - se li chiami diversi, cambia qui =====
+  var IMG_COMP = "competizioni.jpg";
+  var AUDIO_COMP = "canzone.mp3";
+  // =======================================================
+
+  var TESTO_COMP = `
+<div class="titoloComp">LE NOSTRE COMPETIZIONI:</div>
+
+<div class="sezioneComp">
+<div class="nomeComp">SERIE A</div>
+Girone unico a 14 squadre. Nessuna retrocessione diretta. Playout: partecipano le ultime 4 classificate. Si salva solo chi lo vince, le altre retrocedono.
+</div>
+
+<div class="sezioneComp">
+<div class="nomeComp">SERIE B</div>
+Girone unico di sola andata. Dopodiché la prima metà si qualifica alla Serie B1, l'altra metà alla Serie B2 sempre con girone di sola andata.<br>
+Le prime 2 classificate di B1 saranno promosse in Serie A. Tutte le altre squadre di B1 e le prime 2 di B2 parteciperanno ai Play Off. La vincente sale in Serie A.
+</div>
+
+<div class="sezioneComp">
+<div class="nomeComp">COPPA DI LEGA</div>
+Partecipano tutte le squadre di Serie A e Serie B in un tabellone ad eliminazione diretta.
+</div>
+
+<div class="sezioneComp">
+<div class="nomeComp">COPPA DEI CAMPIONI</div>
+Vi partecipano le prime 6 classificate di Serie A. Tabellone a eliminazione diretta. La 1° e la 2° classificata saranno teste di serie.
+</div>
+
+<div class="sezioneComp">
+<div class="nomeComp">COPPA MITROPA</div>
+Vi partecipano dalla 7° alla 10° classificata di Serie A e le prime due classificate di Serie B1. Tabellone a eliminazione diretta, la 7° e l'8° classificata saranno teste di serie.
+</div>
+
+<div class="sezioneComp">
+<div class="nomeComp">CONFERENCE CUP</div>
+Vi partecipano dalla 3° all'ultima classificata di Serie B2. Tabellone a eliminazione diretta con 3° e 4° classificata di Serie B2 come teste di serie.
+</div>
+
+<div class="sezioneComp">
+<div class="nomeComp">SUPERCOPPA</div>
+Si gioca nella stagione successiva, nella settimana che precede l'inizio del nuovo campionato.<br>
+Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Campioni, la vincente della Mitropa e la vincente della Coppa di Lega.
+</div>
+`;
+
+  var audioEl = null;
+
+  function apriCompetizioni(){
+    chiudiCompetizioni();
+    var div = document.createElement("div");
+    div.id = "schedaCompetizioni";
+    div.innerHTML =
+      "<button class='chiudiComp' type='button'>← TORNA INDIETRO</button>" +
+      "<img class='imgComp' src='" + IMG_COMP + "' onerror=\"this.style.display='none'\" />" +
+      "<div class='testoComp'></div>" +
+      "<div class='boxAudio'>" +
+        "<div style='font-weight:900'>🎵 La nostra canzone</div>" +
+        "<button class='playComp' type='button'>▶️</button>" +
+        "<div class='statoAudio' style='color:#aaa;font-size:13px'>Premi Play per ascoltare</div>" +
+        "<audio controls loop preload='none' src='" + AUDIO_COMP + "'></audio>" +
+      "</div>";
+    div.querySelector(".testoComp").innerHTML = TESTO_COMP;
+    document.body.appendChild(div);
+    window.scrollTo(0,0);
+
+    audioEl = div.querySelector("audio");
+    var btnPlay = div.querySelector(".playComp");
+    var stato = div.querySelector(".statoAudio");
+    btnPlay.addEventListener("click", function(){
+      if(!audioEl) return;
+      if(audioEl.paused){
+        audioEl.play();
+        btnPlay.textContent = "⏸️";
+        stato.textContent = "In riproduzione...";
+      } else {
+        audioEl.pause();
+        btnPlay.textContent = "▶️";
+        stato.textContent = "In pausa";
+      }
+    });
+    div.querySelector(".chiudiComp").addEventListener("click", chiudiCompetizioni);
+  }
+
+  function chiudiCompetizioni(){
+    if(audioEl){ try{ audioEl.pause(); }catch(e){} audioEl = null; }
+    var vecchio = document.getElementById("schedaCompetizioni");
+    if(vecchio) vecchio.remove();
+  }
+
+  function mettiBottone(){
+    if(document.getElementById("btnCompV76")) return;
+    var trovato = null;
+    document.querySelectorAll("div, p, span").forEach(function(el){
+      if(trovato) return;
+      var t = el.textContent || "";
+      if(t.indexOf("MIGLIORARE")>=0 && t.indexOf("SEMPRE")>=0){
+        if(!trovato) trovato = el;
+      }
+    });
+    if(!trovato) return;
+    var card = trovato.parentElement || trovato;
+    if(card.querySelector("#btnCompV76")) return;
+    var btn = document.createElement("button");
+    btn.id = "btnCompV76";
+    btn.className = "btnCompetizioni";
+    btn.type = "button";
+    btn.textContent = "🏆 Le nostre competizioni";
+    btn.addEventListener("click", apriCompetizioni);
+    card.appendChild(btn);
+  }
+
+  setInterval(mettiBottone, 1500);
+  setTimeout(mettiBottone, 800);
+})();
+</script>
 </body>
 </html>

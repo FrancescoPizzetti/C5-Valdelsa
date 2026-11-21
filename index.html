@@ -4942,21 +4942,117 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
     if(list && !list.dataset.v51){
       list.dataset.v51 = "1";
       new MutationObserver(function(){ setTimeout(fixListaAdmin, 30); }).observe(list, {childList:true});
-    }
-    var cal = document.getElementById("calList");
-    if(cal && !cal.dataset.v51){
-      cal.dataset.v51 = "1";
-      new MutationObserver(function(){ setTimeout(fixCalCoppa, 30); }).observe(cal, {childList:true, characterData:true, subtree:true});
-    }
+<script>
+// V6.0 - UN SOLO CALENDARIO: sostituisce renderCal45 + renderCal421 + setCalFilter
+(function(){
+  if(window.__cal60) return;
+  window.__cal60 = true;
+
+  function legaDi(m){
+    if(m.fase) return String(m.fase).trim();
+    if(m.lega) return String(m.lega).trim();
+    if(m.campionato) return String(m.campionato).trim();
+    try{ return teamLeague(m.casa) || "Serie A"; }catch(e){ return "Serie A"; }
   }
-  document.addEventListener("click", function(){ setTimeout(attacca, 300); setTimeout(fixListaAdmin, 300); setTimeout(fixCalCoppa, 300); });
-  var legaSel = document.getElementById("fLegaMatch");
-  if(legaSel) legaSel.addEventListener("change", function(){ setTimeout(fixListaAdmin, 100); });
-  var calSel = document.getElementById("calFilter");
-  if(calSel) calSel.addEventListener("change", function(){ setTimeout(fixCalCoppa, 100); });
-  setTimeout(attacca, 500);
-  setTimeout(fixListaAdmin, 800);
-  setTimeout(fixCalCoppa, 800);
+  function numG(g){
+    var n = parseInt(String(g||"").replace(/[^0-9]/g,""), 10);
+    return isNaN(n) ? 999 : n;
+  }
+  function rigaCal(m){
+    var sc = (m.stato === "Giocata")
+      ? "<b>" + (m.golC==null?"":m.golC) + " - " + (m.golT==null?"":m.golT) + "</b>"
+      : "<span class='badge'>Da giocare</span>";
+    return "<div class='row'><div><b>" + (m.casa||"") + " vs " + (m.tras||"") + "</b><br><span class='small'>"
+      + (m.data||"") + " " + (m.ora||"") + " - " + (m.luogo||"") + "</span></div>" + sc + "</div>";
+  }
+
+  function renderCalFix(){
+    var box = document.getElementById("calList");
+    var sel = document.getElementById("calFilter");
+    if(!box || !sel) return;
+    var cf = String(sel.value||"Serie A").trim();
+    try{ localStorage.setItem("c5_calFilter", cf); }catch(e){}
+    var h = "";
+
+    // --- COPPA DI LEGA: da legaBracket.rounds, NON da coppaMatches ---
+    if(cf === "Coppa di Lega"){
+      var br = window.legaBracket;
+      if(br && br.size && br.rounds && br.rounds.length){
+        for(var r=0;r<br.rounds.length;r++){
+          var round = br.rounds[r] || [];
+          if(!round.length) continue;
+          var titolo = "TURNO " + (r+1);
+          try{ if(typeof legaRoundName === "function") titolo = legaRoundName(round.length*2); }catch(e){}
+          h += "<div class='calGiornataTitle'>" + String(titolo).toUpperCase() + "</div>";
+          for(var i=0;i<round.length;i++){
+            var mm = round[i] || {};
+            if(!mm.casa && !mm.tras) continue;
+            var sc2 = (mm.stato === "Giocata")
+              ? "<b>" + (mm.golC==null?"":mm.golC) + " - " + (mm.golT==null?"":mm.golT) + "</b>" + (mm.winner ? " ✅ " + mm.winner : "")
+              : "<span class='badge'>Da giocare</span>";
+            h += "<div class='row'><div><b>" + (mm.casa||"—") + " vs " + (mm.tras||"—") + "</b><br><span class='small'>"
+              + (mm.data||"") + " " + (mm.ora||"") + " - " + (mm.luogo||"") + "</span></div>" + sc2 + "</div>";
+          }
+        }
+      }
+      // Se ci sono anche partite in coppaMatches, aggiungile sotto
+      var extra = (window.coppaMatches||[]).filter(function(m){ return m && m.coppa === "Coppa di Lega" && (m.casa||m.tras); });
+      for(var e=0;e<extra.length;e++){ h += rigaCal(extra[e]); }
+      if(!h) h = "<p class='small'>Coppa di Lega: tabellone non ancora creato. Vai in Admin &gt; Coppe &gt; Coppa di Lega, crea il tabellone e premi SALVA CELLE.</p>";
+      box.innerHTML = h;
+      return;
+    }
+
+    // --- ALTRE COPPE: da coppaMatches, ordinate per turno ---
+    var isCoppa = cf.indexOf("Coppa")!==-1 || cf === "Conference";
+    if(isCoppa){
+      var listC = (window.coppaMatches||[]).filter(function(m){ return m && m.coppa === cf && (m.casa||m.tras); });
+      var ordine = {"girone":0,"sedicesimi":1,"ottavi":2,"quarti":3,"semifinale":4,"finale":5};
+      listC.sort(function(a,b){
+        var fa = String(a.fase||"").toLowerCase(), fb = String(b.fase||"").toLowerCase();
+        var oa = 99, ob = 99;
+        for(var k in ordine){ if(fa.indexOf(k)!==-1) oa = ordine[k]; if(fb.indexOf(k)!==-1) ob = ordine[k]; }
+        return oa - ob;
+      });
+      var lastF = "";
+      for(var j=0;j<listC.length;j++){
+        var m2 = listC[j];
+        var f = String(m2.fase||"").trim();
+        if(f !== lastF){ h += "<div class='calGiornataTitle'>" + (f?f.toUpperCase():"TURNO") + "</div>"; lastF = f; }
+        h += rigaCal(m2);
+      }
+      if(!h) h = "<p class='small'>Calendario vuoto.</p>";
+      box.innerHTML = h;
+      return;
+    }
+
+    // --- CAMPIONATO: Serie A / B / B1 / B2, solo m.fase, ordinato 1,2,3...26 ---
+    var list = (window.matches||[]).filter(function(m){ return legaDi(m) === cf; });
+    list.sort(function(a,b){ return numG(a.giornata) - numG(b.giornata); });
+    var lastG = -1;
+    for(var q=0;q<list.length;q++){
+      var m3 = list[q];
+      var g = numG(m3.giornata); if(g===999) g = 1;
+      if(g !== lastG){ h += "<div class='calGiornataTitle'>GIORNATA " + g + "</div>"; lastG = g; }
+      h += rigaCal(m3);
+    }
+    if(!h) h = "<p class='small'>Calendario vuoto.</p>";
+    box.innerHTML = h;
+  }
+
+  // Sostituisci TUTTI i vecchi renderer con questo. Qualunque listener parta, disegna uguale.
+  window.renderCal45 = renderCalFix;
+  window.renderCal421 = renderCalFix;
+  window.setCalFilter = function(v){
+    var sel = document.getElementById("calFilter");
+    if(sel && v) sel.value = v;
+    renderCalFix();
+  };
+  var _oldR = window.render;
+  window.render = function(){ if(_oldR) _oldR(); renderCalFix(); };
+  var cfSel = document.getElementById("calFilter");
+  if(cfSel) cfSel.addEventListener("change", renderCalFix);
+  setTimeout(renderCalFix, 600);
 })();
 </script>
 </body>

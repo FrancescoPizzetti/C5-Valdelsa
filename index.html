@@ -6207,5 +6207,176 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
   setInterval(sistema, 800);
 })();
 </script>
+<style>
+/* FIX Classifica: B1/B2 dentro B + Capocannonieri */
+#btnClassB1, #btnClassB2{ display:none !important; }
+.subnavB{
+  display:flex; gap:8px; margin:0 0 14px;
+}
+.subnavB button{
+  flex:1; padding:10px 6px; border-radius:10px;
+  background:#1e1e1e; color:#fff; border:1px solid #444;
+  font-weight:900; font-size:13px; cursor:pointer;
+}
+.subnavB button.on{ background:#FFD700; color:#000; border-color:#FFD700; }
+.capBox{
+  margin-top:16px; background:#1a1a1a; border:1px solid #FFD700;
+  border-radius:14px; padding:14px;
+}
+.capBox h3{ margin:0 0 10px; text-align:center; font-size:16px; }
+.capRow{
+  display:flex; align-items:center; gap:10px;
+  padding:9px 0; border-bottom:1px solid #333;
+}
+.capRow:last-child{ border-bottom:none; }
+.capPos{
+  width:28px; height:28px; min-width:28px; border-radius:50%;
+  background:#FFD700; color:#000; font-weight:900;
+  display:flex; align-items:center; justify-content:center; font-size:14px;
+}
+.capNome{ flex:1; font-weight:900; font-size:14px; }
+.capSquadra{ font-size:11px; color:#aaa; font-weight:400; display:block; }
+.capGol{ font-weight:900; font-size:18px; color:#FFD700; }
+.capVuoto{ text-align:center; color:#aaa; font-size:13px; padding:8px; }
+</style>
+<script>
+// FIX Classifica B + Capocannonieri Top 5
+(function(){
+  if(window.__fixClassCap) return;
+  window.__fixClassCap = true;
+
+  // --- 1. Seconda riga B / B1 / B2 dentro Serie B ---
+  function creaSubnavB(){
+    var boxB = document.getElementById("classBBox");
+    if(!boxB || document.getElementById("subnavB")) return;
+    var nav = document.createElement("div");
+    nav.id = "subnavB";
+    nav.className = "subnavB";
+    nav.innerHTML =
+      '<button type="button" id="btnSubB" class="on" onclick="showClass(\'B\')">SERIE B</button>' +
+      '<button type="button" id="btnSubB1" onclick="showClass(\'B1\')">B1</button>' +
+      '<button type="button" id="btnSubB2" onclick="showClass(\'B2\')">B2</button>';
+    boxB.insertBefore(nav, boxB.firstChild);
+  }
+
+  // --- 2. Nuova showClass: A / B (con sotto-nav) / B1 / B2 ---
+  var vecchiaShowClass = window.showClass;
+  window.showClass = function(which){
+    creaSubnavB();
+    // Aggiorna i tasti in alto: solo A e B
+    ["A","B","B1","B2"].forEach(function(k){
+      var b = document.getElementById("btnClass"+k);
+      if(!b) return;
+      // B resta acceso anche quando sei in B1 o B2
+      var acceso = (k === which) || (k === "B" && (which === "B1" || which === "B2"));
+      b.classList.toggle("on", acceso);
+    });
+    // Aggiorna la sotto-nav B / B1 / B2
+    ["B","B1","B2"].forEach(function(k){
+      var b = document.getElementById("btnSub"+k);
+      if(b) b.classList.toggle("on", k === which);
+    });
+    // Mostra il box giusto
+    ["A","B","B1","B2"].forEach(function(k){
+      var box = document.getElementById("class"+k+"Box");
+      if(box) box.classList.toggle("hidden", k !== which);
+    });
+    // Se torni in B, assicurati che la sotto-nav ci sia e sia su B
+    // Se vai in B1/B2, la sotto-nav la rimettiamo dentro B quando torni in B
+    if(which === "B1" || which === "B2"){
+      // Sposta la sotto-nav in cima al box B1/B2 così resta visibile anche lì
+      var nav = document.getElementById("subnavB");
+      var box = document.getElementById("class"+which+"Box");
+      if(nav && box && box.firstChild !== nav) box.insertBefore(nav, box.firstChild);
+    }
+    if(which === "B"){
+      var nav2 = document.getElementById("subnavB");
+      var boxB = document.getElementById("classBBox");
+      if(nav2 && boxB && boxB.firstChild !== nav2) boxB.insertBefore(nav2, boxB.firstChild);
+    }
+    aggiornaCap();
+  };
+
+  // --- 3. Capocannonieri: somma gol di campionato da matches[].scorers ---
+  function legaDiSquadra(nome){
+    try{ if(typeof teamLeague === "function") return teamLeague(nome); }catch(e){}
+    return "";
+  }
+  function calcolaCap(famiglia){
+    var mappa = {}; // nome -> {nome, squadra, gol}
+    var lista = window.matches || [];
+    lista.forEach(function(m){
+      if(!m || !m.scorers) return;
+      m.scorers.forEach(function(s){
+        if(!s || s.autogol || s.n === "AUTOGOL") return;
+        var squadra = s.team || m.casa || "";
+        var lega = legaDiSquadra(squadra);
+        var eB = (lega === "Serie B" || lega === "Serie B1" || lega === "Serie B2");
+        var eA = (lega === "Serie A");
+        if(famiglia === "A" && !eA) return;
+        if(famiglia === "B" && !eB) return;
+        var chiave = s.n + "||" + squadra;
+        if(!mappa[chiave]) mappa[chiave] = { nome: s.n, squadra: squadra, gol: 0 };
+        mappa[chiave].gol += parseInt(s.gol || 1);
+      });
+    });
+    var arr = Object.keys(mappa).map(function(k){ return mappa[k]; });
+    // Se non ci sono marcatori registrati, usa il totale giocatori (vecchi dati)
+    if(arr.length === 0 && window.players){
+      window.players.forEach(function(p){
+        if(!p || !p.n) return;
+        var lega = legaDiSquadra(p.t || "");
+        var eB = (lega === "Serie B" || lega === "Serie B1" || lega === "Serie B2");
+        var eA = (lega === "Serie A");
+        if(famiglia === "A" && !eA) return;
+        if(famiglia === "B" && !eB) return;
+        if((p.g || 0) > 0) arr.push({ nome: p.n, squadra: p.t || "", gol: p.g });
+      });
+    }
+    arr.sort(function(a,b){ return b.gol - a.gol || a.nome.localeCompare(b.nome); });
+    return arr.slice(0, 5);
+  }
+
+  function disegnaCap(boxId, famiglia, titolo){
+    var box = document.getElementById(boxId);
+    if(!box) return;
+    var vecchio = box.querySelector(".capBox");
+    if(vecchio) vecchio.remove();
+    var top = calcolaCap(famiglia);
+    var div = document.createElement("div");
+    div.className = "capBox";
+    var html = "<h3>⚽ " + titolo + " - TOP 5</h3>";
+    if(top.length === 0){
+      html += "<div class='capVuoto'>Ancora nessun gol registrato.</div>";
+    } else {
+      top.forEach(function(p, i){
+        html += "<div class='capRow'><div class='capPos'>" + (i+1) + "</div>" +
+          "<div class='capNome'>" + p.nome + "<span class='capSquadra'>" + p.squadra + "</span></div>" +
+          "<div class='capGol'>" + p.gol + " ⚽</div></div>";
+      });
+    }
+    div.innerHTML = html;
+    // Mettilo dopo la tabella, in fondo al box
+    box.appendChild(div);
+  }
+
+  function aggiornaCap(){
+    disegnaCap("classABox", "A", "CAPOCANNONIERI SERIE A");
+    disegnaCap("classBBox", "B", "CAPOCANNONIERI SERIE B");
+    disegnaCap("classB1Box", "B", "CAPOCANNONIERI SERIE B");
+    disegnaCap("classB2Box", "B", "CAPOCANNONIERI SERIE B");
+  }
+
+  // Aggiorna quando l'app ridisegna la classifica
+  var vecchioRender = window.render;
+  if(vecchioRender && !vecchioRender.__fixCap){
+    var nuovo = function(){ vecchioRender.apply(this, arguments); try{ aggiornaCap(); }catch(e){} };
+    nuovo.__fixCap = true;
+    window.render = nuovo;
+  }
+  setInterval(function(){ try{ creaSubnavB(); aggiornaCap(); }catch(e){} }, 2000);
+  setTimeout(function(){ creaSubnavB(); aggiornaCap(); }, 800);
+})();
+</script>
 </body>
 </html>

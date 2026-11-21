@@ -258,8 +258,15 @@ div:has(> img){
 <div id="cal" class="hidden">
 <div class="card"><h2>📅 CALENDARIO</h2>
 <select id="calFilter" onchange="render()">
-<option value="">Tutte le Leghe</option>
 <option>Serie A</option>
+<option>Serie B</option>
+<option>Serie B1</option>
+<option>Serie B2</option>
+<option>Coppa Campioni</option>
+<option>Coppa di Lega</option>
+<option>Coppa Mitropa</option>
+<option>Conference</option>
+</select>
 <option>Serie B</option>
 <option>Serie B1</option>
 <option>Serie B2</option>
@@ -4491,6 +4498,119 @@ function ridisegnaHome(){
 var _r2 = window.render;
 window.render = function(){ _r2(); ridisegnaHome(); };
 setTimeout(ridisegnaHome, 500);
+</script>
+<style>
+/* Striscia GIORNATA / TURNO centrata */
+.calGiornataTitle{
+  text-align:center!important;
+  font-weight:900!important;
+  font-size:14px!important;
+  letter-spacing:1px!important;
+  background:#facc15!important;
+  color:#000!important;
+  padding:8px 10px!important;
+  border-radius:10px!important;
+  margin:16px 0 8px!important;
+}
+.calGiornataTitle:first-child{ margin-top:4px!important; }
+#cal h2{ text-align:center!important; }
+</style>
+<script>
+// CALENDARIO V2 - filtro solo, diviso per Giornata / Turno
+(function(){
+  var ordineFasi = {
+    "girone":0,
+    "sedicesimi di finale":1, "sedicesimi":1,
+    "ottavi di finale":2, "ottavi":2,
+    "quarti di finale":3, "quarti":3,
+    "semifinale":4, "semifinali":4,
+    "finale":5, "finali":5
+  };
+  function norm(s){ return String(s||"").trim().toLowerCase().replace(/\s+/g," "); }
+  function dataIT(d){
+    if(!d) return "";
+    var p=String(d).split("-");
+    if(p.length===3) return p[2]+"/"+p[1]+"/"+p[0];
+    return d;
+  }
+  function rigaCal(m, isCoppa){
+    var score = "";
+    if(m.stato==="Giocata" || m.stato==="Disputata") score = "<b>"+(m.golC??"")+" - "+(m.golT??"")+"</b>";
+    else score = "<span class='badge'>Da giocare</span>";
+    var logoC = window.logoHtml ? logoHtml(m.casa) : "";
+    var logoT = window.logoHtml ? logoHtml(m.tras) : "";
+    return "<div class='row'><div><b>"+logoC+" "+(m.casa||"")+" vs "+(m.tras||"")+" "+logoT+"</b>"
+      + "<br><span class='small'>"+dataIT(m.data)+" "+(m.ora||"")+" - "+(m.luogo||"")+"</span></div>"
+      + score + "</div>";
+  }
+  function renderCalV2(){
+    var box = document.getElementById("calList");
+    var sel = document.getElementById("calFilter");
+    if(!box || !sel) return;
+    // 1. Niente piu Tutte le Leghe, default Serie A
+    var optVuoto = sel.querySelector('option[value=""]');
+    if(optVuoto) optVuoto.remove();
+    if(!sel.value) sel.value = "Serie A";
+    var cf = sel.value;
+    var isCoppa = ["coppa campioni","coppa di lega","coppa mitropa","conference","supercoppa","playoff","playout"].indexOf(norm(cf)) !== -1
+      || norm(cf).indexOf("coppa") !== -1 || norm(cf)==="conference";
+
+    var h = "";
+    if(!isCoppa){
+      // CAMPIONATO: solo quella lega, diviso per giornata
+      var list = (window.matches||[]).filter(function(m){
+        var lega = m.fase || (window.teamLeague ? teamLeague(m.casa) : "");
+        return norm(lega) === norm(cf);
+      });
+      list.sort(function(a,b){
+        return (a.giornata||99)-(b.giornata||99) || String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||""));
+      });
+      var lastG = -1;
+      list.forEach(function(m){
+        var g = m.giornata||1;
+        if(g!==lastG){ h += "<div class='calGiornataTitle'>GIORNATA "+g+"</div>"; lastG=g; }
+        h += rigaCal(m,false);
+      });
+    } else {
+      // COPPE: solo quella coppa, divisa per turno
+      var listC = (window.coppaMatches||[]).filter(function(m){
+        return norm(m.coppa) === norm(cf);
+      });
+      // Coppa di Lega: prende anche il tabellone legaBracket
+      if(norm(cf)==="coppa di lega" && window.legaBracket && window.legaBracket.rounds){
+        var nomiFasi = ["Sedicesimi di Finale","Ottavi di Finale","Quarti di Finale","Semifinale","Finale"];
+        window.legaBracket.rounds.forEach(function(round, idx){
+          (round||[]).forEach(function(mm){
+            if(!mm || !mm.casa) return;
+            // evita duplicati se gia in coppaMatches
+            var dup = listC.some(function(x){ return x.casa===mm.casa && x.tras===mm.tras && x.fase===nomiFasi[idx]; });
+            if(!dup) listC.push({coppa:"Coppa di Lega", fase:nomiFasi[idx]||"", casa:mm.casa, tras:mm.tras, data:mm.data||"", ora:mm.ora||"", luogo:mm.luogo||"", golC:mm.golC, golT:mm.golT, stato:mm.stato||"Programmata"});
+          });
+        });
+      }
+      listC.sort(function(a,b){
+        var oa = ordineFasi[norm(a.fase)] ?? 99;
+        var ob = ordineFasi[norm(b.fase)] ?? 99;
+        return oa-ob || String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||""));
+      });
+      var lastF = "";
+      listC.forEach(function(m){
+        var f = (m.fase||"").trim();
+        if(norm(f)!==norm(lastF)){
+          h += "<div class='calGiornataTitle'>"+f.toUpperCase()+"</div>";
+          lastF = f;
+        }
+        h += rigaCal(m,true);
+      });
+    }
+    if(!h) h = "<p class='small'>Calendario vuoto.</p>";
+    box.innerHTML = h;
+  }
+  // Si aggancia dopo ogni render() originale
+  var _old = window.render;
+  window.render = function(){ if(_old) _old(); renderCalV2(); };
+  setTimeout(renderCalV2, 600);
+})();
 </script>
 </body>
 </html>

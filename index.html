@@ -5060,5 +5060,232 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
   window.mostraAdminNuovo = mostra;
 })();
 </script>
+<style>
+/* V7.3 - Mostra Altro settimana + Loghi leghe + Scudetti classifica */
+#mostraAltroScreen{
+  position:fixed!important; inset:0!important; z-index:9999!important;
+  background:#fff!important; overflow-y:auto!important;
+  padding:16px!important; padding-bottom:100px!important;
+}
+#mostraAltroScreen .chiudi{
+  background:#111!important; color:#fff!important; border:none!important;
+  width:100%!important; padding:14px!important; border-radius:10px!important;
+  font-weight:900!important; font-size:16px!important; margin-bottom:14px!important;
+}
+#mostraAltroScreen .giornoTitolo{
+  background:#FFD700!important; color:#000!important; font-weight:900!important;
+  padding:10px 12px!important; border-radius:10px!important; margin:16px 0 8px!important;
+}
+#mostraAltroScreen .partitaSettimana{
+  border:1px solid #eee!important; border-radius:12px!important;
+  padding:12px!important; margin-bottom:8px!important;
+  display:flex!important; justify-content:space-between!important; align-items:center!important; gap:8px!important;
+}
+.logo-lega{
+  width:34px!important; height:34px!important; object-fit:contain!important; flex-shrink:0!important;
+}
+.logo-lega-small{
+  width:28px!important; height:28px!important; object-fit:contain!important; flex-shrink:0!important;
+}
+.classifica-scudetto{
+  width:28px!important; height:28px!important; border-radius:50%!important;
+  object-fit:cover!important; background:#eee!important; flex-shrink:0!important;
+}
+.classifica-iniziale{
+  width:28px!important; height:28px!important; border-radius:50%!important;
+  background:#111!important; color:#FFD700!important; display:flex!important;
+  align-items:center!important; justify-content:center!important;
+  font-weight:900!important; font-size:13px!important; flex-shrink:0!important;
+}
+</style>
+<script>
+// V7.3 - TUTTO IN UNO
+(function(){
+  if(window.__v73) return;
+  window.__v73 = true;
+
+  // --- LOGHI LEGHE - file già su GitHub, stessa cartella di index.html ---
+  window.LOGHI_LEGHE = {
+    "Serie A": "logo-serie-a.png",
+    "Serie B": "logo-serie-b.png",
+    "Serie B1": "logo-serie-b1.png",
+    "Serie B2": "logo-serie-b2.png",
+    "Coppa di Lega": "coppa-di-lega.png",
+    "Coppa Campioni": "coppa-campioni.png",
+    "Conference Cup": "conference-cup.png",
+    "Coppa Mitropa": "coppa-mitropa.png",
+    "Supercoppa": "supercoppa.png",
+    "Coppa": "coppa-di-lega.png"
+  };
+  // Se la tua fase è scritta diversa, aggiungila qui. Es: "Coppa Lega": "coppa-di-lega.png"
+
+  function getLogoLega(fase){
+    if(!fase) return "";
+    if(window.LOGHI_LEGHE[fase]) return window.LOGHI_LEGHE[fase];
+    var f = String(fase).toLowerCase();
+    if(f.indexOf("serie a")>=0) return "logo-serie-a.png";
+    if(f.indexOf("b1")>=0) return "logo-serie-b1.png";
+    if(f.indexOf("b2")>=0) return "logo-serie-b2.png";
+    if(f.indexOf("serie b")>=0) return "logo-serie-b.png";
+    if(f.indexOf("campioni")>=0) return "coppa-campioni.png";
+    if(f.indexOf("conference")>=0) return "conference-cup.png";
+    if(f.indexOf("mitropa")>=0) return "coppa-mitropa.png";
+    if(f.indexOf("supercoppa")>=0) return "supercoppa.png";
+    if(f.indexOf("coppa")>=0) return "coppa-di-lega.png";
+    return "";
+  }
+
+  function getLogoSquadra(nome){
+    if(window.LOGHI_SQUADRE && window.LOGHI_SQUADRE[nome]) return window.LOGHI_SQUADRE[nome];
+    var arr = window.squadre || window.teams || [];
+    for(var i=0;i<arr.length;i++){
+      if(arr[i] && (arr[i].nome===nome || arr[i].name===nome)){
+        if(arr[i].logo || arr[i].scudetto || arr[i].img) return arr[i].logo || arr[i].scudetto || arr[i].img;
+      }
+    }
+    return "";
+  }
+
+  // --- SETTIMANA CORRENTE lun-dom ---
+  function getSettimana(){
+    var oggi = new Date(); oggi.setHours(0,0,0,0);
+    var g = oggi.getDay();
+    var diff = (g===0 ? -6 : 1-g);
+    var lun = new Date(oggi); lun.setDate(oggi.getDate()+diff);
+    var dom = new Date(lun); dom.setDate(lun.getDate()+6); dom.setHours(23,59,59,999);
+    return { lun: lun, dom: dom };
+  }
+  function parseData(s){
+    if(!s) return null;
+    var m = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+    var d = new Date(s);
+    return isNaN(d) ? null : d;
+  }
+
+  function mostraSettimana(){
+    var sett = getSettimana();
+    var arr = window.matches || [];
+    var filt = [];
+    for(var i=0;i<arr.length;i++){
+      var d = parseData(arr[i] && arr[i].data);
+      if(d && d>=sett.lun && d<=sett.dom) filt.push(arr[i]);
+    }
+    filt.sort(function(a,b){ return (parseData(a.data)||new Date(0)) - (parseData(b.data)||new Date(0)); });
+
+    var perGiorno = {}; var ordine = [];
+    var nomi = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+    filt.forEach(function(m){
+      var d = parseData(m.data);
+      var k = d.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit",year:"numeric"});
+      if(!perGiorno[k]){ perGiorno[k]=[]; ordine.push({k:k, d:d}); }
+      perGiorno[k].push(m);
+    });
+
+    var lunS = sett.lun.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"});
+    var domS = sett.dom.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"});
+    var h = "<div id='mostraAltroScreen'>" +
+      "<button class='chiudi' type='button' onclick=\"document.getElementById('mostraAltroScreen').remove()\">← TORNA INDIETRO</button>" +
+      "<h2 style='margin:0'>Partite di questa settimana</h2>" +
+      "<p class='small' style='margin:6px 0 0'>Da lunedì " + lunS + " a domenica " + domS + " • Serie A, Serie B e Coppe</p>";
+
+    if(!filt.length){
+      h += "<p style='margin-top:20px'>Nessuna partita in programma questa settimana.</p>";
+    } else {
+      ordine.forEach(function(g){
+        var lista = perGiorno[g.k];
+        h += "<div class='giornoTitolo'>" + nomi[g.d.getDay()] + " " + g.k + " • " + lista.length + (lista.length===1?" partita":" partite") + "</div>";
+        lista.forEach(function(m){
+          var fase = m.fase || m.lega || "";
+          var logo = getLogoLega(fase);
+          var badge = logo ? "<img class='logo-lega' src='"+logo+"' onerror=\"this.style.display='none'\" />" : "<b>"+fase+"</b>";
+          var ris = (m.stato==="Giocata") ? "<b>"+(m.golC==null?"":m.golC)+" - "+(m.golT==null?"":m.golT)+"</b>" : "<span class='small'>"+(m.ora||"")+"</span>";
+          h += "<div class='partitaSettimana'><div style='display:flex;gap:8px;align-items:center'>"+badge+
+            "<div><b>"+(m.casa||"")+" vs "+(m.tras||"")+"</b><br><span class='small'>"+fase+" • "+(m.campo||m.luogo||"")+" • "+(m.ora||"")+"</span></div></div><div>"+ris+"</div></div>";
+        });
+      });
+    }
+    h += "</div>";
+    document.body.insertAdjacentHTML("beforeend", h);
+    window.scrollTo(0,0);
+  }
+
+  // --- SOSTITUISCI PILLOLA SERIE A/B CON LOGO NELLE CARD HOME ---
+  function sostituisciPillole(){
+    // Cerca le pillole con scritto SERIE A / SERIE B / Coppa in Home
+    var els = document.querySelectorAll("span, div, p, small");
+    els.forEach(function(el){
+      if(el.children.length>0) return;
+      var t = (el.textContent||"").trim();
+      // solo pillole corte, non testi lunghi
+      if(t.length>20) return;
+      var logo = getLogoLega(t);
+      if(!logo) return;
+      // deve essere una pillola: ha background o è in una card partita
+      var cls = (el.className||"").toString().toLowerCase();
+      var parentTxt = (el.parentElement && el.parentElement.textContent || "").toLowerCase();
+      if(cls.indexOf("badge")<0 && cls.indexOf("pill")<0 && cls.indexOf("lega")<0 && cls.indexOf("fase")<0 && parentTxt.indexOf("vs")<0) return;
+      var img = document.createElement("img");
+      img.src = logo; img.className = "logo-lega-small";
+      img.alt = t;
+      img.onerror = function(){ this.style.display="none"; };
+      el.replaceWith(img);
+    });
+  }
+
+  // --- CLASSIFICA HOME: togli integrale + scudetti ---
+  function fixClassifica(){
+    document.querySelectorAll("button, a").forEach(function(b){
+      var t = (b.textContent||"").trim().toUpperCase();
+      if(t.indexOf("CLASSIFICA INTEGRALE")>=0) b.style.display="none";
+    });
+
+    // Aggiungi scudetto davanti al nome squadra in Home
+    var home = document.getElementById("home") || document.body;
+    var nomi = {};
+    (window.matches||[]).forEach(function(m){ if(m.casa) nomi[m.casa]=1; if(m.tras) nomi[m.tras]=1; });
+    Object.keys(nomi).forEach(function(nome){
+      var els = home.querySelectorAll("div, span, p, li");
+      els.forEach(function(el){
+        if(el.querySelector(".classifica-scudetto, .classifica-iniziale")) return;
+        if(el.children.length>0) return;
+        if(el.textContent.trim() !== nome) return;
+        // solo se è in una zona classifica: il genitore contiene "pti" o "Pti"
+        var cont = el.parentElement ? el.parentElement.textContent : "";
+        if(cont.indexOf("pti")<0 && cont.indexOf("Pti")<0 && cont.indexOf("PUNTI")<0) return;
+        var logo = getLogoSquadra(nome);
+        var span = document.createElement("span");
+        if(logo){
+          span.innerHTML = "<img class='classifica-scudetto' src='"+logo+"' onerror=\"this.outerHTML='<span class=\\'classifica-iniziale\\'>"+nome.charAt(0)+"</span>'\" />";
+        } else {
+          span.innerHTML = "<span class='classifica-iniziale'>"+nome.charAt(0)+"</span>";
+        }
+        span.style.display="inline-flex"; span.style.marginRight="8px"; span.style.verticalAlign="middle";
+        el.parentNode.insertBefore(span, el);
+      });
+    });
+  }
+
+  function aggancia(){
+    document.querySelectorAll("button, a").forEach(function(b){
+      var t = (b.textContent||"").trim().toUpperCase();
+      if(t==="MOSTRA ALTRO" && !b.dataset.v73){
+        b.dataset.v73="1";
+        b.addEventListener("click", function(e){
+          e.preventDefault(); e.stopPropagation();
+          mostraSettimana();
+        });
+      }
+    });
+    sostituisciPillole();
+    fixClassifica();
+  }
+
+  document.addEventListener("click", function(){ setTimeout(aggancia, 300); });
+  setInterval(aggancia, 2500);
+  setTimeout(aggancia, 1000);
+  window.mostraSettimanaCorrente = mostraSettimana;
+})();
+</script>
 </body>
 </html>

@@ -258,6 +258,55 @@ body, .wrap, #home{
 #pastMatches .mCard > div:last-child{
   text-align:center!important;
 }
+/* FIX URGENTE - rientra tutto, nomi su 2 righe centrati */
+#upcomingMatches, #pastMatches{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:8px!important;
+  overflow:hidden!important;
+}
+#upcomingMatches .mCard, #pastMatches .mCard{
+  min-width:0!important;
+  padding:10px 8px!important;
+  overflow:hidden!important;
+}
+#upcomingMatches .mTeams, #pastMatches .mTeams{
+  grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr)!important;
+  gap:4px!important;
+}
+#upcomingMatches .mTeam, #pastMatches .mTeam{
+  min-width:0!important;
+  flex-direction:column!important;
+  gap:4px!important;
+  justify-content:flex-start!important;
+}
+#upcomingMatches .mTeamLogo .logo,
+#pastMatches .mTeamLogo .logo{
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+}
+#upcomingMatches .mTeamName, #pastMatches .mTeamName{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  word-break:break-word!important;
+  font-size:12px!important;
+  line-height:1.15!important;
+  text-align:center!important;
+  display:block!important;
+}
+#upcomingMatches .mVs, #pastMatches .mVs{
+  align-self:center!important;
+  padding-top:22px!important;
+}
+#upcomingMatches .mOra, #pastMatches .mOra{
+  font-size:28px!important;
+}
+#upcomingMatches .mComp, #pastMatches .mComp{
+  font-size:9px!important;
+  padding:4px 7px!important;
+  white-space:nowrap!important;
+}
 </style>
 </head>
 <body>

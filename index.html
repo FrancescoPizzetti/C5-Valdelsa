@@ -136,6 +136,19 @@ header img, .banner img, .logo img, .top img{
   outline:none!important;
   padding:0!important;
 }
+/* FORZA PULITA - toglie tutti i contorni gialli e quadrati */
+[class*="logo"], [class*="Logo"], [class*="banner"], [class*="hero"]{
+  border:none!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  outline:none!important;
+}
+div:has(> img){
+  border:none!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0!important;
+}
 </style>
 </head>
 <body>

@@ -257,7 +257,7 @@ div:has(> img){
 <div id="chiSiamo" class="hidden"><div class="card"><h2>ℹ️ Chi Siamo</h2><img id="chiSiamoImg" style="width:100%;max-height:320px;object-fit:cover;border-radius:14px;display:none"><div id="chiSiamoText" style="white-space:pre-wrap;margin-top:12px;line-height:1.6"></div></div></div>
 <div id="cal" class="hidden">
 <div class="card"><h2>📅 CALENDARIO</h2>
-<select id="calFilter" onchange="render()">
+<select id="calFilter" onchange="setCalFilter(this.value)">
 <option>Serie A</option>
 <option>Serie B</option>
 <option>Serie B1</option>

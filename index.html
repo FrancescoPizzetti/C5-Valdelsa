@@ -5389,5 +5389,166 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
 
     if(!filt.length){
       h += "<p style='margin-top:20px;color:#fff'>Nessuna partita in programma questa settimana.</
+<script>
+// V7.4 - Loghi pillole Home + Scudetti SOLO Classifica Top 5
+(function(){
+  if(window.__v74) return;
+  window.__v74 = true;
+
+  function logoLega(t){
+    var f = String(t||"").toLowerCase();
+    if(f.indexOf("b1")>=0) return "logo-serie-b1.png";
+    if(f.indexOf("b2")>=0) return "logo-serie-b2.png";
+    if(f.indexOf("serie a")>=0) return "logo-serie-a.png";
+    if(f.indexOf("serie b")>=0) return "logo-serie-b.png";
+    if(f.indexOf("campioni")>=0) return "coppa-campioni.png";
+    if(f.indexOf("conference")>=0) return "conference-cup.png";
+    if(f.indexOf("mitropa")>=0) return "coppa-mitropa.png";
+    if(f.indexOf("supercoppa")>=0) return "supercoppa.png";
+    if(f.indexOf("coppa")>=0) return "coppa-di-lega.png";
+    return "";
+  }
+
+  // --- 1. MAPPA SQUADRA -> SCUDETTO, presa dalle card che già ce l'hanno ---
+  // In Prossime Partite gli scudetti ci sono già, li copio da lì.
+  function mappaScudetti(){
+    var mappa = {};
+    // tutti i nomi squadra che conosciamo
+    var nomi = {};
+    (window.matches||[]).forEach(function(m){
+      var c = m.casa||m.home||m.squadraCasa||m.squadra1||"";
+      var t = m.tras||m.away||m.squadraTrasferta||m.squadra2||"";
+      if(c) nomi[c]=1;
+      if(t) nomi[t]=1;
+    });
+    // per ogni immagine in pagina, se vicino c'è un nome squadra, è il suo scudetto
+    document.querySelectorAll("img").forEach(function(img){
+      var src = img.getAttribute("src")||"";
+      if(!src || src.indexOf("logo-serie")>=0 || src.indexOf("coppa")>=0 || src.indexOf("conference")>=0) return;
+      // salgo fino a 3 genitori e cerco un nome squadra nel testo
+      var nodo = img;
+      for(var k=0;k<4 && nodo;k++){
+        nodo = nodo.parentElement;
+        if(!nodo) break;
+        var txt = nodo.textContent||"";
+        // non prendere la zona Classifica o Ultimi Risultati
+        if(txt.indexOf("CLASSIFICA")>=0) continue;
+        Object.keys(nomi).forEach(function(nome){
+          if(!mappa[nome] && txt.indexOf(nome)>=0 && src.length>4){
+            mappa[nome] = src;
+          }
+        });
+      }
+    });
+    return mappa;
+  }
+
+  // --- 2. PILLole SERIE A/B in Home -> logo ---
+  function fixPillole(){
+    var mappa = {}; // non serve
+    document.querySelectorAll("*").forEach(function(el){
+      if(el.dataset.v74pill) return;
+      // prendo solo elementi il cui testo è ESATTAMENTE Serie A / B / B1 / B2
+      // e che non contengono altre card dentro (altrimenti prenderei la card intera)
+      var t = (el.textContent||"").trim();
+      if(["SERIE A","SERIE B","SERIE B1","SERIE B2"].indexOf(t.toUpperCase())<0) return;
+      // se dentro ha un altro elemento con lo stesso testo, salto, prendo il più interno
+      if(el.querySelector("*") && (el.querySelector("*").textContent||"").trim().toUpperCase()===t.toUpperCase()) return;
+      // deve stare in una card partita: salgo e controllo che ci sia VS / Da giocare / Giornata
+      var card = el;
+      var trovato = false;
+      for(var i=0;i<5 && card;i++){ card = card.parentElement; if(!card) break; var ct = card.textContent||""; if(ct.indexOf("vs")>=0 || ct.indexOf("VS")>=0 || ct.indexOf("Da giocare")>=0 || ct.indexOf("Giornata")>=0){ trovato=true; break; } }
+      if(!trovato) return;
+      // NON toccare i bottoni SERIE A / SERIE B della Classifica Top 5
+      var sopra = el.closest("div");
+      var tutto = sopra ? sopra.textContent : "";
+      if(tutto.indexOf("CLASSIFICA HOME")>=0) return;
+      if(el.closest("button")) return;
+
+      var logo = logoLega(t);
+      if(!logo) return;
+      el.dataset.v74pill = "1";
+      // svuoto la pillola e ci metto il logo, tenendo la pillola come contenitore
+      el.innerHTML = "";
+      el.style.background = "#fff";
+      el.style.padding = "3px";
+      el.style.borderRadius = "50%";
+      el.style.display = "inline-flex";
+      el.style.alignItems = "center";
+      el.style.justifyContent = "center";
+      el.style.width = "38px";
+      el.style.height = "38px";
+      el.style.minWidth = "38px";
+      var img = document.createElement("img");
+      img.src = logo; img.alt = t;
+      img.style.width = "32px"; img.style.height = "32px"; img.style.objectFit = "contain";
+      img.onerror = function(){ el.style.display="none"; };
+      el.appendChild(img);
+    });
+  }
+
+  // --- 3. SCUDETTI SOLO in CLASSIFICA HOME TOP 5 ---
+  function fixClassifica(){
+    // trova il blocco Classifica Home
+    var titolo = null;
+    document.querySelectorAll("h2, h3, div, p, span").forEach(function(el){
+      if((el.textContent||"").trim().toUpperCase().indexOf("CLASSIFICA HOME")>=0 && !titolo) titolo = el;
+    });
+    if(!titolo) return;
+    var blocco = titolo;
+    for(var i=0;i<5 && blocco;i++){ blocco = blocco.parentElement; if(blocco && blocco.textContent.indexOf("9 pti")>=0) break; }
+    if(!blocco) blocco = titolo.parentElement;
+    if(!blocco) return;
+
+    var mappa = mappaScudetti();
+    // cerca le righe: contengono "1. Bar Colle" + "pti"
+    var righe = blocco.querySelectorAll("div, li, p");
+    righe.forEach(function(riga){
+      if(riga.dataset.v74scud) return;
+      if(riga.querySelector("img")) return; // già fatto
+      var txt = (riga.textContent||"").trim();
+      // deve essere tipo "1. Bar Colle 9 pti"
+      var m = txt.match(/^\d+\.\s*(.+?)\s+\d+\s*pti/i);
+      if(!m) return;
+      var nome = m[1].trim();
+      // il nome può avere spazi in più, prova a trovare la squadra esatta
+      var nomeEsatto = null;
+      Object.keys(mappa).forEach(function(n){ if(nome.indexOf(n)>=0) nomeEsatto = n; });
+      // se non l'ho trovata nella mappa, uso il nome letto, ma cerco lo scudetto anche in LOGHI_SQUADRE
+      var logo = nomeEsatto ? mappa[nomeEsatto] : (window.LOGHI_SQUADRE && window.LOGHI_SQUADRE[nome]);
+      if(!logo){
+        // ultimo tentativo: cerca un img in pagina con alt = nome
+        var altImg = document.querySelector("img[alt='"+nome+"']");
+        if(altImg) logo = altImg.src;
+      }
+      if(!logo) return; // se non ho lo scudetto, non metto niente, non metto la lettera
+
+      riga.dataset.v74scud = "1";
+      // metto lo scudetto davanti al numero, senza rompere il testo
+      var img = document.createElement("img");
+      img.src = logo; img.alt = nome;
+      img.style.width = "28px"; img.style.height = "28px";
+      img.style.objectFit = "cover"; img.style.borderRadius = "50%";
+      img.style.marginRight = "8px"; img.style.verticalAlign = "middle";
+      img.style.flexShrink = "0";
+      img.style.background = "#fff";
+      // rendo la riga flex così scudetto + testo stanno in riga
+      riga.style.display = "flex";
+      riga.style.alignItems = "center";
+      riga.insertBefore(img, riga.firstChild);
+    });
+  }
+
+  function run(){
+    fixPillole();
+    fixClassifica();
+  }
+  // Home si ridisegna spesso, quindi osservo i cambiamenti
+  var obs = new MutationObserver(function(){ run(); });
+  obs.observe(document.body, { childList: true, subtree: true });
+  setInterval(run, 2000);
+  setTimeout(run, 800);
+})();
+</script>
 </body>
 </html>

@@ -5550,5 +5550,109 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
   setTimeout(run, 800);
 })();
 </script>
+<style>
+/* V7.5 - Loghi competizioni con CSS, sopravvivono a ogni render */
+/* Prossime + Ultimi Risultati: la pillola diventa il logo */
+#upcomingMatches .mComp, #pastMatches .mComp{
+  color: transparent !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-color: #fff !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  font-size: 0 !important;
+}
+#upcomingMatches .mComp.a, #pastMatches .mComp.a{
+  background-image: url("logo-serie-a.png") !important;
+}
+#upcomingMatches .mComp.b, #pastMatches .mComp.b{
+  background-image: url("logo-serie-b.png") !important;
+}
+#upcomingMatches .mComp.coppa, #pastMatches .mComp.coppa{
+  background-image: url("coppa-di-lega.png") !important;
+}
+/* Classifica Top 5: riga con scudetto */
+#top5 .row, #top5B .row{
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+#top5 .top5-team, #top5B .top5-team{
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+#top5 .logo, #top5B .logo{
+  width: 28px !important; height: 28px !important;
+  min-width: 28px !important; border-radius: 50% !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  font-weight: 900 !important; color: #000 !important; font-size: 14px !important;
+  overflow: hidden !important;
+}
+#top5 .logo img, #top5B .logo img{ width:100% !important; height:100% !important; object-fit:cover !important; }
+</style>
+<script>
+// V7.5 - Scudetti SOLO in Top 5, dopo ogni render
+(function(){
+  if(window.__v75) return;
+  window.__v75 = true;
+
+  function fixTop5(){
+    // Nascondi VEDI CLASSIFICA INTEGRALE, resta nascosto
+    document.querySelectorAll("button, a").forEach(function(b){
+      if((b.textContent||"").toUpperCase().indexOf("CLASSIFICA INTEGRALE")>=0) b.style.display="none";
+    });
+
+    // Per ogni riga Top 5: "1. Bar Colle" -> scudetto + nome
+    ["top5","top5B"].forEach(function(id){
+      var box = document.getElementById(id);
+      if(!box) return;
+      var righe = box.querySelectorAll(":scope > .row");
+      righe.forEach(function(riga){
+        if(riga.dataset.v75) return;
+        var txt = (riga.textContent||"").trim();
+        // txt è tipo "1. Bar Colle 9 pti"
+        var m = txt.match(/^\d+\.\s*(.+?)\s+\d+\s*pti/i);
+        if(!m) return;
+        var nome = m[1].trim();
+        if(!window.logoHtml) return;
+        riga.dataset.v75 = "1";
+        // riscrivo la riga: sinistra = scudetto + nome, destra = punti
+        var pti = txt.match(/(\d+\s*pti)/i);
+        riga.innerHTML = "<div class='top5-team'>" + window.logoHtml(nome) + "<span>" + nome + "</span></div><b>" + (pti ? pti[1] : "") + "</b>";
+      });
+    });
+  }
+
+  // Aggancio DOPO ogni render, così non viene cancellato
+  var origRender = window.render;
+  if(origRender && !origRender.__v75){
+    var nuovo = function(){
+      origRender.apply(this, arguments);
+      try{ fixTop5(); }catch(e){}
+    };
+    nuovo.__v75 = true;
+    window.render = nuovo;
+  }
+  // Anche per ridisegnaHome, che è quella che ridisegna le card
+  var origHome = window.ridisegnaHome;
+  if(origHome && !origHome.__v75){
+    var nuovoHome = function(){
+      origHome.apply(this, arguments);
+      try{ fixTop5(); }catch(e){}
+    };
+    nuovoHome.__v75 = true;
+    window.ridisegnaHome = nuovoHome;
+  }
+
+  setTimeout(fixTop5, 800);
+  setInterval(fixTop5, 2000);
+})();
+</script>
 </body>
 </html>

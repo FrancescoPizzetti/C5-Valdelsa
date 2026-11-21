@@ -5058,73 +5058,105 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
     var tras = document.getElementById("fCoppaTras") ? document.getElementById("fCoppaTras").value : "";
     var data = document.getElementById("fCoppaData") ? document.getElementById("fCoppaData").value : "";
     var ora = document.getElementById("fCoppaOra") ? document.getElementById("fCoppaOra").value : "";
-    var luogo = "";
-    try{ if(typeof getCoppaLuogo === "function") luogo = getCoppaLuogo() || ""; }catch(e){}
-    if(!luogo && document.getElementById("fCoppaLuogo")) luogo = document.getElementById("fCoppaLuogo").value || "";
-    if(!coppa){ alert("Scegli la coppa."); return; }
-    if(!casa || !tras){ alert("Scegli Casa e Trasferta."); return; }
-    if(casa === tras){ alert("Casa e Trasferta sono la stessa squadra: " + casa + ".\nCambia la Trasferta."); return; }
-    if(coppa === "Coppa di Lega"){
-      var br = window.legaBracket;
-      if(!br || !br.size || !br.rounds || !br.rounds.length){
-        alert("Coppa di Lega: tabellone non ancora creato.\nVai sotto a COPPA DI LEGA - CELLE, metti le squadre e premi SALVA CELLE, poi da qui puoi mettere data/ora.");
-        return;
-      }
-      for(var r=0;r<br.rounds.length;r++){
-        for(var m=0;m<br.rounds[r].length;m++){
-          var mm = br.rounds[r][m];
-          if(mm && mm.casa === casa && mm.tras === tras){
-            mm.data = data; mm.ora = ora; mm.luogo = luogo;
-            save(); if(typeof render === "function") render();
-            alert("Calendario aggiornato nel tabellone!\n" + casa + " vs " + tras + " - " + data + " " + ora);
-            return;
-          }
-        }
-      }
-      var messo = false;
-      for(var r2=0;r2<br.rounds.length && !messo;r2++){
-        for(var m2=0;m2<br.rounds[r2].length;m2++){
-          var slot = br.rounds[r2][m2];
-          if(slot && (!slot.casa || slot.casa === "—" || slot.casa === "")){
-            slot.casa = casa; slot.tras = tras; slot.data = data; slot.ora = ora; slot.luogo = luogo; slot.stato = slot.stato || "Programmata";
-            messo = true; break;
-          }
-        }
-      }
-      if(!messo){
-        br.rounds[0].push({casa:casa, tras:tras, data:data, ora:ora, luogo:luogo, golC:"", golT:"", stato:"Programmata", winner:""});
-      }
-      save(); if(typeof render === "function") render();
-      alert("Partita di Coppa di Lega CREATA!\n" + casa + " vs " + tras + " - " + data + " " + ora + "\nOra la vedi in Calendario > Coppa di Lega.");
+  </script>
+  <style>
+/* V7.0 - Filtro Admin da zero */
+#unicoFiltroCalendario{ display:none!important; }
+#matchesList{ display:none!important; }
+#adminFiltroNuovo{
+  background:#111!important;
+  border:2px solid #FFD700!important;
+  border-radius:12px!important;
+  padding:12px!important;
+  margin:12px 0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:8px!important;
+}
+#adminFiltroNuovo label{ font-size:13px!important; font-weight:900!important; color:#FFD700!important; }
+#adminFiltroNuovo select, #adminFiltroNuovo button{
+  width:100%!important;
+  padding:12px!important;
+  font-size:15px!important;
+  border-radius:8px!important;
+}
+#adminFiltroNuovo button{ background:#FFD700!important; color:#000!important; font-weight:900!important; border:none!important; }
+#adminListaNuova .row{ display:flex!important; justify-content:space-between!important; align-items:center!important; }
+</style>
+<script>
+// V7.0 - Filtro Admin da zero. Niente observer, niente render(), niente vecchi filtri.
+(function(){
+  if(window.__v70) return;
+  window.__v70 = true;
+
+  function creaUI(){
+    var list = document.getElementById("matchesList");
+    if(!list) return false;
+    if(document.getElementById("adminFiltroNuovo")) return true;
+    var box = document.createElement("div");
+    box.id = "adminFiltroNuovo";
+    box.innerHTML =
+      "<label>LEGA</label>" +
+      "<select id='adminLegaNuova'>" +
+        "<option value=''>-- Tutte le leghe --</option>" +
+        "<option>Serie A</option><option>Serie B</option>" +
+        "<option>Serie B1</option><option>Serie B2</option>" +
+      "</select>" +
+      "<label>GIORNATA</label>" +
+      "<select id='adminGiornataNuova'>" +
+        "<option value=''>-- Tutte le giornate --</option>" +
+      "</select>" +
+      "<button type='button' id='adminMostraNuovo'>MOSTRA PARTITE</button>" +
+      "<p class='small' style='margin:0'>Metti Lega + Giornata e premi MOSTRA. Solo così vedi la lista, altrimenti resta nascosta. Per cancellare, premi la X rossa.</p>";
+    list.parentNode.insertBefore(box, list);
+    var div = document.createElement("div");
+    div.id = "adminListaNuova";
+    div.innerHTML = "<p class='small'>Usa il filtro sopra per vedere le partite.</p>";
+    list.parentNode.insertBefore(div, list);
+    var gsel = document.getElementById("adminGiornataNuova");
+    for(var g=1; g<=26; g++){
+      var o = document.createElement("option");
+      o.value = String(g); o.textContent = "Giornata " + g;
+      gsel.appendChild(o);
+    }
+    document.getElementById("adminMostraNuovo").addEventListener("click", mostra);
+    document.getElementById("adminLegaNuova").addEventListener("change", mostra);
+    document.getElementById("adminGiornataNuova").addEventListener("change", mostra);
+    return true;
+  }
+
+  function mostra(){
+    var div = document.getElementById("adminListaNuova");
+    if(!div) return;
+    var lega = document.getElementById("adminLegaNuova").value || "";
+    var gior = document.getElementById("adminGiornataNuova").value || "";
+    if(!lega && !gior){
+      div.innerHTML = "<p class='small'>Usa il filtro sopra per vedere le partite.</p>";
       return;
     }
-    var list = window.coppaMatches || [];
-    for(var k=0;k<list.length;k++){
-      var cm = list[k];
-      if(cm && cm.coppa === coppa && cm.casa === casa && cm.tras === tras){
-        cm.data = data; cm.ora = ora; cm.luogo = luogo;
-        save(); if(typeof render === "function") render();
-        alert("Calendario aggiornato nel tabellone!\n" + casa + " vs " + tras + " - " + data + " " + ora);
-        return;
-      }
+    var h = "";
+    var trovate = 0;
+    var arr = window.matches || [];
+    for(var i=0;i<arr.length;i++){
+      var m = arr[i];
+      if(!m) continue;
+      var faseM = String(m.fase || m.lega || "").trim();
+      if(lega && faseM !== lega) continue;
+      var gM = String(m.giornata || "").replace(/[^0-9]/g,"");
+      if(gior && gM !== gior) continue;
+      trovate++;
+      var sc = (m.stato === "Giocata") ? "<b>" + (m.golC==null?"":m.golC) + "-" + (m.golT==null?"":m.golT) + "</b>" : "<span class='badge'>Da giocare</span>";
+      h += "<div class='row'><div><b>Giornata " + (m.giornata||"") + " - " + (m.casa||"") + " vs " + (m.tras||"") + "</b><br><span class='small'>" + faseM + " - " + (m.data||"") + "</span></div><div>" + sc + " <button class='del' type='button' onclick='delMatch(" + i + ")'>X</button></div></div>";
     }
-    for(var k2=0;k2<list.length;k2++){
-      var slot2 = list[k2];
-      if(slot2 && slot2.coppa === coppa && (!slot2.casa || slot2.casa === "")){
-        slot2.casa = casa; slot2.tras = tras; slot2.data = data; slot2.ora = ora; slot2.luogo = luogo; slot2.stato = slot2.stato || "Programmata";
-        save(); if(typeof render === "function") render();
-        alert("Partita CREATA nello slot vuoto (" + (slot2.fase||"") + ")!\n" + casa + " vs " + tras);
-        return;
-      }
-    }
-    var fase = "Quarti di Finale";
-    for(var k3=0;k3<list.length;k3++){
-      if(list[k3] && list[k3].coppa === coppa && list[k3].fase){ fase = list[k3].fase; break; }
-    }
-    list.push({coppa:coppa, fase:fase, casa:casa, tras:tras, data:data, ora:ora, luogo:luogo, golC:"", golT:"", stato:"Programmata"});
-    save(); if(typeof render === "function") render();
-    alert("Partita di " + coppa + " CREATA!\n" + casa + " vs " + tras + " - " + data + " " + ora + "\nOra la vedi in Calendario > " + coppa + ".");
-  };
+    if(!trovate) h = "<p class='small'>Nessuna partita per " + (lega||"") + " Giornata " + (gior||"") + ".</p>";
+    div.innerHTML = h;
+  }
+
+  // La lista nuova la creo quando apri Admin, e quando clicchi CREA / Salva
+  document.addEventListener("click", function(){ setTimeout(creaUI, 300); });
+  setTimeout(creaUI, 800);
+  // La rendo accessibile da console se serve: window.mostraAdminNuovo()
+  window.mostraAdminNuovo = mostra;
 })();
 </script>
 </body>

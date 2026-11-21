@@ -362,7 +362,19 @@ div:has(> img){
 <div class="card"><h2>⭐ Trofei Individuali</h2>
 <div class="label">SELEZIONA ANNO</div>
 <select id="alboYearFilterInd" onchange="changeAlboYearInd()"><option value="">Tutti gli anni</option></select>
-<div id="alboInds"></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0">
+  <button onclick="showIndTrofeo('Miglior Allenatore')">Panchina d'oro</button>
+  <button onclick="showIndTrofeo('Miglior Giocatore')">Miglior giocatore</button>
+  <button onclick="showIndTrofeo('Miglior Portiere')">Miglior portiere</button>
+  <button onclick="showIndTrofeo('Capocannoniere')">Capocannoniere</button>
+</div>
+
+<div style="text-align:center">
+  <img id="indHero" src="panchina-d-oro.png" style="width:100%;max-width:520px;border-radius:16px">
+  <h3 id="indHeroTitle" style="color:gold">Panchina d'oro</h3>
+</div>
+<div id="alboInds">
+  <div id="alboInds"></div>
 </div>
 </div>
 <div id="alboStoricoBox" class="hidden">

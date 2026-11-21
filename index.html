@@ -4733,50 +4733,5 @@ html, body, #home, #homePage, .page, main{
   overscroll-behavior-y:auto!important;
 }
 </style>
-<script>
-// FIX V4.3.1 - stop lampeggio filtro
-(function(){
-  var _lastHTML = "";
-  var _lastCal = "";
-  var _origCal421 = window.renderCal421;
-  if(!_origCal421) return;
-
-  window.renderCal421 = function(){
-    var box = document.getElementById("calList");
-    var sel = document.getElementById("calFilter");
-    // Se sei in Admin, non toccare niente: non ricostruire la lista
-    // perche' ti chiude il menu a tendina del Passo 2
-    var inAdmin = document.getElementById("adminPage") || document.querySelector('[id*="admin"]');
-    var adminVisibile = false;
-    if(inAdmin){
-      var st = window.getComputedStyle(inAdmin);
-      if(st && st.display !== "none" && inAdmin.offsetParent !== null) adminVisibile = true;
-    }
-    // Se il contenitore Calendario non e' visibile, non fare niente
-    if(box && box.offsetParent === null && !adminVisibile){
-      // sei in un'altra tab, non serve ridisegnare
-      return;
-    }
-    if(adminVisibile) return;
-
-    // Chiama il render vecchio, ma solo se il filtro e' cambiato
-    var curCal = sel ? sel.value : "";
-    // Facciamo il render vero
-    _origCal421();
-    // Se l'HTML e' uguale a prima, non lo riscriviamo, cosi' non lampeggia
-    if(box && box.innerHTML === _lastHTML && curCal === _lastCal){
-      return;
-    }
-    if(box){ _lastHTML = box.innerHTML; _lastCal = curCal; }
-  };
-
-  // Togli il setTimeout che ridisegnava da solo ogni 800ms
-  // Il render ora parte solo quando cambi davvero filtro/tab
-  var sel2 = document.getElementById("calFilter");
-  if(sel2){
-    sel2.addEventListener("change", function(){ _lastHTML = ""; window.renderCal421(); });
-  }
-})();
-</script>
 </body>
 </html>

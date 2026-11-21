@@ -6491,7 +6491,7 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
 }
 </style>
 <style>
-/* FIX Albo d'oro V1 */
+/* FIX Albo d'oro V3 */
 #alboClubGrid{ display:none; margin-top:14px; }
 #alboClubGrid.mostra{ display:block; }
 .alboCompBtn{
@@ -6527,10 +6527,10 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
 #paginaAlboComp .vuotoAlbo{ text-align:center; color:#ddd; background:rgba(0,0,0,0.5); border-radius:14px; padding:20px; }
 </style>
 <script>
-// FIX Albo d'oro V1 - Storico via, Club = 7 competizioni
+// FIX Albo d'oro V3 - rifatto con ascolto unico, sopravvive ai ridisegni
 (function(){
-  if(window.__fixAlboV1) return;
-  window.__fixAlboV1 = true;
+  if(window.__fixAlboV3) return;
+  window.__fixAlboV3 = true;
 
   var COMPS = [
     { nome:"Serie A", img:"logo-serie-a.png", chiavi:["Serie A"] },
@@ -6541,44 +6541,22 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
     { nome:"Conference", img:"conference-cup.png", chiavi:["Conference"] },
     { nome:"Supercoppa", img:"supercoppa.png", chiavi:["Supercoppa"] }
   ];
+  var COMP_NOMI = "Serie A|Serie B|Coppa di Lega|Coppa Campioni|Coppa Mitropa|Mitropa Cup|Mitropa|Conference|Supercoppa";
+  var inClub = false;
 
-  function trovaAlbo(){
-    var els = Array.from(document.querySelectorAll("h1,h2,h3,div,span,button"));
-    var t = els.find(function(e){ return (e.textContent||"").trim() === "Albo d'oro" || (e.textContent||"").trim().indexOf("Albo d'oro") === 0; });
-    if(!t) return null;
-    var c = t; for(var i=0;i<5 && c.parentElement;i++){ c = c.parentElement; if(c.querySelector("button")) break; }
-    return c;
-  }
-  function bottone(nome){
-    var all = Array.from(document.querySelectorAll("button"));
-    return all.find(function(b){ return (b.textContent||"").trim().toUpperCase() === nome; });
-  }
-  function sezioneCon(testo){
-    var all = Array.from(document.querySelectorAll("div,section"));
-    return all.find(function(d){ return (d.textContent||"").indexOf(testo) >= 0 && d.querySelector("select,div"); });
-  }
-
-  // Prende i vincitori dalla lista esistente "Squadra - Competizione  ANNO"
   function leggiVincitori(){
     var out = [];
-    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-    var n;
-    while(n = walker.nextNode()){
-      var txt = (n.nodeValue||"").trim();
-      // es. "Dragon Futsal - Serie A" oppure "FC The Wolf - Conference"
-      var m = txt.match(/^(.+?)\s*-\s*(Serie A|Serie B|Coppa di Lega|Coppa Campioni|Coppa Mitropa|Mitropa Cup|Conference|Supercoppa)\s*$/);
-      if(!m) continue;
-      var el = n.parentElement;
-      var anno = "";
-      if(el){
-        var pill = el.querySelector("span,div,button");
-        var allTxt = el.textContent || "";
-        var a = allTxt.match(/(19|20)\d{2}/);
-        if(a) anno = a[0];
-      }
-      out.push({ squadra:m[1].trim(), comp:m[2].trim(), anno:anno });
-    }
-    return out;
+    var re = new RegExp("^\\s*(.+?)\\s*-\\s*(" + COMP_NOMI + ")\\s*(19|20\\d\\d)?");
+    document.querySelectorAll("div").forEach(function(d){
+      if(d.querySelector("div")) return;
+      var txt = (d.textContent||"").replace(/\s+/g," ").trim();
+      var m = txt.match(re);
+      if(!m) return;
+      var anno = txt.match(/(19|20)\d{2}/);
+      out.push({ squadra:m[1].trim(), comp:m[2].trim(), anno: anno ? anno[0] : "" });
+    });
+    var visti = {};
+    return out.filter(function(v){ var k = v.squadra+"|"+v.comp+"|"+v.anno; if(visti[k]) return false; visti[k]=1; return true; });
   }
 
   function apriComp(comp){
@@ -6605,16 +6583,30 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
     pag.querySelector(".chiudiAlbo").addEventListener("click", function(){ pag.remove(); });
   }
 
-  function sistema(){
-    // 1. Togli STORICO
-    var st = bottone("STORICO");
-    if(st) st.remove();
+  // Nasconde / mostra solo la card che contiene quel titolo, mai il contenitore Albo
+  function cardDi(testo){
+    var all = Array.from(document.querySelectorAll("h1,h2,h3,h4"));
+    var t = all.find(function(e){
+      var txt = (e.textContent||"").replace(/\s+/g," ").trim();
+      return txt.indexOf(testo) === 0 || txt.indexOf("🏆 "+testo) === 0 || txt.indexOf("📅 "+testo) === 0;
+    });
+    if(!t) return null;
+    var card = t.parentElement;
+    if(!card) return null;
+    if(card.querySelector("button") && (card.textContent||"").indexOf("CLUB") >= 0) return null;
+    return card;
+  }
+  function mostraVecchie(mostra){
+    ["Club più titolati","Vincitori per Anno"].forEach(function(testo){
+      var c = cardDi(testo);
+      if(c) c.style.display = mostra ? "" : "none";
+    });
+  }
 
-    var albo = trovaAlbo();
-    if(!albo || albo.dataset.alboV1) return;
-    albo.dataset.alboV1 = "1";
-
-    // 2. Griglia 7 competizioni, nascosta all'inizio
+  function creaGriglia(){
+    if(document.getElementById("alboClubGrid")) return document.getElementById("alboClubGrid");
+    var btnClub = Array.from(document.querySelectorAll("button")).find(function(b){ return (b.textContent||"").trim().toUpperCase() === "CLUB"; });
+    if(!btnClub) return null;
     var grid = document.createElement("div");
     grid.id = "alboClubGrid";
     COMPS.forEach(function(c){
@@ -6624,30 +6616,44 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
       b.addEventListener("click", function(){ apriComp(c); });
       grid.appendChild(b);
     });
-    albo.appendChild(grid);
-
-    // 3. Click CLUB -> mostra griglia, nasconde vecchie sezioni Club
-    //    Click INDIVIDUALI -> nasconde griglia, mostra tutto come prima
-    var btnClub = bottone("CLUB");
-    var btnInd = bottone("INDIVIDUALI");
-    if(btnClub) btnClub.addEventListener("click", function(){
-      setTimeout(function(){
-        grid.classList.add("mostra");
-        ["Club più titolati","Vincitori per Anno"].forEach(function(testo){
-          var s = sezioneCon(testo);
-          if(s) s.style.display = "none";
-        });
-      }, 50);
-    });
-    if(btnInd) btnInd.addEventListener("click", function(){
-      grid.classList.remove("mostra");
-      ["Club più titolati","Vincitori per Anno"].forEach(function(testo){
-        var s = sezioneCon(testo);
-        if(s) s.style.display = "";
-      });
-    });
+    btnClub.parentElement.after(grid);
+    return grid;
   }
-  setInterval(sistema, 600);
+
+  // Un solo ascolto per tutti i click: non si perde quando la pagina si ridisegna
+  document.addEventListener("click", function(e){
+    var btn = e.target.closest ? e.target.closest("button") : null;
+    if(!btn) return;
+    var txt = (btn.textContent||"").trim().toUpperCase();
+    if(txt === "STORICO"){ e.stopPropagation(); return; }
+    if(txt === "CLUB"){
+      inClub = true;
+      setTimeout(function(){
+        var g = creaGriglia();
+        if(g) g.classList.add("mostra");
+        mostraVecchie(false);
+      }, 80);
+    }
+    if(txt === "INDIVIDUALI"){
+      inClub = false;
+      var g = document.getElementById("alboClubGrid");
+      if(g) g.classList.remove("mostra");
+      mostraVecchie(true);
+    }
+  }, true);
+
+  setInterval(function(){
+    // Togli STORICO appena ricompare
+    Array.from(document.querySelectorAll("button")).forEach(function(b){
+      if((b.textContent||"").trim().toUpperCase() === "STORICO") b.remove();
+    });
+    // Se sei in CLUB e la griglia è stata cancellata dal ridisegno, ricreala e rimostra
+    if(inClub){
+      var g = creaGriglia();
+      if(g) g.classList.add("mostra");
+      mostraVecchie(false);
+    }
+  }, 500);
 })();
 </script>
 </body>

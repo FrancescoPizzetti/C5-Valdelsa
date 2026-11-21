@@ -5287,5 +5287,107 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
   window.mostraSettimanaCorrente = mostraSettimana;
 })();
 </script>
+  <style>
+/* V7.3 FIX NERO - Schermata settimana su sfondo nero */
+#mostraAltroScreen{
+  background:#111!important;
+  color:#fff!important;
+}
+#mostraAltroScreen .chiudi{
+  background:#FFD700!important; color:#000!important;
+}
+#mostraAltroScreen .partitaSettimana{
+  background:#1e1e1e!important;
+  border:1px solid #333!important;
+}
+#mostraAltroScreen .partitaSettimana b{ color:#fff!important; }
+#mostraAltroScreen .partitaSettimana .small{ color:#aaa!important; }
+#mostraAltroScreen .giornoTitolo{
+  background:#FFD700!important; color:#000!important;
+}
+</style>
+<script>
+// V7.3 FIX NERO - Nomi squadre + pillole loghi + sfondo nero
+(function(){
+  function nomeCasa(m){
+    return m.casa || m.home || m.squadraCasa || m.squadra1 || m.team1 || m.teamCasa || m.casaNome || m.homeTeam || (m.squadre && m.squadre[0]) || "";
+  }
+  function nomeTras(m){
+    return m.tras || m.away || m.squadraTrasferta || m.squadraTras || m.squadra2 || m.team2 || m.teamTrasferta || m.trasNome || m.awayTeam || (m.squadre && m.squadre[1]) || "";
+  }
+  function campoPartita(m){
+    return m.campo || m.luogo || m.field || m.stadio || m.sede || "";
+  }
+  function oraPartita(m){
+    return m.ora || m.orario || m.time || "";
+  }
+  function golCasa(m){
+    return m.golC ?? m.golCasa ?? m.golHome ?? m.risCasa ?? m.gol1 ?? "";
+  }
+  function golTras(m){
+    return m.golT ?? m.golTrasferta ?? m.golAway ?? m.risTras ?? m.gol2 ?? "";
+  }
+  function isGiocata(m){
+    return m.stato==="Giocata" || m.giocata===true || (golCasa(m)!=="" && golTras(m)!=="");
+  }
+
+  function parseData(s){
+    if(!s) return null;
+    var mm = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(mm) return new Date(parseInt(mm[3]), parseInt(mm[2])-1, parseInt(mm[1]));
+    var d = new Date(s);
+    return isNaN(d) ? null : d;
+  }
+  function getSettimana(){
+    var oggi = new Date(); oggi.setHours(0,0,0,0);
+    var g = oggi.getDay();
+    var diff = (g===0 ? -6 : 1-g);
+    var lun = new Date(oggi); lun.setDate(oggi.getDate()+diff);
+    var dom = new Date(lun); dom.setDate(lun.getDate()+6); dom.setHours(23,59,59,999);
+    return { lun: lun, dom: dom };
+  }
+  function getLogoLega(fase){
+    if(!fase) return "";
+    var f = String(fase).toLowerCase();
+    if(f.indexOf("b1")>=0) return "logo-serie-b1.png";
+    if(f.indexOf("b2")>=0) return "logo-serie-b2.png";
+    if(f.indexOf("serie a")>=0) return "logo-serie-a.png";
+    if(f.indexOf("serie b")>=0) return "logo-serie-b.png";
+    if(f.indexOf("campioni")>=0) return "coppa-campioni.png";
+    if(f.indexOf("conference")>=0) return "conference-cup.png";
+    if(f.indexOf("mitropa")>=0) return "coppa-mitropa.png";
+    if(f.indexOf("supercoppa")>=0) return "supercoppa.png";
+    if(f.indexOf("coppa")>=0) return "coppa-di-lega.png";
+    return "";
+  }
+
+  window.mostraSettimanaCorrente = function(){
+    var sett = getSettimana();
+    var arr = window.matches || [];
+    var filt = [];
+    for(var i=0;i<arr.length;i++){
+      var d = parseData(arr[i] && arr[i].data);
+      if(d && d>=sett.lun && d<=sett.dom) filt.push(arr[i]);
+    }
+    filt.sort(function(a,b){ return (parseData(a.data)||new Date(0)) - (parseData(b.data)||new Date(0)); });
+
+    var perGiorno = {}; var ordine = [];
+    var nomiG = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+    filt.forEach(function(m){
+      var d = parseData(m.data);
+      var k = d.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit",year:"numeric"});
+      if(!perGiorno[k]){ perGiorno[k]=[]; ordine.push({k:k, d:d}); }
+      perGiorno[k].push(m);
+    });
+
+    var lunS = sett.lun.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"});
+    var domS = sett.dom.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"});
+    var h = "<div id='mostraAltroScreen'>" +
+      "<button class='chiudi' type='button' onclick=\"document.getElementById('mostraAltroScreen').remove()\">← TORNA INDIETRO</button>" +
+      "<h2 style='margin:0;color:#fff!important;font-size:22px'>Partite di questa settimana</h2>" +
+      "<p class='small' style='margin:6px 0 0;color:#aaa'>Da lunedì " + lunS + " a domenica " + domS + " • Serie A, Serie B e Coppe</p>";
+
+    if(!filt.length){
+      h += "<p style='margin-top:20px;color:#fff'>Nessuna partita in programma questa settimana.</
 </body>
 </html>

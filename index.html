@@ -731,37 +731,39 @@ function changeAlboYear(){
 curAlboYear=el('alboYearFilter').value;
 render();
 }
-  var curIndTrofeo="Miglior Allenatore";
+var curIndTrofeo="Panchina d'Oro";
 
 function showIndTrofeo(which){
   curIndTrofeo=which;
   aggiornaIndHero();
-  document.querySelectorAll(".ind-btn").forEach(b=>{
-    b.classList.toggle("active", b.textContent.trim()===(
-      which==="Miglior Allenatore" ? "Panchina d'oro" :
-      which==="Miglior Giocatore" ? "Miglior giocatore" :
-      which==="Miglior Portiere" ? "Miglior portiere" : "Capocannoniere"
-    ));
+  document.querySelectorAll(".ind-btn").forEach(function(b){
+    b.classList.toggle("active", b.getAttribute("data-trofeo")===which);
   });
   render();
 }
 
 function aggiornaIndHero(){
   var mapImg={
-    "Miglior Allenatore":"panchina-d-oro.png",
-    "Miglior Giocatore":"miglior-giocatore.png",
-    "Miglior Portiere":"miglior-portiere.png",
-    "Capocannoniere":"capocannonieri.jpg"
+    "Panchina d'Oro":"panchina-d-oro.png",
+    "Capocannoniere Serie A":"capocannonieri.jpg",
+    "Capocannoniere Serie B":"capocannonieri.jpg",
+    "Miglior Giocatore Serie A":"miglior-giocatore.png",
+    "Miglior Giocatore Serie B":"miglior-giocatore.png",
+    "Miglior Portiere Serie A":"miglior-portiere.png",
+    "Miglior Portiere Serie B":"miglior-portiere.png"
   };
   var mapTitolo={
-    "Miglior Allenatore":"Panchina d'oro",
-    "Miglior Giocatore":"Miglior giocatore",
-    "Miglior Portiere":"Miglior portiere",
-    "Capocannoniere":"Capocannoniere"
+    "Panchina d'Oro":"Panchina d'oro",
+    "Capocannoniere Serie A":"Capocannoniere Serie A",
+    "Capocannoniere Serie B":"Capocannoniere Serie B",
+    "Miglior Giocatore Serie A":"Miglior giocatore Serie A",
+    "Miglior Giocatore Serie B":"Miglior giocatore Serie B",
+    "Miglior Portiere Serie A":"Miglior portiere Serie A",
+    "Miglior Portiere Serie B":"Miglior portiere Serie B"
   };
   if(el('indHero')) el('indHero').src = mapImg[curIndTrofeo];
   if(el('indHeroTitle')) el('indHeroTitle').textContent = mapTitolo[curIndTrofeo];
-}
+  }
   function changeAlboYearInd(){
 curAlboYearInd=el('alboYearFilterInd').value;
 render();

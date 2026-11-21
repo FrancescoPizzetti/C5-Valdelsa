@@ -5992,10 +5992,41 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
     if(v) v.remove();
     document.body.classList.remove("comp-aperta");
   }
-
   function eVisibile(el){
     if(!el) return false;
     var r = el.getBoundingClientRect();
-    if(r.width === 0 && r.height === 
+    if(r.width === 0 && r.height === 0) return false;
+    var s = window.getComputedStyle(el);
+    if(s.display === "none" || s.visibility === "hidden") return false;
+    return true;
+  }
+  function sistema(){
+    document.querySelectorAll("#btnCompV76, #btnCompV77").forEach(function(b){ b.remove(); });
+    var vecchio = document.getElementById("btnCompV78");
+    var punto = null;
+    var minLen = 999999;
+    document.querySelectorAll("div, p, span").forEach(function(el){
+      var t = el.textContent || "";
+      if(t.indexOf("MIGLIORARE")>=0 && t.indexOf("SEMPRE")>=0 && eVisibile(el)){
+        if(t.length < minLen){ minLen = t.length; punto = el; }
+      }
+    });
+    if(!punto){
+      if(vecchio) vecchio.remove();
+      return;
+    }
+    if(vecchio) return;
+    var card = punto.parentElement || punto;
+    var btn = document.createElement("button");
+    btn.id = "btnCompV78";
+    btn.className = "btnCompetizioni";
+    btn.type = "button";
+    btn.textContent = "🏆 Le nostre competizioni";
+    btn.addEventListener("click", apri);
+    card.appendChild(btn);
+  }
+  setInterval(sistema, 800);
+})();
+</script>
 </body>
 </html>

@@ -183,6 +183,32 @@ div:has(> img){
 #home .card:has(#upcomingMatches) > p.small{
   display:none!important;
 }
+/* Home match come mockup foto 2 */
+#home .card:has(#upcomingMatches) > p.small{display:none!important;}
+#home .card:has(#upcomingMatches) .p3-title .p3-btn{display:none!important;}
+
+#upcomingMatches .mCard, #pastMatches .mCard{
+  background:rgba(0,0,0,0.92)!important;
+  border:1px solid #c9a227!important;
+  border-radius:14px!important;
+  padding:12px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:6px!important;
+  min-height:118px!important;
+}
+.mTop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.mOra{font-size:34px;font-weight:900;color:#facc15;line-height:1;}
+.mRis{font-size:36px;font-weight:900;color:#fff;line-height:1;text-align:center;}
+.mComp{font-size:10px;font-weight:900;color:#fff;padding:5px 9px;border-radius:999px;white-space:nowrap;}
+.mComp.a{background:#2563eb;}
+.mComp.b{background:#f59e0b;color:#000;}
+.mComp.coppa{background:#9333ea;}
+.mTeams{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:900;line-height:1.2;}
+.mTeams .logo{width:26px;height:26px;min-width:26px;border-radius:50%;overflow:hidden;}
+.mTeams .logo img{width:100%;height:100%;object-fit:cover;}
+.mMeta{font-size:12px;color:#ccc;}
+#pastMatches .mTeams .logo{display:none;}
 </style>
 </head>
 <body>
@@ -4386,6 +4412,79 @@ function fixDateItalian(){
 // Lo rilancia ogni volta che la pagina ridisegna le partite
 var _oldRender = window.render;
 window.render = function(){ _oldRender(); fixDateItalian(); };
+</script>
+<script>
+// HOME - Orario grande + Serie + Loghi + Data italiana + Via 2° Mostra Altro
+function dataIT2(d){
+  if(!d) return '';
+  var s=String(d).trim();
+  if(s.indexOf('/')!==-1) return s;
+  var p=s.split('-');
+  if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0];
+  return s;
+}
+function compDi(m, isCoppa){
+  if(isCoppa) return m.coppa || 'Coppa';
+  return m.fase || (window.teamLeague ? teamLeague(m.casa) : 'Serie A');
+}
+function classeComp(comp){
+  if(!comp) return 'a';
+  if(comp.indexOf('Serie B')===0) return 'b';
+  if(comp.indexOf('Coppa')===0 || comp.indexOf('Conference')===0) return 'coppa';
+  return 'a';
+}
+function ridisegnaHome(){
+  try{
+    // PROSSIME - 4 partite
+    var box=document.getElementById('upcomingMatches');
+    if(box){
+      var list=[];
+      (window.matches||[]).forEach(function(m){
+        if(m && m.stato==='Programmata' && m.data)
+          list.push({data:m.data, ora:m.ora||'', casa:m.casa, tras:m.tras, luogo:m.luogo||'', giornata:m.giornata||1, comp:compDi(m,false), coppa:false});
+      });
+      (window.coppaMatches||[]).forEach(function(m){
+        if(m && m.stato==='Programmata' && m.data)
+          list.push({data:m.data, ora:m.ora||'', casa:m.casa, tras:m.tras, luogo:m.luogo||'', giornata:'', comp:compDi(m,true), coppa:true, fase:m.fase||''});
+      });
+      list.sort(function(a,b){return String(a.data+a.ora).localeCompare(String(b.data+b.ora));});
+      list=list.slice(0,4);
+      var h='';
+      list.forEach(function(m){
+        var meta = m.coppa ? (m.fase||'') : ('Giornata '+(m.giornata||1));
+        h += "<div class='mCard'><div class='mTop'><div class='mOra'>"+(m.ora||'')+"</div>"
+          + "<span class='mComp "+classeComp(m.comp)+"'>"+m.comp.toUpperCase()+"</span></div>"
+          + "<div class='mTeams'>"+(window.logoHtml?logoHtml(m.casa):'')+"<span>"+m.casa+"</span><span style='opacity:.6;font-weight:400'> vs </span>"+(window.logoHtml?logoHtml(m.tras):'')+"<span>"+m.tras+"</span></div>"
+          + "<div class='mMeta'>📍 "+(m.luogo||'')+" - "+dataIT2(m.data)+(meta?' • '+meta:'')+"</div>"
+          + "<div><span class='badge'>Da giocare</span></div></div>";
+      });
+      if(h) box.innerHTML=h;
+    }
+    // ULTIMI RISULTATI - senza loghi, con risultato grande
+    var box2=document.getElementById('pastMatches');
+    if(box2){
+      var gioc=(window.matches||[]).filter(function(m){return m.stato==='Giocata';});
+      gioc.sort(function(a,b){return String(b.data||'').localeCompare(String(a.data||''));});
+      gioc=gioc.slice(0,4);
+      var h2='';
+      gioc.forEach(function(m){
+        var comp=compDi(m,false);
+        h2 += "<div class='mCard'><div class='mTop'><div></div><span class='mComp "+classeComp(comp)+"'>"+comp.toUpperCase()+"</span></div>"
+          + "<div class='mRis'>"+(m.golC??'')+" - "+(m.golT??'')+"</div>"
+          + "<div class='mTeams' style='justify-content:center'><span>"+m.casa+"</span><span style='opacity:.6;font-weight:400'> vs </span><span>"+m.tras+"</span></div>"
+          + "<div class='mMeta' style='text-align:center'>📍 "+(m.luogo||'')+" - "+dataIT2(m.data)+" • Giornata "+(m.giornata||1)+"</div></div>";
+      });
+      if(h2) box2.innerHTML=h2;
+    }
+    // Data italiana anche in Calendario / Risultati
+    document.querySelectorAll('#calList, #risList').forEach(function(el){
+      el.innerHTML = el.innerHTML.replace(/(\d{4})-(\d{2})-(\d{2})/g, '$3/$2/$1');
+    });
+  }catch(e){}
+}
+var _r2 = window.render;
+window.render = function(){ _r2(); ridisegnaHome(); };
+setTimeout(ridisegnaHome, 500);
 </script>
 </body>
 </html>

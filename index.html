@@ -3065,7 +3065,6 @@ if(el('fMatchSelect')){
 var curM=el('fMatchSelect').value;
 var prog2=matches.slice();
 var _filtroLega=el('fLegaMatch')?el('fLegaMatch').value:"";
-if(_filtroLega) prog2=prog2.filter(function(_m){return (_m.fase||_m.lega||"")==_filtroLega;});
 prog2.sort(function(a,b){return (a.giornata||1)-(b.giornata||1);});
 var hsel="";
 for(var smi=0;smi<prog2.length;smi++){

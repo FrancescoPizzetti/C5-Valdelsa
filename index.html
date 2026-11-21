@@ -4659,5 +4659,30 @@ body, html{
   max-width:100%!important;
 }
 </style>
+<style>
+/* FIX: la pagina torna a scorrere, solo la barra in basso resta ferma */
+html, body{
+  overflow-x:auto!important;
+  max-width:none!important;
+}
+/* La barra in basso resta ferma e senza scroll */
+.bottomNav, #bottomNav, .bottom-nav, .tabBar, .tabbar, nav{
+  overflow:hidden!important;
+  overflow-x:hidden!important;
+}
+/* Le strisce delle partite in Home tornano a scorrere a destra */
+#home, #homePage, .home{
+  overflow-x:visible!important;
+}
+/* Tutti i contenitori con le card partite: scroll orizzontale attivo */
+div:has(> .mCard), div:has(> .matchCard), div:has(> .cardPartita){
+  overflow-x:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+  touch-action:pan-x!important;
+}
+.mCard, .matchCard{
+  touch-action:pan-x!important;
+}
+</style>
 </body>
 </html>

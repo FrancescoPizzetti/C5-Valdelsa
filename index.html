@@ -4508,95 +4508,100 @@ setTimeout(ridisegnaHome, 500);
 #cal h2{ text-align:center!important; }
 </style>
 <script>
-<script>
-// CALENDARIO V4.1 - scelta che resta
+// CALENDARIO V4.2 - sintassi semplice
 function setCalFilter(v){
   try{ localStorage.setItem("c5_calFilter", v); }catch(e){}
-  if(typeof render==="function") render();
+  renderCal421();
 }
-(function(){
-  var ordineFasi = {"girone":0,"sedicesimi di finale":1,"sedicesimi":1,"ottavi di finale":2,"ottavi":2,"quarti di finale":3,"quarti":3,"semifinale":4,"semifinali":4,"finale":5,"finali":5};
-  function norm(s){ return String(s||"").trim().toLowerCase().replace(/\s+/g," "); }
-  function dataIT(d){ if(!d) return ""; var p=String(d).split("-"); if(p.length===3) return p[2]+"/"+p[1]+"/"+p[0]; return d; }
-  function rigaCal(m){
-    var score = (m.stato==="Giocata"||m.stato==="Disputata") ? "<b>"+(m.golC??"")+" - "+(m.golT??"")+"</b>" : "<span class='badge'>Da giocare</span>";
-    return "<div class='row'><div><b>"+(m.casa||"")+" vs "+(m.tras||"")+"</b><br><span class='small'>"+dataIT(m.data)+" "+(m.ora||"")+" - "+(m.luogo||"")+"</span></div>"+score+"</div>";
+function renderCal421(){
+  var box = document.getElementById("calList");
+  var sel = document.getElementById("calFilter");
+  if(!box || !sel) return;
+  var salvato = "";
+  try{ salvato = localStorage.getItem("c5_calFilter") || ""; }catch(e){}
+  if(salvato){
+    for(var i=0;i<sel.options.length;i++){ if(sel.options[i].text===salvato){ sel.value = salvato; break; } }
   }
-  function renderCalV41(){
-    var box = document.getElementById("calList");
-    var sel = document.getElementById("calFilter");
-    if(!box || !sel) return;
-    var optVuoto = sel.querySelector('option[value=""]');
-    if(optVuoto) optVuoto.remove();
-    // Ripristina la scelta salvata, se c'e
-    var salvato = "";
-    try{ salvato = localStorage.getItem("c5_calFilter") || ""; }catch(e){}
-    if(salvato && sel.value!==salvato){
-      var esiste = Array.from(sel.options).some(function(o){ return o.text===salvato || o.value===salvato; });
-      if(esiste) sel.value = salvato;
+  if(!sel.value) sel.value = "Serie A";
+  var cf = sel.value;
+  try{ localStorage.setItem("c5_calFilter", cf); }catch(e){}
+  var cfLow = String(cf).toLowerCase();
+  var isCoppa = cfLow.indexOf("coppa")!==-1 || cfLow==="conference" || cfLow.indexOf("playoff")!==-1 || cfLow.indexOf("playout")!==-1;
+  var h = "";
+  var debug = "DEBUG: matches="+(window.matches||[]).length+" coppaMatches="+(window.coppaMatches||[]).length+" filtro="+cf;
+  if(!isCoppa){
+    var list = [];
+    for(var a=0;a<(window.matches||[]).length;a++){
+      var m = window.matches[a];
+      var lega1 = String(m.fase||"").toLowerCase();
+      var lega2 = "";
+      try{ lega2 = String(window.teamLeague ? teamLeague(m.casa) : "").toLowerCase(); }catch(e){}
+      if(lega1===cfLow || lega2===cfLow) list.push(m);
     }
-    if(!sel.value) sel.value = "Serie A";
-    var cf = sel.value;
-    try{ localStorage.setItem("c5_calFilter", cf); }catch(e){}
-    var isCoppa = norm(cf).indexOf("coppa")!==-1 || norm(cf)==="conference" || norm(cf).indexOf("playoff")!==-1 || norm(cf).indexOf("playout")!==-1;
-    var h = "";
-    var debug = "DEBUG: matches="+(window.matches||[]).length+" coppaMatches="+(window.coppaMatches||[]).length+" | filtro="+cf;
-    if(!isCoppa){
-      var list = (window.matches||[]).filter(function(m){
-        var lega1 = norm(m.fase||"");
-        var lega2 = "";
-        try{ lega2 = norm(window.teamLeague ? teamLeague(m.casa) : ""); }catch(e){}
-        return lega1===norm(cf) || lega2===norm(cf) || norm(m.lega||"")===norm(cf);
-      });
-      debug += " | trovate="+list.length;
-      list.sort(function(a,b){ return (a.giornata||99)-(b.giornata||99) || String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")); });
-      var lastG = -1;
-      list.forEach(function(m){
-        var g = m.giornata||1;
-        if(g!==lastG){ h += "<div class='calGiornataTitle'>GIORNATA "+g+"</div>"; lastG=g; }
-        h += rigaCal(m);
-      });
-    } else {
-      var listC = [];
-      (window.coppaMatches||[]).forEach(function(m){
-        var nome = norm(m.coppa||m.competizione||m.lega||"");
-        if(nome===norm(cf) || (norm(cf)==="coppa di lega" && nome.indexOf("lega")!==-1)) listC.push(m);
-      });
-      var LB = window.legaBracket;
-      var rounds = LB ? (LB.rounds || (Array.isArray(LB)?LB:null) || LB.matches || null) : null;
-      debug += " | coppa trovate="+listC.length+" legaBracket="+(LB?"SI":"NO")+" rounds="+(rounds?rounds.length:"0");
-      if(rounds){
-        var nomiFasi = ["Sedicesimi di Finale","Ottavi di Finale","Quarti di Finale","Semifinale","Finale"];
-        rounds.forEach(function(round, idx){
-          var partite = (round && round.matches) ? round.matches : (round && round.games ? round.games : round);
-          if(!Array.isArray(partite)) return;
-          partite.forEach(function(mm){
-            if(!mm || !mm.casa || mm.casa==="BYE" || mm.casa==="") return;
-            var fase = mm.fase || mm.round || mm.turno || nomiFasi[idx] || "";
-            var dup = listC.some(function(x){ return x.casa===mm.casa && x.tras===mm.tras; });
-            if(!dup) listC.push({coppa:"Coppa di Lega", fase:fase, casa:mm.casa, tras:mm.tras, data:mm.data||"", ora:mm.ora||"", luogo:mm.luogo||"", golC:mm.golC, golT:mm.golT, stato:mm.stato||"Programmata"});
-          });
-        });
+    debug += " trovate="+list.length;
+    list.sort(function(x,y){ return (x.giornata||99)-(y.giornata||99); });
+    var lastG = -1;
+    for(var b=0;b<list.length;b++){
+      var mm = list[b];
+      var g = mm.giornata||1;
+      if(g!==lastG){ h += "<div class='calGiornataTitle'>GIORNATA "+g+"</div>"; lastG=g; }
+      var sc = (mm.stato==="Giocata") ? "<b>"+(mm.golC==null?"":mm.golC)+" - "+(mm.golT==null?"":mm.golT)+"</b>" : "<span class='badge'>Da giocare</span>";
+      h += "<div class='row'><div><b>"+(mm.casa||"")+" vs "+(mm.tras||"")+"</b><br><span class='small'>"+(mm.data||"")+" "+(mm.ora||"")+" - "+(mm.luogo||"")+"</span></div>"+sc+"</div>";
+    }
+  } else {
+    var listC = [];
+    for(var c=0;c<(window.coppaMatches||[]).length;c++){
+      var mc = window.coppaMatches[c];
+      var nome = String(mc.coppa||mc.competizione||mc.lega||"").toLowerCase();
+      if(nome===cfLow || (cfLow==="coppa di lega" && nome.indexOf("lega")!==-1)) listC.push(mc);
+    }
+    debug += " coppa trovate="+listC.length;
+    var LB = window.legaBracket;
+    var rounds = null;
+    if(LB){
+      if(LB.rounds) rounds = LB.rounds;
+      else if(LB.length!==undefined && typeof LB.length==="number") rounds = LB;
+      else if(LB.matches) rounds = LB.matches;
+    }
+    debug += " legaBracket="+(LB?"SI":"NO")+" rounds="+(rounds?rounds.length:"0");
+    if(rounds && rounds.length){
+      var nomiFasi = ["Sedicesimi di Finale","Ottavi di Finale","Quarti di Finale","Semifinale","Finale"];
+      for(var r=0;r<rounds.length;r++){
+        var partite = rounds[r];
+        if(partite && partite.matches) partite = partite.matches;
+        if(!partite || !partite.length) continue;
+        for(var p=0;p<partite.length;p++){
+          var mp = partite[p];
+          if(!mp || !mp.casa || mp.casa==="BYE" || mp.casa==="") continue;
+          var fase = mp.fase || mp.round || mp.turno || nomiFasi[r] || "";
+          var dup = false;
+          for(var d=0;d<listC.length;d++){ if(listC[d].casa===mp.casa && listC[d].tras===mp.tras) dup=true; }
+          if(!dup) listC.push({coppa:"Coppa di Lega", fase:fase, casa:mp.casa, tras:mp.tras, data:mp.data||"", ora:mp.ora||"", luogo:mp.luogo||"", golC:mp.golC, golT:mp.golT, stato:mp.stato||"Programmata"});
+        }
       }
-      debug += " | dopo bracket="+listC.length;
-      listC.sort(function(a,b){
-        var oa = ordineFasi[norm(a.fase)] ?? 99; var ob = ordineFasi[norm(b.fase)] ?? 99;
-        return oa-ob || String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||""));
-      });
-      var lastF = "";
-      listC.forEach(function(m){
-        var f = (m.fase||"").trim();
-        if(norm(f)!==norm(lastF)){ h += "<div class='calGiornataTitle'>"+(f?f.toUpperCase():"TURNO")+"</div>"; lastF=f; }
-        h += rigaCal(m);
-      });
     }
-    if(!h) h = "<p class='small'>Calendario vuoto.</p><p class='small' style='color:#facc15'>"+debug+"</p>";
-    box.innerHTML = h;
+    debug += " dopo bracket="+listC.length;
+    var ordine = {"girone":0,"sedicesimi di finale":1,"sedicesimi":1,"ottavi di finale":2,"ottavi":2,"quarti di finale":3,"quarti":3,"semifinale":4,"semifinali":4,"finale":5,"finali":5};
+    listC.sort(function(x,y){
+      var ox = ordine[String(x.fase||"").toLowerCase()]; if(ox==null) ox=99;
+      var oy = ordine[String(y.fase||"").toLowerCase()]; if(oy==null) oy=99;
+      return ox-oy;
+    });
+    var lastF = "";
+    for(var e=0;e<listC.length;e++){
+      var m2 = listC[e];
+      var f = String(m2.fase||"").trim();
+      if(f.toLowerCase()!==lastF.toLowerCase()){ h += "<div class='calGiornataTitle'>"+(f?f.toUpperCase():"TURNO")+"</div>"; lastF=f; }
+      var sc2 = (m2.stato==="Giocata") ? "<b>"+(m2.golC==null?"":m2.golC)+" - "+(m2.golT==null?"":m2.golT)+"</b>" : "<span class='badge'>Da giocare</span>";
+      h += "<div class='row'><div><b>"+(m2.casa||"")+" vs "+(m2.tras||"")+"</b><br><span class='small'>"+(m2.data||"")+" "+(m2.ora||"")+" - "+(m2.luogo||"")+"</span></div>"+sc2+"</div>";
+    }
   }
-  var _old = window.render;
-  window.render = function(){ if(_old) _old(); renderCalV41(); };
-  setTimeout(renderCalV41, 800);
-})();
+  if(!h) h = "<p class='small'>Calendario vuoto.</p><p class='small' style='color:#facc15'>"+debug+"</p>";
+  box.innerHTML = h;
+}
+var _oldRenderCal = window.render;
+window.render = function(){ if(_oldRenderCal) _oldRenderCal(); renderCal421(); };
+setTimeout(renderCal421, 800);
 </script>
 </body>
 </html>

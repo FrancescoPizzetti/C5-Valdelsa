@@ -4614,5 +4614,50 @@ setTimeout(renderCal421, 800);
   border-bottom:none!important;
 }
 </style>
+<style>
+/* Barra in basso: 5 voci sempre visibili, senza scroll, senza ingrandimenti */
+.bottomNav, #bottomNav, .bottom-nav, .tabBar, .tabbar, nav{
+  display:grid!important;
+  grid-template-columns:repeat(5,1fr)!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  overflow-x:hidden!important;
+  box-sizing:border-box!important;
+}
+.bottomNav a, .bottomNav button, .bottomNav div,
+#bottomNav a, #bottomNav button, #bottomNav div,
+.tabBar a, .tabbar a, nav a{
+  min-width:0!important;
+  flex:1 1 0!important;
+  padding:6px 0 4px!important;
+  font-size:11px!important;
+  line-height:1.1!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  transform:none!important;
+  scale:1!important;
+}
+.bottomNav .active, .bottomNav .on, .bottomNav .selected,
+#bottomNav .active, #bottomNav .on, #bottomNav .selected{
+  transform:none!important;
+  scale:1!important;
+  font-size:11px!important;
+}
+/* Icone tutte uguali, anche quella attiva */
+.bottomNav img, .bottomNav svg, .bottomNav span,
+#bottomNav img, #bottomNav svg, #bottomNav span,
+.tabBar img, .tabbar img, nav img{
+  width:22px!important;
+  height:22px!important;
+  font-size:20px!important;
+  line-height:1!important;
+}
+/* La pagina non deve mai allargarsi a destra */
+body, html{
+  overflow-x:hidden!important;
+  max-width:100%!important;
+}
+</style>
 </body>
 </html>

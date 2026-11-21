@@ -4547,10 +4547,16 @@ function renderCal421(){
   var box = document.getElementById("calList");
   var sel = document.getElementById("calFilter");
   if(!box || !sel) return;
-  var salvato = "";
-  try{ salvato = localStorage.getItem("c5_calFilter") || ""; }catch(e){}
-  if(salvato){
-    for(var i=0;i<sel.options.length;i++){ if(sel.options[i].text===salvato){ sel.value = salvato; break; } }
+    // V4.4: il filtro salvato lo leggiamo SOLO la prima volta, mai dopo
+  // altrimenti ogni render ti rimette su Serie A
+  if(!window._calInit){
+    window._calInit = true;
+    try{
+      var salvato = localStorage.getItem("c5_calFilter") || "";
+      if(salvato){
+        for(var i=0;i<sel.options.length;i++){ if(sel.options[i].text===salvato){ sel.value = salvato; break; } }
+      }
+    }catch(e){}
   }
   if(!sel.value) sel.value = "Serie A";
   var cf = sel.value;
@@ -4638,6 +4644,10 @@ window._legaDiMatch = legaDiMatch;
 var _oldRenderCal43 = window.render;
 window.render = function(){ if(_oldRenderCal43) _oldRenderCal43(); renderCal421(); };
 setTimeout(renderCal421, 800);
+document.getElementById("calFilter").addEventListener("change", function(){
+  try{ localStorage.setItem("c5_calFilter", this.value); }catch(e){}
+  renderCal421();
+});
 </script>
 <style>
 /* Calendario: via contorno giallo intorno alle partite */

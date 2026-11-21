@@ -362,23 +362,12 @@ div:has(> img){
 <div class="card"><h2>⭐ Trofei Individuali</h2>
 <div class="label">SELEZIONA ANNO</div>
 <select id="alboYearFilterInd" onchange="changeAlboYearInd()"><option value="">Tutti gli anni</option></select>
-<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0">
-  <button onclick="showIndTrofeo('Miglior Allenatore')">Panchina d'oro</button>
-  <button onclick="showIndTrofeo('Miglior Giocatore')">Miglior giocatore</button>
-  <button onclick="showIndTrofeo('Miglior Portiere')">Miglior portiere</button>
-  <button onclick="showIndTrofeo('Capocannoniere')">Capocannoniere</button>
-</div>
-<div style="text-align:center">
-  <img id="indHero" src="panchina-d-oro.png" style="width:100%;max-width:520px;border-radius:16px">
-  <h3 id="indHeroTitle" style="color:gold">Panchina d'oro</h3>
-</div>
   <div class="ind-grid">
   <button class="ind-btn active" onclick="showIndTrofeo('Miglior Allenatore')">Panchina d'oro</button>
   <button class="ind-btn" onclick="showIndTrofeo('Miglior Giocatore')">Miglior giocatore</button>
   <button class="ind-btn" onclick="showIndTrofeo('Miglior Portiere')">Miglior portiere</button>
   <button class="ind-btn" onclick="showIndTrofeo('Capocannoniere')">Capocannoniere</button>
 </div>
-
 <div style="text-align:center">
   <img id="indHero" src="panchina-d-oro.png" style="width:100%;max-width:520px;border-radius:16px">
   <h3 id="indHeroTitle" style="color:gold">Panchina d'oro</h3>
@@ -740,30 +729,6 @@ el('alboStoricoBox').classList.toggle('hidden',which!=='storico');
 function changeAlboYear(){
 curAlboYear=el('alboYearFilter').value;
 render();
-}
-var curIndTrofeo="Miglior Allenatore";
-
-function showIndTrofeo(which){
-  curIndTrofeo=which;
-  aggiornaIndHero();
-  render();
-}
-
-function aggiornaIndHero(){
-  var mapImg={
-    "Miglior Allenatore":"panchina-d-oro.png",
-    "Miglior Giocatore":"miglior-giocatore.png",
-    "Miglior Portiere":"miglior-portiere.png",
-    "Capocannoniere":"capocannoniere.jpg"
-  };
-  var mapTitolo={
-    "Miglior Allenatore":"Panchina d'oro",
-    "Miglior Giocatore":"Miglior giocatore",
-    "Miglior Portiere":"Miglior portiere",
-    "Capocannoniere":"Capocannoniere"
-  };
-  if(el('indHero')) el('indHero').src = mapImg[curIndTrofeo];
-  if(el('indHeroTitle')) el('indHeroTitle').textContent = mapTitolo[curIndTrofeo];
 }
   var curIndTrofeo="Miglior Allenatore";
 
@@ -2819,7 +2784,6 @@ if(el('alboInds')){
   var listInd=indTitles.slice();
   if(curAlboYearInd)listInd=listInd.filter(function(x){return x.anno==curAlboYearInd});
 if(curIndTrofeo)listInd=listInd.filter(function(x){return x.trofeo==curIndTrofeo});
-  if(curIndTrofeo)listInd=listInd.filter(function(x){return x.trofeo==curIndTrofeo});
 var hai="";
 for(var ii=0;ii<listInd.length;ii++){
 hai+="<div class='row'><div><b>"+listInd[ii].nome+"</b><br><span class='small'>"+listInd[ii].trofeo+"</span></div><span class='badge'>"+listInd[ii].anno+"</span></div>";

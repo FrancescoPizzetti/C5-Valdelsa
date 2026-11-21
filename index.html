@@ -4836,113 +4836,6 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
 })();
 </script>
 <script>
-// V5.1 - Osservatore: corregge Calendario Coppa di Lega + Lista Admin, anche se render() lo riscrive
-(function(){
-  if(window.__v51) return;
-  window.__v51 = true;
-
-  // --- A) LISTA ADMIN: filtra per la LEGA di Passo 1 + ordina 1,2,3...26 ---
-  function fixListaAdmin(){
-    var list = document.getElementById("matchesList");
-    if(!list) return;
-    var legaSel = document.getElementById("fLegaMatch");
-    var lega = legaSel ? String(legaSel.value||"").trim() : "";
-    var rows = Array.prototype.slice.call(list.children);
-    if(!rows.length) return;
-    // 1) Ordina per giornata
-    rows.sort(function(a,b){
-      var ma = (a.textContent||"").match(/Giornata\s*(\d+)/i);
-      var mb = (b.textContent||"").match(/Giornata\s*(\d+)/i);
-      var ga = ma ? parseInt(ma[1],10) : 999;
-      var gb = mb ? parseInt(mb[1],10) : 999;
-      return ga - gb;
-    });
-    for(var i=0;i<rows.length;i++){ list.appendChild(rows[i]); }
-    // 2) Filtra: se Passo 1 è su Serie B, nascondi le righe che non parlano di Serie B
-    for(var j=0;j<rows.length;j++){
-      var txt = rows[j].textContent || "";
-      if(!lega){ rows[j].style.display = ""; continue; }
-      // La riga in foto finisce con " - Serie A" / " - Serie B", quindi il testo contiene la lega
-      // Se la riga non ha nessuna lega scritta, mostrala lo stesso, non nasconderla a caso
-      var haLega = txt.indexOf("Serie A")!==-1 || txt.indexOf("Serie B")!==-1 || txt.indexOf("Coppa")!==-1;
-      if(!haLega){ rows[j].style.display = ""; continue; }
-      rows[j].style.display = (txt.indexOf(lega)!==-1) ? "" : "none";
-    }
-  }
-
-  // --- B) CALENDARIO COPPA DI LEGA: guarda in TUTTI i posti dove può essere salvata ---
-  function fixCalCoppa(){
-    var sel = document.getElementById("calFilter");
-    var box = document.getElementById("calList");
-    if(!sel || !box) return;
-    if(String(sel.value||"").trim() !== "Coppa di Lega") return;
-    var txt = (box.textContent||"").trim();
-    if(txt !== "Calendario vuoto." && txt !== "") return; // Se c'è già qualcosa, non toccare
-    var h = "";
-    var trovate = 0;
-    // 1) coppaMatches
-    var cm = window.coppaMatches || [];
-    for(var i=0;i<cm.length;i++){
-      var m = cm[i];
-      if(!m || m.coppa !== "Coppa di Lega") continue;
-      if(!m.casa && !m.tras) continue;
-      trovate++;
-      var sc = (m.stato === "Giocata") ? "<b>" + (m.golC==null?"":m.golC) + " - " + (m.golT==null?"":m.golT) + "</b>" : "<span class='badge'>Da giocare</span>";
-      h += "<div class='row'><div><b>" + (m.casa||"") + " vs " + (m.tras||"") + "</b><br><span class='small'>" + (m.fase||"") + " - " + (m.data||"") + " " + (m.ora||"") + "</span></div>" + sc + "</div>";
-    }
-    // 2) legaBracket - prova tutte le forme: array, .rounds, .slots, Map
-    var br = window.legaBracket;
-    if(br){
-      var rounds = br.rounds || br.turni || null;
-      if(rounds && rounds.length){
-        for(var r=0;r<rounds.length;r++){
-          var round = rounds[r] || [];
-          var arr = Array.isArray(round) ? round : (round.partite || round.matches || []);
-          for(var k=0;k<arr.length;k++){
-            var mm = arr[k];
-            if(!mm || (!mm.casa && !mm.tras)) continue;
-            trovate++;
-            var sc2 = (mm.stato === "Giocata") ? "<b>" + (mm.golC==null?"":mm.golC) + " - " + (mm.golT==null?"":mm.golT) + "</b>" : "<span class='badge'>Da giocare</span>";
-            h += "<div class='row'><div><b>" + (mm.casa||"") + " vs " + (mm.tras||"") + "</b><br><span class='small'>Turno " + (r+1) + " - " + (mm.data||"") + "</span></div>" + sc2 + "</div>";
-          }
-        }
-      }
-      // Se è una Map con .get, prova a leggerla
-      if(!trovate && br.size && typeof br.get === "function"){
-        try{
-          br.forEach(function(v){
-            if(v && v.casa){ trovate++; h += "<div class='row'><div><b>" + v.casa + " vs " + (v.tras||"") + "</b></div></div>"; }
-          });
-        }catch(e){}
-      }
-    }
-    // 3) matches con fase Coppa
-    var ms = window.matches || [];
-    for(var q=0;q<ms.length;q++){
-      var m3 = ms[q];
-      if(m3 && String(m3.fase||"").indexOf("Coppa di Lega")!==-1 && (m3.casa||m3.tras)){
-        trovate++;
-        h += "<div class='row'><div><b>" + (m3.casa||"") + " vs " + (m3.tras||"") + "</b></div></div>";
-      }
-    }
-    if(trovate){
-      box.innerHTML = h;
-    } else {
-      // Diagnosi: ti dice dove ha guardato e cosa ha trovato, così capiamo se è davvero sparito o solo non salvato
-      box.innerHTML = "<p class='small'>Coppa di Lega: nessuna partita trovata.<br>"
-        + "coppaMatches: " + cm.length + " totali, "
-        + "legaBracket: " + (br ? ("tipo " + typeof br + ", size " + (br.size==null?"?":br.size) + ", rounds " + (br.rounds?br.rounds.length:"no")) : "assente") + "<br>"
-        + "Se in Admin > Coppe > Coppa di Lega le celle sono vuote, il tabellone non è mai stato salvato con SALVA CELLE. Se le celle ci sono, mandami foto di quella pagina.</p>";
-    }
-  }
-
-  // Osservatori: scattano quando il codice riscrive le liste, anche se non passa da render()
-  function attacca(){
-    var list = document.getElementById("matchesList");
-    if(list && !list.dataset.v51){
-      list.dataset.v51 = "1";
-      new MutationObserver(function(){ setTimeout(fixListaAdmin, 30); }).observe(list, {childList:true});
-<script>
 // V6.0 - UN SOLO CALENDARIO: sostituisce renderCal45 + renderCal421 + setCalFilter
 (function(){
   if(window.__cal60) return;
@@ -5053,6 +4946,185 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
   var cfSel = document.getElementById("calFilter");
   if(cfSel) cfSel.addEventListener("change", renderCalFix);
   setTimeout(renderCalFix, 600);
+})();
+</script>
+<style>
+/* V6.1 - Filtro Admin compatto e leggibile */
+#unicoFiltroCalendario{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:8px!important;
+  padding:12px!important;
+  background:#111!important;
+  border:2px solid #FFD700!important;
+  border-radius:12px!important;
+  margin:12px 0!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+#unicoFiltroCalendario b{ font-size:14px!important; color:#FFD700!important; }
+#unicoFiltroCalendario select{
+  width:100%!important;
+  min-width:0!important;
+  flex:none!important;
+  padding:12px!important;
+  font-size:15px!important;
+  border-radius:8px!important;
+  background:#000!important;
+  color:#fff!important;
+  white-space:normal!important;
+}
+#unicoFiltroCalendario button{
+  width:100%!important;
+  padding:12px!important;
+  font-size:15px!important;
+  font-weight:900!important;
+}
+</style>
+<script>
+// V6.1 - Lista Admin nascosta finché non filtri
+(function(){
+  if(window.__v61) return;
+  window.__v61 = true;
+  var PLACEHOLDER_ID = "matchesListPlaceholder";
+  function aggiornaLista(){
+    var list = document.getElementById("matchesList");
+    if(!list) return;
+    var box = document.getElementById("unicoFiltroCalendario");
+    var g = box ? box.querySelector(".selFiltroGiornataUnico") : null;
+    var c = box ? box.querySelector(".selFiltroCampUnico") : null;
+    var gv = g ? String(g.value||"") : "";
+    var cv = c ? String(c.value||"") : "";
+    var filtrato = (gv !== "" || cv !== "");
+    var ph = document.getElementById(PLACEHOLDER_ID);
+    if(!ph){
+      ph = document.createElement("p");
+      ph.id = PLACEHOLDER_ID;
+      ph.className = "small";
+      ph.textContent = "Usa il filtro sopra: metti Lega + Giornata per vedere solo quelle partite e cancellare quella sbagliata con la X.";
+      list.parentNode.insertBefore(ph, list);
+    }
+    if(!filtrato){
+      list.style.display = "none";
+      ph.style.display = "";
+      return;
+    }
+    ph.style.display = "none";
+    list.style.display = "";
+    var rows = Array.prototype.slice.call(list.children);
+    rows.sort(function(a,b){
+      var ma = (a.textContent||"").match(/Giornata\s*(\d+)/i);
+      var mb = (b.textContent||"").match(/Giornata\s*(\d+)/i);
+      return (ma?parseInt(ma[1],10):999) - (mb?parseInt(mb[1],10):999);
+    });
+    for(var i=0;i<rows.length;i++){ list.appendChild(rows[i]); }
+    var visibili = 0;
+    for(var j=0;j<rows.length;j++){
+      var txt = rows[j].textContent || "";
+      var okG = !gv
+              var okC = !cv;
+      if(cv){ okC = txt.indexOf(cv) !== -1; }
+      rows[j].style.display = (okG && okC) ? "" : "none";
+      if(okG && okC) visibili++;
+    }
+    if(!visibili){
+      ph.textContent = "Nessuna partita per " + (cv||"") + " Giornata " + (gv||"") + ". Premi Mostra tutto per azzerare.";
+      ph.style.display = "";
+    }
+  }
+  document.addEventListener("change", function(e){
+    if(e.target && e.target.className && String(e.target.className).indexOf("selFiltro")!==-1){
+      setTimeout(aggiornaLista, 50);
+    }
+  });
+  document.addEventListener("click", function(e){
+    if(e.target && e.target.className && String(e.target.className).indexOf("btnResetFiltroUnico")!==-1){
+      setTimeout(aggiornaLista, 100);
+    }
+  });
+  var _oldR = window.render;
+  window.render = function(){ if(_oldR) _oldR(); setTimeout(aggiornaLista, 50); };
+  setTimeout(aggiornaLista, 800);
+})();
+</script>
+<script>
+// V6.2 - Salva Partita di Coppa: se non esiste, LA CREA. Se esiste, aggiorna data/ora/luogo.
+(function(){
+  if(window.__v62) return;
+  window.__v62 = true;
+  window.saveCoppaMatch = function(){
+    var coppa = document.getElementById("fCoppa") ? document.getElementById("fCoppa").value : "";
+    var casa = document.getElementById("fCoppaCasa") ? document.getElementById("fCoppaCasa").value : "";
+    var tras = document.getElementById("fCoppaTras") ? document.getElementById("fCoppaTras").value : "";
+    var data = document.getElementById("fCoppaData") ? document.getElementById("fCoppaData").value : "";
+    var ora = document.getElementById("fCoppaOra") ? document.getElementById("fCoppaOra").value : "";
+    var luogo = "";
+    try{ if(typeof getCoppaLuogo === "function") luogo = getCoppaLuogo() || ""; }catch(e){}
+    if(!luogo && document.getElementById("fCoppaLuogo")) luogo = document.getElementById("fCoppaLuogo").value || "";
+    if(!coppa){ alert("Scegli la coppa."); return; }
+    if(!casa || !tras){ alert("Scegli Casa e Trasferta."); return; }
+    if(casa === tras){ alert("Casa e Trasferta sono la stessa squadra: " + casa + ".\nCambia la Trasferta."); return; }
+    if(coppa === "Coppa di Lega"){
+      var br = window.legaBracket;
+      if(!br || !br.size || !br.rounds || !br.rounds.length){
+        alert("Coppa di Lega: tabellone non ancora creato.\nVai sotto a COPPA DI LEGA - CELLE, metti le squadre e premi SALVA CELLE, poi da qui puoi mettere data/ora.");
+        return;
+      }
+      for(var r=0;r<br.rounds.length;r++){
+        for(var m=0;m<br.rounds[r].length;m++){
+          var mm = br.rounds[r][m];
+          if(mm && mm.casa === casa && mm.tras === tras){
+            mm.data = data; mm.ora = ora; mm.luogo = luogo;
+            save(); if(typeof render === "function") render();
+            alert("Calendario aggiornato nel tabellone!\n" + casa + " vs " + tras + " - " + data + " " + ora);
+            return;
+          }
+        }
+      }
+      var messo = false;
+      for(var r2=0;r2<br.rounds.length && !messo;r2++){
+        for(var m2=0;m2<br.rounds[r2].length;m2++){
+          var slot = br.rounds[r2][m2];
+          if(slot && (!slot.casa || slot.casa === "—" || slot.casa === "")){
+            slot.casa = casa; slot.tras = tras; slot.data = data; slot.ora = ora; slot.luogo = luogo; slot.stato = slot.stato || "Programmata";
+            messo = true; break;
+          }
+        }
+      }
+      if(!messo){
+        br.rounds[0].push({casa:casa, tras:tras, data:data, ora:ora, luogo:luogo, golC:"", golT:"", stato:"Programmata", winner:""});
+      }
+      save(); if(typeof render === "function") render();
+      alert("Partita di Coppa di Lega CREATA!\n" + casa + " vs " + tras + " - " + data + " " + ora + "\nOra la vedi in Calendario > Coppa di Lega.");
+      return;
+    }
+    var list = window.coppaMatches || [];
+    for(var k=0;k<list.length;k++){
+      var cm = list[k];
+      if(cm && cm.coppa === coppa && cm.casa === casa && cm.tras === tras){
+        cm.data = data; cm.ora = ora; cm.luogo = luogo;
+        save(); if(typeof render === "function") render();
+        alert("Calendario aggiornato nel tabellone!\n" + casa + " vs " + tras + " - " + data + " " + ora);
+        return;
+      }
+    }
+    for(var k2=0;k2<list.length;k2++){
+      var slot2 = list[k2];
+      if(slot2 && slot2.coppa === coppa && (!slot2.casa || slot2.casa === "")){
+        slot2.casa = casa; slot2.tras = tras; slot2.data = data; slot2.ora = ora; slot2.luogo = luogo; slot2.stato = slot2.stato || "Programmata";
+        save(); if(typeof render === "function") render();
+        alert("Partita CREATA nello slot vuoto (" + (slot2.fase||"") + ")!\n" + casa + " vs " + tras);
+        return;
+      }
+    }
+    var fase = "Quarti di Finale";
+    for(var k3=0;k3<list.length;k3++){
+      if(list[k3] && list[k3].coppa === coppa && list[k3].fase){ fase = list[k3].fase; break; }
+    }
+    list.push({coppa:coppa, fase:fase, casa:casa, tras:tras, data:data, ora:ora, luogo:luogo, golC:"", golT:"", stato:"Programmata"});
+    save(); if(typeof render === "function") render();
+    alert("Partita di " + coppa + " CREATA!\n" + casa + " vs " + tras + " - " + data + " " + ora + "\nOra la vedi in Calendario > " + coppa + ".");
+  };
 })();
 </script>
 </body>

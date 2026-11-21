@@ -360,11 +360,14 @@ div:has(> img){
 </div>
 <div id="alboIndBox" class="hidden">
 <div class="card"><h2>⭐ Trofei Individuali</h2>
-  <div class="ind-grid">
-  <button class="ind-btn active" onclick="showIndTrofeo('Miglior Allenatore')">Panchina d'oro</button>
-  <button class="ind-btn" onclick="showIndTrofeo('Miglior Giocatore')">Miglior giocatore</button>
-  <button class="ind-btn" onclick="showIndTrofeo('Miglior Portiere')">Miglior portiere</button>
-  <button class="ind-btn" onclick="showIndTrofeo('Capocannoniere')">Capocannoniere</button>
+<div class="ind-grid">
+  <button class="ind-btn active" data-trofeo="Panchina d'Oro" onclick="showIndTrofeo('Panchina d\'Oro')">Panchina d'oro</button>
+  <button class="ind-btn" data-trofeo="Capocannoniere Serie A" onclick="showIndTrofeo('Capocannoniere Serie A')">Capocannoniere A</button>
+  <button class="ind-btn" data-trofeo="Capocannoniere Serie B" onclick="showIndTrofeo('Capocannoniere Serie B')">Capocannoniere B</button>
+  <button class="ind-btn" data-trofeo="Miglior Giocatore Serie A" onclick="showIndTrofeo('Miglior Giocatore Serie A')">Miglior giocatore A</button>
+  <button class="ind-btn" data-trofeo="Miglior Giocatore Serie B" onclick="showIndTrofeo('Miglior Giocatore Serie B')">Miglior giocatore B</button>
+  <button class="ind-btn" data-trofeo="Miglior Portiere Serie A" onclick="showIndTrofeo('Miglior Portiere Serie A')">Miglior portiere A</button>
+  <button class="ind-btn" data-trofeo="Miglior Portiere Serie B" onclick="showIndTrofeo('Miglior Portiere Serie B')">Miglior portiere B</button>
 </div>
 <div style="text-align:center">
   <img id="indHero" src="panchina-d-oro.png" style="width:100%;max-width:520px;border-radius:16px">

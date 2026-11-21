@@ -733,6 +733,37 @@ function aggiornaIndHero(){
   if(el('indHero')) el('indHero').src = mapImg[curIndTrofeo];
   if(el('indHeroTitle')) el('indHeroTitle').textContent = mapTitolo[curIndTrofeo];
 }
+  var curIndTrofeo="Miglior Allenatore";
+
+function showIndTrofeo(which){
+  curIndTrofeo=which;
+  aggiornaIndHero();
+  document.querySelectorAll(".ind-btn").forEach(b=>{
+    b.classList.toggle("active", b.textContent.trim()===(
+      which==="Miglior Allenatore" ? "Panchina d'oro" :
+      which==="Miglior Giocatore" ? "Miglior giocatore" :
+      which==="Miglior Portiere" ? "Miglior portiere" : "Capocannoniere"
+    ));
+  });
+  render();
+}
+
+function aggiornaIndHero(){
+  var mapImg={
+    "Miglior Allenatore":"panchina-d-oro.png",
+    "Miglior Giocatore":"miglior-giocatore.png",
+    "Miglior Portiere":"miglior-portiere.png",
+    "Capocannoniere":"capocannonieri.jpg"
+  };
+  var mapTitolo={
+    "Miglior Allenatore":"Panchina d'oro",
+    "Miglior Giocatore":"Miglior giocatore",
+    "Miglior Portiere":"Miglior portiere",
+    "Capocannoniere":"Capocannoniere"
+  };
+  if(el('indHero')) el('indHero').src = mapImg[curIndTrofeo];
+  if(el('indHeroTitle')) el('indHeroTitle').textContent = mapTitolo[curIndTrofeo];
+}
   function changeAlboYearInd(){
 curAlboYearInd=el('alboYearFilterInd').value;
 render();
@@ -2755,6 +2786,7 @@ el('alboByYear').innerHTML=hay;
 if(el('alboInds')){
   var listInd=indTitles.slice();
   if(curAlboYearInd)listInd=listInd.filter(function(x){return x.anno==curAlboYearInd});
+if(curIndTrofeo)listInd=listInd.filter(function(x){return x.trofeo==curIndTrofeo});
   if(curIndTrofeo)listInd=listInd.filter(function(x){return x.trofeo==curIndTrofeo});
 var hai="";
 for(var ii=0;ii<listInd.length;ii++){

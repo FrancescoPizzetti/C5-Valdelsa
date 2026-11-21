@@ -2717,8 +2717,9 @@ if(!hay)hay="<p class='small'>Nessun titolo.</p>";
 el('alboByYear').innerHTML=hay;
 }
 if(el('alboInds')){
-var listInd=indTitles.slice();
-if(curAlboYearInd)listInd=listInd.filter(function(t){return String(t.anno)===String(curAlboYearInd);});
+  var listInd=indTitles.slice();
+  if(curAlboYearInd)listInd=listInd.filter(function(x){return x.anno==curAlboYearInd});
+  if(curIndTrofeo)listInd=listInd.filter(function(x){return x.trofeo==curIndTrofeo});
 var hai="";
 for(var ii=0;ii<listInd.length;ii++){
 hai+="<div class='row'><div><b>"+listInd[ii].nome+"</b><br><span class='small'>"+listInd[ii].trofeo+"</span></div><span class='badge'>"+listInd[ii].anno+"</span></div>";

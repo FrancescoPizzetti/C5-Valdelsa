@@ -6490,5 +6490,165 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
   margin-top:0 !important;
 }
 </style>
+<style>
+/* FIX Albo d'oro V1 */
+#alboClubGrid{ display:none; margin-top:14px; }
+#alboClubGrid.mostra{ display:block; }
+.alboCompBtn{
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; padding:18px 16px; margin-bottom:12px;
+  background:rgba(0,0,0,0.75); color:#fff; border:1px solid #E8C86A;
+  border-radius:14px; font-size:18px; font-weight:900; text-align:left;
+}
+.alboCompBtn span:last-child{ color:#E8C86A; font-size:22px; }
+#paginaAlboComp{
+  position:fixed !important; inset:0 !important; z-index:999999 !important;
+  overflow-y:auto !important; padding:20px 16px 40px !important; background:#000;
+}
+#paginaAlboComp .bgAlbo{
+  position:fixed !important; inset:0 !important;
+  background-position:center center !important; background-repeat:no-repeat !important;
+  background-size:82% auto !important; opacity:0.22 !important; pointer-events:none !important;
+}
+#paginaAlboComp .contAlbo{ position:relative !important; }
+#paginaAlboComp .chiudiAlbo{
+  display:block; margin:0 auto 22px; background:#E8D48A; color:#000; border:none;
+  border-radius:999px; padding:12px 22px; font-size:15px; font-weight:900; text-transform:uppercase;
+}
+#paginaAlboComp .titoloAlbo{ font-size:30px; line-height:1.1; color:#E8C86A; text-align:center; margin-bottom:8px; }
+#paginaAlboComp .sottoAlbo{ text-align:center; color:#B8C4C0; font-size:14px; margin-bottom:26px; }
+#paginaAlboComp .rigaAlbo{
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  background:rgba(20,35,30,0.85); border:1px solid rgba(255,255,255,0.25);
+  border-radius:12px; padding:16px 12px; margin-bottom:12px;
+}
+#paginaAlboComp .nomeAlbo{ font-size:19px; font-weight:900; color:#fff; }
+#paginaAlboComp .annoAlbo{ background:#E8C86A; color:#000; font-weight:900; border-radius:999px; padding:6px 14px; white-space:nowrap; }
+#paginaAlboComp .vuotoAlbo{ text-align:center; color:#ddd; background:rgba(0,0,0,0.5); border-radius:14px; padding:20px; }
+</style>
+<script>
+// FIX Albo d'oro V1 - Storico via, Club = 7 competizioni
+(function(){
+  if(window.__fixAlboV1) return;
+  window.__fixAlboV1 = true;
+
+  var COMPS = [
+    { nome:"Serie A", img:"logo-serie-a.png", chiavi:["Serie A"] },
+    { nome:"Serie B", img:"logo-serie-b.png", chiavi:["Serie B"] },
+    { nome:"Coppa di Lega", img:"coppa-di-lega.png", chiavi:["Coppa di Lega"] },
+    { nome:"Coppa Campioni", img:"coppa-campioni.png", chiavi:["Coppa Campioni"] },
+    { nome:"Coppa Mitropa", img:"coppa-mitropa.png", chiavi:["Coppa Mitropa","Mitropa Cup","Mitropa"] },
+    { nome:"Conference", img:"conference-cup.png", chiavi:["Conference"] },
+    { nome:"Supercoppa", img:"supercoppa.png", chiavi:["Supercoppa"] }
+  ];
+
+  function trovaAlbo(){
+    var els = Array.from(document.querySelectorAll("h1,h2,h3,div,span,button"));
+    var t = els.find(function(e){ return (e.textContent||"").trim() === "Albo d'oro" || (e.textContent||"").trim().indexOf("Albo d'oro") === 0; });
+    if(!t) return null;
+    var c = t; for(var i=0;i<5 && c.parentElement;i++){ c = c.parentElement; if(c.querySelector("button")) break; }
+    return c;
+  }
+  function bottone(nome){
+    var all = Array.from(document.querySelectorAll("button"));
+    return all.find(function(b){ return (b.textContent||"").trim().toUpperCase() === nome; });
+  }
+  function sezioneCon(testo){
+    var all = Array.from(document.querySelectorAll("div,section"));
+    return all.find(function(d){ return (d.textContent||"").indexOf(testo) >= 0 && d.querySelector("select,div"); });
+  }
+
+  // Prende i vincitori dalla lista esistente "Squadra - Competizione  ANNO"
+  function leggiVincitori(){
+    var out = [];
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    var n;
+    while(n = walker.nextNode()){
+      var txt = (n.nodeValue||"").trim();
+      // es. "Dragon Futsal - Serie A" oppure "FC The Wolf - Conference"
+      var m = txt.match(/^(.+?)\s*-\s*(Serie A|Serie B|Coppa di Lega|Coppa Campioni|Coppa Mitropa|Mitropa Cup|Conference|Supercoppa)\s*$/);
+      if(!m) continue;
+      var el = n.parentElement;
+      var anno = "";
+      if(el){
+        var pill = el.querySelector("span,div,button");
+        var allTxt = el.textContent || "";
+        var a = allTxt.match(/(19|20)\d{2}/);
+        if(a) anno = a[0];
+      }
+      out.push({ squadra:m[1].trim(), comp:m[2].trim(), anno:anno });
+    }
+    return out;
+  }
+
+  function apriComp(comp){
+    var vecchia = document.getElementById("paginaAlboComp");
+    if(vecchia) vecchia.remove();
+    var vincitori = leggiVincitori().filter(function(v){ return comp.chiavi.indexOf(v.comp) >= 0; });
+    vincitori.sort(function(a,b){ return (b.anno||"").localeCompare(a.anno||""); });
+    var html = "<div class='bgAlbo' style=\"background-image:url('" + comp.img + "')\"></div><div class='contAlbo'>" +
+      "<button type='button' class='chiudiAlbo'>← Torna alle competizioni</button>" +
+      "<div class='titoloAlbo'>" + comp.nome + "</div>" +
+      "<div class='sottoAlbo'>Albo d'oro • Vincitori</div>";
+    if(!vincitori.length){
+      html += "<div class='vuotoAlbo'>Ancora nessun vincitore inserito per " + comp.nome + ".</div>";
+    } else {
+      vincitori.forEach(function(v){
+        html += "<div class='rigaAlbo'><div class='nomeAlbo'>" + v.squadra + "</div><div class='annoAlbo'>" + (v.anno || "") + "</div></div>";
+      });
+    }
+    html += "</div>";
+    var pag = document.createElement("div");
+    pag.id = "paginaAlboComp";
+    pag.innerHTML = html;
+    document.body.appendChild(pag);
+    pag.querySelector(".chiudiAlbo").addEventListener("click", function(){ pag.remove(); });
+  }
+
+  function sistema(){
+    // 1. Togli STORICO
+    var st = bottone("STORICO");
+    if(st) st.remove();
+
+    var albo = trovaAlbo();
+    if(!albo || albo.dataset.alboV1) return;
+    albo.dataset.alboV1 = "1";
+
+    // 2. Griglia 7 competizioni, nascosta all'inizio
+    var grid = document.createElement("div");
+    grid.id = "alboClubGrid";
+    COMPS.forEach(function(c){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "alboCompBtn";
+      b.innerHTML = "<span>" + c.nome + "</span><span>›</span>";
+      b.addEventListener("click", function(){ apriComp(c); });
+      grid.appendChild(b);
+    });
+    albo.appendChild(grid);
+
+    // 3. Click CLUB -> mostra griglia, nasconde vecchie sezioni Club
+    //    Click INDIVIDUALI -> nasconde griglia, mostra tutto come prima
+    var btnClub = bottone("CLUB");
+    var btnInd = bottone("INDIVIDUALI");
+    if(btnClub) btnClub.addEventListener("click", function(){
+      setTimeout(function(){
+        grid.classList.add("mostra");
+        ["Club più titolati","Vincitori per Anno"].forEach(function(testo){
+          var s = sezioneCon(testo);
+          if(s) s.style.display = "none";
+        });
+      }, 50);
+    });
+    if(btnInd) btnInd.addEventListener("click", function(){
+      grid.classList.remove("mostra");
+      ["Club più titolati","Vincitori per Anno"].forEach(function(testo){
+        var s = sezioneCon(testo);
+        if(s) s.style.display = "";
+      });
+    });
+  }
+  setInterval(sistema, 600);
+})();
+</script>
 </body>
 </html>

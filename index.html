@@ -4835,5 +4835,88 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
   });
 })();
 </script>
+<script>
+// V5.0 - 1) CALENDARIO COPPA DI LEGA da legaBracket  2) LISTA ADMIN ordinata + filtro di nuovo visibile
+(function(){
+  if(window.__v50) return;
+  window.__v50 = true;
+
+  // --- 1) CALENDARIO: Coppa di Lega ---
+  function renderCoppaLega(){
+    var sel = document.getElementById("calFilter");
+    var box = document.getElementById("calList");
+    if(!sel || !box) return false;
+    if(sel.value !== "Coppa di Lega") return false;
+    var h = "";
+    // a) Da legaBracket, se c'è
+    var br = window.legaBracket;
+    if(br && br.rounds && br.rounds.length){
+      var nomiTurni = ["Sedicesimi di Finale","Ottavi di Finale","Quarti di Finale","Semifinale","Finale"];
+      for(var r=0;r<br.rounds.length;r++){
+        var round = br.rounds[r] || [];
+        if(!round.length) continue;
+        var titolo = nomiTurni[r] || ("Turno " + (r+1));
+        h += "<div class='calGiornataTitle'>" + titolo.toUpperCase() + "</div>";
+        for(var i=0;i<round.length;i++){
+          var m = round[i];
+          if(!m) continue;
+          var sc = (m.stato === "Giocata") ? "<b>" + (m.golC==null?"":m.golC) + " - " + (m.golT==null?"":m.golT) + "</b>" : "<span class='badge'>Da giocare</span>";
+          h += "<div class='row'><div><b>" + (m.casa||"") + " vs " + (m.tras||"") + "</b><br><span class='small'>" + (m.data||"") + " " + (m.ora||"") + " - " + (m.luogo||"") + "</span></div>" + sc + "</div>";
+        }
+      }
+    }
+    // b) Fallback: anche da coppaMatches, se ce ne sono
+    var extra = (window.coppaMatches||[]).filter(function(m){ return m && m.coppa === "Coppa di Lega"; });
+    if(extra.length){
+      var lastF = "";
+      for(var e=0;e<extra.length;e++){
+        var m2 = extra[e];
+        var f = String(m2.fase||"").trim();
+        if(f !== lastF){ h += "<div class='calGiornataTitle'>" + (f?f.toUpperCase():"TURNO") + "</div>"; lastF = f; }
+        var sc2 = (m2.stato === "Giocata") ? "<b>" + (m2.golC==null?"":m2.golC) + " - " + (m2.golT==null?"":m2.golT) + "</b>" : "<span class='badge'>Da giocare</span>";
+        h += "<div class='row'><div><b>" + (m2.casa||"") + " vs " + (m2.tras||"") + "</b><br><span class='small'>" + (m2.data||"") + " " + (m2.ora||"") + " - " + (m2.luogo||"") + "</span></div>" + sc2 + "</div>";
+      }
+    }
+    if(!h) h = "<p class='small'>Coppa di Lega ancora vuota: genera il tabellone in Admin > Fasi Finali, poi compila le celle.</p>";
+    box.innerHTML = h;
+    return true;
+  }
+
+  // --- 2) LISTA ADMIN: ordina per giornata 1,2,3...26 e rifà vedere il filtro ---
+  function ordinaListaAdmin(){
+    // Rifai vedere il filtro giallo in Admin, era nascosto dal V4.9
+    var old = document.getElementById("unicoFiltroCalendario");
+    if(old) old.style.display = "";
+    var list = document.getElementById("matchesList");
+    if(!list) return;
+    var rows = Array.prototype.slice.call(list.children);
+    if(!rows.length) return;
+    // Ordina per numero giornata nel testo, se non c'è resta in fondo
+    rows.sort(function(a,b){
+      var ma = (a.textContent||"").match(/Giornata\s*(\d+)/i);
+      var mb = (b.textContent||"").match(/Giornata\s*(\d+)/i);
+      var ga = ma ? parseInt(ma[1],10) : 999;
+      var gb = mb ? parseInt(mb[1],10) : 999;
+      return ga - gb;
+    });
+    // Riscrive solo se l'ordine è cambiato, così non lampeggia
+    var cambiato = false;
+    for(var i=0;i<rows.length;i++){ if(list.children[i] !== rows[i]){ cambiato = true; break; } }
+    if(cambiato){ for(var j=0;j<rows.length;j++){ list.appendChild(rows[j]); } }
+  }
+
+  var _oldR = window.render;
+  window.render = function(){
+    if(_oldR) _oldR();
+    // Se è Coppa di Lega, sovrascrivi il Calendario con quella giusta
+    try{ if(renderCoppaLega()){ /* fatto */ } }catch(e){}
+    try{ ordinaListaAdmin(); }catch(e){}
+  };
+  // Quando cambi il filtro Calendario, riprova subito
+  var cf = document.getElementById("calFilter");
+  if(cf) cf.addEventListener("change", function(){ setTimeout(function(){ renderCoppaLega(); }, 100); });
+  setTimeout(function(){ renderCoppaLega(); ordinaListaAdmin(); }, 800);
+})();
+</script>
 </body>
 </html>

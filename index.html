@@ -149,13 +149,13 @@ div:has(> img){
   box-shadow:none!important;
   padding:0!important;
 }
-/* Via il quadrato grande esterno PROSSIME / RISULTATI - come mockup */
-div:has(.card){
+/* Via quadrato nero SOLO in Home - Classifica resta com'è */
+div[id*="Home"] div[class*="p3"]:not(button):not(.p3-btn):not(.p3-btn-ghost){
   border:none!important;
   background:transparent!important;
   box-shadow:none!important;
 }
-.card{
+div[id*="Home"] .card{
   border:1px solid rgba(201,162,39,0.6)!important;
   background:rgba(0,0,0,0.88)!important;
 }

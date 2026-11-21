@@ -5854,5 +5854,51 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
   setTimeout(mettiBottone, 800);
 })();
 </script>
+<style>
+/* V7.6.2 - Fix sovrapposizione: scheda opaca e pagina sotto nascosta */
+#schedaCompetizioni{
+  background:#000 !important;
+  background-color:#000 !important;
+  opacity:1 !important;
+  z-index:999999 !important;
+  position:fixed !important;
+  inset:0 !important;
+}
+/* Quando la scheda è aperta, nascondi tutto il resto */
+body.comp-aperta > *:not(#schedaCompetizioni){
+  display:none !important;
+}
+body.comp-aperta{
+  overflow:hidden !important;
+  background:#000 !important;
+}
+</style>
+<script>
+// V7.6.2 - Nascondi pagina sotto quando apri competizioni
+(function(){
+  if(window.__v762) return;
+  window.__v762 = true;
+
+  function controlla(){
+    var scheda = document.getElementById("schedaCompetizioni");
+    if(scheda){
+      document.body.classList.add("comp-aperta");
+      // se clicchi TORNA INDIETRO, togli la classe
+      var btn = scheda.querySelector(".chiudiComp");
+      if(btn && !btn.dataset.v762){
+        btn.dataset.v762 = "1";
+        btn.addEventListener("click", function(){
+          setTimeout(function(){
+            document.body.classList.remove("comp-aperta");
+          }, 50);
+        });
+      }
+    } else {
+      document.body.classList.remove("comp-aperta");
+    }
+  }
+  setInterval(controlla, 500);
+})();
+</script>
 </body>
 </html>

@@ -4508,147 +4508,6 @@ setTimeout(ridisegnaHome, 500);
 #cal h2{ text-align:center!important; }
 </style>
 <script>
-<script>
-// CALENDARIO + ADMIN FILTRO V4.3 - lega robusta
-function normTesto(s){
-  return String(s||"").toLowerCase().trim().replace(/\s+/g," ").replace("serie  b","serie b").replace("serie  a","serie a");
-}
-function legaDiMatch(m){
-  var c = [];
-  var campi = [m.fase, m.lega, m.campionato, m.competizione, m.divisione, m.categoria, m.torneo];
-  for(var i=0;i<campi.length;i++){ var n=normTesto(campi[i]); if(n) c.push(n); }
-  // teamLeague solo se non abbiamo gia' una lega, e mai di default Serie A
-  try{
-    var tl1 = normTesto(window.teamLeague ? teamLeague(m.casa) : "");
-    var tl2 = normTesto(window.teamLeague ? teamLeague(m.tras) : "");
-    if(tl1 && tl1!=="serie a") c.push(tl1);
-    if(tl2 && tl2!=="serie a") c.push(tl2);
-    // se non abbiamo niente, e teamLeague dice Serie A, lo teniamo solo come ultima spiaggia
-    if(!c.length && tl1) c.push(tl1);
-  }catch(e){}
-  return c;
-}
-function matchDiLega(m, cfLow){
-  var leghe = legaDiMatch(m);
-  for(var i=0;i<leghe.length;i++){
-    if(leghe[i]===cfLow) return true;
-    if(leghe[i].indexOf(cfLow)!==-1 && cfLow.length>=5) return true;
-  }
-  // fallback: se il filtro e' Serie B e la partita non ha lega, non la mostrare come Serie A
-  return false;
-}
-function numGiornata(g){
-  if(g==null) return -1;
-  var s = String(g).toLowerCase().replace("giornata","").trim();
-  var n = parseInt(s,10);
-  return isNaN(n) ? -1 : n;
-}
-function renderCal421(){
-  var box = document.getElementById("calList");
-  var sel = document.getElementById("calFilter");
-  if(!box || !sel) return;
-    // V4.4: il filtro salvato lo leggiamo SOLO la prima volta, mai dopo
-  // altrimenti ogni render ti rimette su Serie A
-  if(!window._calInit){
-    window._calInit = true;
-    try{
-      var salvato = localStorage.getItem("c5_calFilter") || "";
-      if(salvato){
-        for(var i=0;i<sel.options.length;i++){ if(sel.options[i].text===salvato){ sel.value = salvato; break; } }
-      }
-    }catch(e){}
-  }
-  if(!sel.value) sel.value = "Serie A";
-  var cf = sel.value;
-  try{ localStorage.setItem("c5_calFilter", cf); }catch(e){}
-  var cfLow = normTesto(cf);
-  var isCoppa = cfLow.indexOf("coppa")!==-1 || cfLow==="conference" || cfLow.indexOf("playoff")!==-1 || cfLow.indexOf("playout")!==-1;
-  var h = "";
-  if(!isCoppa){
-    var list = [];
-    for(var a=0;a<(window.matches||[]).length;a++){
-      var m = window.matches[a];
-      if(matchDiLega(m, cfLow)) list.push(m);
-    }
-    list.sort(function(x,y){ return numGiornata(x.giornata)-numGiornata(y.giornata); });
-    var lastG = -1;
-    for(var b=0;b<list.length;b++){
-      var mm = list[b];
-      var g = numGiornata(mm.giornata); if(g<0) g=1;
-      if(g!==lastG){ h += "<div class='calGiornataTitle'>GIORNATA "+g+"</div>"; lastG=g; }
-      var sc = (mm.stato==="Giocata") ? "<b>"+(mm.golC==null?"":mm.golC)+" - "+(mm.golT==null?"":mm.golT)+"</b>" : "<span class='badge'>Da giocare</span>";
-      h += "<div class='row'><div><b>"+(mm.casa||"")+" vs "+(mm.tras||"")+"</b><br><span class='small'>"+(mm.data||"")+" "+(mm.ora||"")+" - "+(mm.luogo||"")+"</span></div>"+sc+"</div>";
-    }
-  } else {
-    var listC = [];
-    for(var c=0;c<(window.coppaMatches||[]).length;c++){
-      var mc = window.coppaMatches[c];
-      var nome = normTesto(mc.coppa||mc.competizione||mc.lega||"");
-      if(nome===cfLow || (cfLow==="coppa di lega" && nome.indexOf("lega")!==-1)) listC.push(mc);
-    }
-    var LB = window.legaBracket;
-    var rounds = null;
-    if(LB){
-      if(LB.rounds) rounds = LB.rounds;
-      else if(LB.length!==undefined && typeof LB.length==="number") rounds = LB;
-      else if(LB.matches) rounds = LB.matches;
-    }
-    if(rounds && rounds.length){
-      var nomiFasi = ["Sedicesimi di Finale","Ottavi di Finale","Quarti di Finale","Semifinale","Finale"];
-      for(var r=0;r<rounds.length;r++){
-        var partite = rounds[r];
-        if(partite && partite.matches) partite = partite.matches;
-        if(!partite || !partite.length) continue;
-        for(var p=0;p<partite.length;p++){
-          var mp = partite[p];
-          if(!mp || !mp.casa || mp.casa==="BYE" || mp.casa==="") continue;
-          var fase = mp.fase || mp.round || mp.turno || nomiFasi[r] || "";
-          var dup = false;
-          for(var d=0;d<listC.length;d++){ if(listC[d].casa===mp.casa && listC[d].tras===mp.tras) dup=true; }
-          if(!dup) listC.push({coppa:"Coppa di Lega", fase:fase, casa:mp.casa, tras:mp.tras, data:mp.data||"", ora:mp.ora||"", luogo:mp.luogo||"", golC:mp.golC, golT:mp.golT, stato:mp.stato||"Programmata"});
-        }
-      }
-    }
-    var ordine = {"girone":0,"sedicesimi di finale":1,"sedicesimi":1,"ottavi di finale":2,"ottavi":2,"quarti di finale":3,"quarti":3,"semifinale":4,"semifinali":4,"finale":5,"finali":5};
-    listC.sort(function(x,y){
-      var ox = ordine[normTesto(x.fase)]; if(ox==null) ox=99;
-      var oy = ordine[normTesto(y.fase)]; if(oy==null) oy=99;
-      return ox-oy;
-    });
-    var lastF = "";
-    for(var e=0;e<listC.length;e++){
-      var m2 = listC[e];
-      var f = String(m2.fase||"").trim();
-      if(normTesto(f)!==normTesto(lastF)){ h += "<div class='calGiornataTitle'>"+(f?f.toUpperCase():"TURNO")+"</div>"; lastF=f; }
-      var sc2 = (m2.stato==="Giocata") ? "<b>"+(m2.golC==null?"":m2.golC)+" - "+(m2.golT==null?"":m2.golT)+"</b>" : "<span class='badge'>Da giocare</span>";
-      h += "<div class='row'><div><b>"+(m2.casa||"")+" vs "+(m2.tras||"")+"</b><br><span class='small'>"+(m2.data||"")+" "+(m2.ora||"")+" - "+(m2.luogo||"")+"</span></div>"+sc2+"</div>";
-    }
-  }
-  if(!h) h = "<p class='small'>Calendario vuoto.</p>";
-  box.innerHTML = h;
-}
-// FIX ADMIN: quando Admin filtra per Giornata + Lega, usa la stessa logica
-function adminMatchOk(m, giornataSel, legaSel){
-  if(giornataSel && String(giornataSel).toLowerCase().indexOf("tutt") === -1){
-    var gSel = numGiornata(giornataSel);
-    if(gSel>=0 && numGiornata(m.giornata)!==gSel) return false;
-  }
-  if(legaSel && String(legaSel).toLowerCase().indexOf("tutt") === -1){
-    if(!matchDiLega(m, normTesto(legaSel))) return false;
-  }
-  return true;
-}
-// Esponi la funzione perche' i filtri Admin esistenti la possano usare
-window._adminMatchOk = adminMatchOk;
-window._legaDiMatch = legaDiMatch;
-var _oldRenderCal43 = window.render;
-window.render = function(){ if(_oldRenderCal43) _oldRenderCal43(); renderCal421(); };
-setTimeout(renderCal421, 800);
-document.getElementById("calFilter").addEventListener("change", function(){
-  try{ localStorage.setItem("c5_calFilter", this.value); }catch(e){}
-  renderCal421();
-});
-</script>
 <style>
 /* Calendario: via contorno giallo intorno alle partite */
 #calList .row{
@@ -4743,5 +4602,67 @@ html, body, #home, #homePage, .page, main{
   overscroll-behavior-y:auto!important;
 }
 </style>
-</body>
+<script>
+// CALENDARIO V4.5 - fix setCalFilter mancante
+function legaCal(m){
+  // 1) Prima conta m.fase, che è quella giusta anche se il nome squadra è scritto diverso
+  // es. Napoli C5 vs Napoli, Dante vs Dante Futsal
+  if(m.fase) return String(m.fase).trim();
+  if(m.lega) return String(m.lega).trim();
+  if(m.campionato) return String(m.campionato).trim();
+  // 2) Solo se la partita non ha lega, prova teamLeague
+  try{ return teamLeague(m.casa) || "Serie A"; }catch(e){ return "Serie A"; }
+}
+function renderCal45(){
+  var box = document.getElementById("calList");
+  var sel = document.getElementById("calFilter");
+  if(!box || !sel) return;
+  var cf = sel.value || "Serie A";
+  var cfLow = String(cf).toLowerCase().trim();
+  var isCoppa = cfLow.indexOf("coppa") !== -1 || cfLow === "conference" || cfLow.indexOf("mitropa") !== -1;
+  var h = "";
+  if(!isCoppa){
+    var list = [];
+    for(var i=0;i<(window.matches||[]).length;i++){
+      if(legaCal(window.matches[i]) === cf) list.push(window.matches[i]);
+    }
+    list.sort(function(a,b){ return (a.giornata||99)-(b.giornata||99); });
+    var lastG = -1;
+    for(var j=0;j<list.length;j++){
+      var m = list[j];
+      var g = m.giornata || 1;
+      if(g !== lastG){ h += "<div class='calGiornataTitle'>GIORNATA "+g+"</div>"; lastG = g; }
+      var sc = (m.stato === "Giocata") ? "<b>"+(m.golC==null?"":m.golC)+" - "+(m.golT==null?"":m.golT)+"</b>" : "<span class='badge'>Da giocare</span>";
+      h += "<div class='row'><div><b>"+(m.casa||"")+" vs "+(m.tras||"")+"</b><br><span class='small'>Giornata "+g+" - "+(m.data||"")+" "+(m.ora||"")+" - "+(m.luogo||"")+"</span></div>"+sc+"</div>";
+    }
+  } else {
+    var listC = [];
+    for(var k=0;k<(window.coppaMatches||[]).length;k++){
+      var mc = window.coppaMatches[k];
+      if(mc.coppa === cf) listC.push(mc);
+    }
+    var lastF = "";
+    for(var e=0;e<listC.length;e++){
+      var m2 = listC[e];
+      var f = String(m2.fase||"").trim();
+      if(f !== lastF){ h += "<div class='calGiornataTitle'>"+(f?f.toUpperCase():"TURNO")+"</div>"; lastF = f; }
+      var sc2 = (m2.stato === "Giocata") ? "<b>"+(m2.golC==null?"":m2.golC)+" - "+(m2.golT==null?"":m2.golT)+"</b>" : "<span class='badge'>Da giocare</span>";
+      h += "<div class='row'><div><b>"+(m2.casa||"")+" vs "+(m2.tras||"")+"</b><br><span class='small'>"+(m2.data||"")+" "+(m2.ora||"")+" - "+(m2.luogo||"")+"</span></div>"+sc2+"</div>";
+    }
+  }
+  if(!h) h = "<p class='small'>Calendario vuoto.</p>";
+  box.innerHTML = h;
+}
+// Questa è la funzione che il menù chiama con onchange - prima non esisteva
+window.setCalFilter = function(v){
+  var sel = document.getElementById("calFilter");
+  if(sel && v) sel.value = v;
+  try{ localStorage.setItem("c5_calFilter", v); }catch(e){}
+  renderCal45();
+};
+var _oldRender45 = window.render;
+window.render = function(){ if(_oldRender45) _oldRender45(); renderCal45(); };
+setTimeout(renderCal45, 500);
+</script>
+  </body>
 </html>

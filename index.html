@@ -6807,4 +6807,61 @@ function modificaDataOraCoppa(){
   alert("Aggiornato!\n"+casa+" vs "+tras+"\n"+nd.trim()+" "+no.trim()+" - "+nl.trim());
 }
 </script>
+<script>
+// FIX TABELLONE COPPA DI LEGA - mostra data / ora / luogo al posto di "-"
+(function(){
+  if(window.__fixTabData) return;
+  window.__fixTabData = true;
+
+  function dataDi(casa, tras){
+    // 1) Cerca prima nel tabellone legaBracket
+    try{
+      if(window.legaBracket && legaBracket.rounds){
+        for(var r=0;r<legaBracket.rounds.length;r++){
+          for(var m=0;m<legaBracket.rounds[r].length;m++){
+            var mm = legaBracket.rounds[r][m];
+            if(mm && mm.casa===casa && mm.tras===tras && mm.data) return mm;
+          }
+        }
+      }
+    }catch(e){}
+    // 2) Se non c'è lì, cerca in coppaMatches
+    for(var k=0;k<(window.coppaMatches||[]).length;k++){
+      var cm = coppaMatches[k];
+      if(cm && cm.casa===casa && cm.tras===tras && cm.data) return cm;
+    }
+    return null;
+  }
+
+  function fixTabellone(){
+    // Cerca la sezione Coppe
+    var box = document.getElementById('coppe') || document.body;
+    // Trova tutti i "-" soli
+    var tutti = box.querySelectorAll('div, span, p, small');
+    for(var i=0;i<tutti.length;i++){
+      var el = tutti[i];
+      // Solo se il testo è proprio "-" da solo
+      if((el.textContent||'').trim() !== '-') continue;
+      // Il genitore deve contenere "vs", cioè è la riga della partita
+      var gen = el.parentElement;
+      if(!gen) continue;
+      var txt = gen.textContent || '';
+      if(txt.indexOf('vs') === -1) continue;
+      // Estrai Casa e Trasferta: "Atl. Madrink F.C. vs Bar Colle -"
+      var parti = txt.split('vs');
+      if(parti.length < 2) continue;
+      var casa = parti[0].replace(/OTTAVI|QUARTI|SEMIFINALE|FINALE|SEDICESIMI/gi,'').trim().split('\n').pop().trim();
+      var tras = parti[1].trim().split('\n')[0].split('Da giocare')[0].split('-')[0].trim();
+      // Pulisci: togli eventuali "Da giocare"
+      tras = tras.replace('Da giocare','').trim();
+      var m = dataDi(casa, tras);
+      if(!m) continue;
+      el.textContent = '📅 ' + (m.data||'') + ' ' + (m.ora||'') + ' - ' + (m.luogo||'');
+    }
+  }
+
+  setInterval(fixTabellone, 1000);
+  setTimeout(fixTabellone, 800);
+})();
+</script>
 </html>

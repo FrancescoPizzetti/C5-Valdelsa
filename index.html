@@ -2859,7 +2859,7 @@ if(qOtt.length)qhtml+="<div class='qualBox'><b>Ai Quarti:</b><br>"+qOtt.join("<b
 if(qQua.length)qhtml+="<div class='qualBox'><b>In Semifinale:</b><br>"+qQua.join("<br>")+"</div>";
 if(qSem.length)qhtml+="<div class='qualBox'><b>In Finale:</b><br>"+qSem.join("<br>")+"</div>";
 if(qFin.length)qhtml+="<div class='qualBox'><b>VINCE: "+qFin[0]+"</b></div>";
-if(!qhtml)qhtml="<p class='small'>Metti i risultati e qui vedi le qualificate.</p>";
+if(!qhtml)qhtml=""
 el('coppaQualificate').innerHTML=qhtml;
 }else{
 el('coppaQualificate').innerHTML="<p class='small'>Altre Coppe: crea tutto a mano.</p>";

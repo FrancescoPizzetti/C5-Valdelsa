@@ -6948,30 +6948,4 @@ function modificaDataOraCoppa(){
   setTimeout(converti, 800);
 })();
 </script>
-<script>
-// FIX PULIZIE LEGGERE - solo 2 scritte
-(function(){
-  if(window.__fixLeggero) return;
-  window.__fixLeggero = true;
-
-  function pulisci(){
-    var tutti = document.querySelectorAll('p, div, small, span');
-    for(var i=0; i<tutti.length; i++){
-      var t = tutti[i].textContent || '';
-      // Foto 2
-      if(t.indexOf('Ancora nessuna partita') !== -1){
-        tutti[i].style.display = 'none';
-      }
-      if(t.indexOf('Metti i risultati e qui vedi le qualificate') !== -1){
-        tutti[i].style.display = 'none';
-      }
-      // Foto 3
-      if(t.indexOf('Squadre:') !== -1 && t.indexOf('Tabellone da') !== -1){
-        tutti[i].style.display = 'none';
-      }
-    }
-  }
-  setInterval(pulisci, 1500);
-})();
-</script>
 </html>

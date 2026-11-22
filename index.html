@@ -4920,8 +4920,21 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
     var n = parseInt(String(g||"").replace(/[^0-9]/g,""), 10);
     return isNaN(n) ? 999 : n;
   }
-  function rigaCal(m){
-    var sc = (m.stato === "Giocata")
+  function _isRiposa(nome){
+  if(!nome) return false;
+  if(String(nome).trim().toUpperCase()==="RIPOSA") return true;
+  try{
+    for(var i=0;i<(window.teams||[]).length;i++){
+      if(window.teams[i].n===nome && window.teams[i].ritirata) return true;
+    }
+  }catch(e){}
+  return false;
+}
+function rigaCal(m){
+    var _rip = _isRiposa(m.casa) || _isRiposa(m.tras);
+    var sc = _rip
+      ? "<b>RIPOSA</b>"
+      : (m.stato === "Giocata")
       ? "<b>" + (m.golC==null?"":m.golC) + " - " + (m.golT==null?"":m.golT) + "</b>"
       : "<span class='badge'>Da giocare</span>";
     return "<div class='row'><div><b>" + (m.casa||"") + " vs " + (m.tras||"") + "</b><br><span class='small'>"

@@ -6696,43 +6696,6 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
   }, 500);
 })();
 </script>
-<script>
-// FIX RIPOSA v1 - Calendario = RIPOSA mai Da giocare / Home = via card RIPOSA
-(function(){
-  if(window.__fixRiposaV1) return;
-  window.__fixRiposaV1 = true;
-  function isRip(n){
-    if(!n) return false;
-    if(String(n).trim().toUpperCase()==="RIPOSA") return true;
-    try{
-      for(var i=0;i<(window.teams||[]).length;i++){
-        if(window.teams[i].n===n && window.teams[i].ritirata) return true;
-      }
-    }catch(e){}
-    return false;
-  }
-  function pulisci(){
-    try{
-      // 1. CALENDARIO: riga con RIPOSA -> badge diventa RIPOSA
-      document.querySelectorAll('#calList .row').forEach(function(row){
-        if(row.textContent.indexOf('RIPOSA')!==-1){
-          row.querySelectorAll('.badge').forEach(function(b){
-            if(b.textContent.trim()==='Da giocare') b.textContent='RIPOSA';
-          });
-        }
-      });
-      // 2. HOME: card con RIPOSA -> sparisce del tutto
-      document.querySelectorAll('#upcomingMatches .row, #upcomingMatches .mCard').forEach(function(card){
-        if(card.textContent.indexOf('RIPOSA')!==-1) card.remove();
-      });
-    }catch(e){}
-  }
-  var _r = window.render;
-  window.render = function(){ if(_r) _r(); setTimeout(pulisci, 50); };
-  setInterval(pulisci, 1000);
-  setTimeout(pulisci, 800);
-})();
-</script>
 </body>
 <script>
 (function(){

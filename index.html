@@ -6864,4 +6864,55 @@ function modificaDataOraCoppa(){
   setTimeout(fixTabellone, 800);
 })();
 </script>
+<script>
+// FIX SCRITTE - Foto 1 e Foto 2
+(function(){
+  if(window.__fixScritte) return;
+  window.__fixScritte = true;
+
+  function rinomina(){
+    // --- FOTO 1: PASSO 2 ---
+    // Trova tutte le label "SCEGLI LA PARTITA"
+    document.querySelectorAll('.label, label, div').forEach(function(el){
+      var t = (el.textContent||'').trim();
+      // Solo quella del PASSO 2: è esattamente "SCEGLI LA PARTITA"
+      if(t === 'SCEGLI LA PARTITA'){
+        // Controlla che vicino ci sia il menu fMatchSelect
+        var box = el.parentElement;
+        if(box && box.querySelector('#fMatchSelect')){
+          el.textContent = 'SCEGLI LA PARTITA PER MODIFICARE RISULTATO / DATA / LUOGO';
+          el.style.fontSize = '13px';
+        }
+      }
+    });
+
+    // --- FOTO 2: Box CANCELLARE ---
+    // Trova il bottone MOSTRA PARTITE, il suo box è quello da cancellare
+    document.querySelectorAll('button').forEach(function(btn){
+      if((btn.textContent||'').trim() !== 'MOSTRA PARTITE') return;
+      var box = btn.parentElement;
+      // Salgo fino al box con bordo giallo
+      for(var i=0;i<4 && box;i++){ if(box.querySelector('select')) break; box = box.parentElement; }
+      if(!box) return;
+      // Dentro quel box, la label LEGA diventa...
+      box.querySelectorAll('.label, label, div').forEach(function(el){
+        if((el.textContent||'').trim() === 'LEGA'){
+          el.textContent = 'SCEGLI LA PARTITA DA CANCELLARE';
+          el.style.fontSize = '13px';
+        }
+      });
+      // Aggiorno anche la frasina sotto, se c'è
+      box.querySelectorAll('p, div, small').forEach(function(el){
+        var txt = el.textContent||'';
+        if(txt.indexOf('Metti Lega + Giornata') !== -1){
+          el.textContent = 'Scegli la partita da cancellare: metti Lega + Giornata e premi MOSTRA. Solo così vedi la lista, altrimenti resta nascosta. Per cancellare, premi la X rossa.';
+        }
+      });
+    });
+  }
+
+  setInterval(rinomina, 1000);
+  setTimeout(rinomina, 800);
+})();
+</script>
 </html>

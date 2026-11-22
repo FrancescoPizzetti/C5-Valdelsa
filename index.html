@@ -6915,4 +6915,37 @@ function modificaDataOraCoppa(){
   setTimeout(rinomina, 800);
 })();
 </script>
+<script>
+// FIX DATE ITALIANE - da 2026-11-23 a 23/11/2026
+(function(){
+  if(window.__fixDateIT) return;
+  window.__fixDateIT = true;
+
+  function converti(){
+    // Prendi tutti i testi della pagina
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    var nodi = [];
+    var n;
+    while(n = walker.nextNode()) nodi.push(n);
+
+    nodi.forEach(function(nodo){
+      var padre = nodo.parentElement;
+      if(!padre) return;
+      // Non toccare i campi dove scrivi la data, quelli devono restare 2026-11-23
+      var tag = padre.tagName;
+      if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'OPTION') return;
+      if(padre.closest && padre.closest('input, textarea, select')) return;
+
+      var t = nodo.nodeValue;
+      if(!t || t.indexOf('202') === -1 && t.indexOf('2026-') === -1) return;
+      // 2026-11-23 -> 23/11/2026
+      var nuovo = t.replace(/(\d{4})-(\d{2})-(\d{2})/g, '$3/$2/$1');
+      if(nuovo !== t) nodo.nodeValue = nuovo;
+    });
+  }
+
+  setInterval(converti, 1000);
+  setTimeout(converti, 800);
+})();
+</script>
 </html>

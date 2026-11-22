@@ -4514,12 +4514,12 @@ function ridisegnaHome(){
     var box=document.getElementById('upcomingMatches');
     if(box){
       var list=[];
-      (window.matches||[]).forEach(function(m){
-        if(m && m.stato==='Programmata' && m.data)
+(window.matches||[]).forEach(function(m){
+        if(m && m.stato==='Programmata' && m.data && !_isRiposa(m.casa) && !_isRiposa(m.tras))
           list.push({data:m.data, ora:m.ora||'', casa:m.casa, tras:m.tras, luogo:m.luogo||'', giornata:m.giornata||1, comp:compDi(m,false), coppa:false});
       });
       (window.coppaMatches||[]).forEach(function(m){
-        if(m && m.stato==='Programmata' && m.data)
+        if(m && m.stato==='Programmata' && m.data && !_isRiposa(m.casa) && !_isRiposa(m.tras))
           list.push({data:m.data, ora:m.ora||'', casa:m.casa, tras:m.tras, luogo:m.luogo||'', giornata:'', comp:compDi(m,true), coppa:true, fase:m.fase||''});
       });
       list.sort(function(a,b){return String(a.data+a.ora).localeCompare(String(b.data+b.ora));});

@@ -578,6 +578,7 @@ function showCalTab(t){
 <div class="label">CHI HA VINTO AI RIGORI?</div>
 <select id="fCoppaVincRigori"><option value="">-</option></select>
 <button class="big" type="button" onclick="saveCoppaMatch()">🏆 Salva Partita di Coppa</button>
+<button class="big" type="button" style="background:#3b82f6;color:#fff" onclick="modificaDataOraCoppa()">🕘 MODIFICA DATA / ORA / LUOGO COPPA</button>
 <button class="big" type="button" style="background:#111827;color:#fff;border:1px solid #444" onclick="svuotaCoppe()">🗑️ ELIMINA TUTTE LE PARTITE DI COPPA</button>
 <div id="legaAdminBox"></div><div id="coppaAdminList"></div>
 </div>
@@ -6747,5 +6748,63 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
     vecchiaCoppa();
   };
 })();
+</script>
+<script>
+// FIX MODIFICA COPPA - Data / Ora / Luogo senza doppioni, anche per Coppa di Lega
+function modificaDataOraCoppa(){
+  var coppa = document.getElementById("fCoppa") ? document.getElementById("fCoppa").value : "";
+  var casa = document.getElementById("fCoppaCasa") ? document.getElementById("fCoppaCasa").value : "";
+  var tras = document.getElementById("fCoppaTras") ? document.getElementById("fCoppaTras").value : "";
+  if(!casa || !tras){ alert("Scegli prima Casa e Trasferta!"); return; }
+
+  // 1) Trova la partita vecchia, per mostrarti cosa c'è ora
+  var vecchia = null;
+  try{
+    if(coppa === "Coppa di Lega" && window.legaBracket && legaBracket.rounds){
+      for(var r=0;r<legaBracket.rounds.length;r++){
+        for(var m=0;m<legaBracket.rounds[r].length;m++){
+          var mm = legaBracket.rounds[r][m];
+          if(mm.casa===casa && mm.tras===tras) vecchia = mm;
+        }
+      }
+    }
+  }catch(e){}
+  if(!vecchia){
+    for(var k=0;k<(window.coppaMatches||[]).length;k++){
+      var cm = coppaMatches[k];
+      if(cm.coppa===coppa && cm.casa===casa && cm.tras===tras) vecchia = cm;
+    }
+  }
+  if(!vecchia){ alert("Questa partita non c'è nel tabellone.\nControlla Coppa, Casa e Trasferta."); return; }
+
+  // 2) Chiede i nuovi valori, con i vecchi già scritti
+  var nd = prompt("Nuova DATA (AAAA-MM-GG):", vecchia.data || "");
+  if(nd===null) return;
+  var no = prompt("Nuova ORA:", vecchia.ora || "21:00");
+  if(no===null) return;
+  var nl = prompt("Nuovo LUOGO:", vecchia.luogo || "Bernino Indoor");
+  if(nl===null) return;
+
+  // 3) Aggiorna DOVUNQUE sta la partita, senza crearne una nuova
+  var trovata = false;
+  try{
+    if(window.legaBracket && legaBracket.rounds){
+      for(var r2=0;r2<legaBracket.rounds.length;r2++){
+        for(var m2=0;m2<legaBracket.rounds[r2].length;m2++){
+          var mm2 = legaBracket.rounds[r2][m2];
+          if(mm2.casa===casa && mm2.tras===tras){ mm2.data=nd.trim(); mm2.ora=no.trim(); mm2.luogo=nl.trim(); trovata=true; }
+        }
+      }
+    }
+  }catch(e){}
+  for(var k2=0;k2<(window.coppaMatches||[]).length;k2++){
+    var cm2 = coppaMatches[k2];
+    if(cm2.coppa===coppa && cm2.casa===casa && cm2.tras===tras){ cm2.data=nd.trim(); cm2.ora=no.trim(); cm2.luogo=nl.trim(); trovata=true; }
+  }
+  if(!trovata){ alert("Partita non trovata!"); return; }
+
+  save();
+  alert("Aggiornato!\n"+casa+" vs "+tras+"\n"+nd.trim()+" "+no.trim()+" - "+nl.trim());
+}
 </script>
 </html>

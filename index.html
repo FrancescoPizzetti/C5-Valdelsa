@@ -6683,6 +6683,96 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
   }, 500);
 })();
 </script>
+<script>
+// COPPA DI LEGA - DATA ORA LUOGO - incolli 1 volta sola
+(function(){
+  // Crea la scatolina in fondo alla pagina
+  var box = document.createElement("div");
+  box.style.border = "2px solid #333";
+  box.style.padding = "12px";
+  box.style.margin = "16px";
+  box.style.background = "#fff8dc";
+  box.innerHTML = "<h3>Coppa di Lega - Data e Ora</h3>" +
+    "<label>Turno:</label><br><select id='legaTurno' style='width:100%;padding:8px'></select><br><br>" +
+    "<label>Partita:</label><br><select id='legaPartita' style='width:100%;padding:8px'></select><br><br>" +
+    "<label>Data:</label><br><input id='legaData' type='date' style='width:100%;padding:8px'><br><br>" +
+    "<label>Ora:</label><br><input id='legaOra' type='time' style='width:100%;padding:8px'><br><br>" +
+    "<label>Luogo / Campo:</label><br><input id='legaLuogo' type='text' placeholder='es. Bernino Indoor' style='width:100%;padding:8px'><br><br>" +
+    "<button id='legaSalva' style='width:100%;padding:10px;font-size:16px'>Salva Data Ora Luogo</button>" +
+    "<p id='legaMsg' style='color:green'></p>";
+  document.body.appendChild(box);
+
+  var selTurno = document.getElementById("legaTurno");
+  var selPartita = document.getElementById("legaPartita");
+
+  function riempiTurni(){
+    selTurno.innerHTML = "";
+    var nomi = ["Ottavi","Quarti","Semifinali","Finale"];
+    for(var r=0;r<legaBracket.rounds.length;r++){
+      var o = document.createElement("option");
+      o.value = r;
+      o.text = nomi[r] || ("Turno " + (r+1));
+      selTurno.appendChild(o);
+    }
+    riempiPartite();
+  }
+
+  function riempiPartite(){
+    selPartita.innerHTML = "";
+    var r = parseInt(selTurno.value || 0);
+    var lista = legaBracket.rounds[r] || [];
+    for(var i=0;i<lista.length;i++){
+      var m = lista[i];
+      var o = document.createElement("option");
+      o.value = i;
+      o.text = (m.casa||"?") + " vs " + (m.tras||"?");
+      selPartita.appendChild(o);
+    }
+    mostraValori();
+  }
+
+  function mostraValori(){
+    var r = parseInt(selTurno.value || 0);
+    var i = parseInt(selPartita.value || 0);
+    var m = (legaBracket.rounds[r]||[])[i];
+    if(!m) return;
+    document.getElementById("legaData").value = (m.data||"").slice(0,10);
+    document.getElementById("legaOra").value = (m.ora||"").slice(0,5);
+    document.getElementById("legaLuogo").value = m.luogo || "";
+  }
+
+  selTurno.onchange = riempiPartite;
+  selPartita.onchange = mostraValori;
+
+  document.getElementById("legaSalva").onclick = function(){
+    var r = parseInt(selTurno.value || 0);
+    var i = parseInt(selPartita.value || 0);
+    var m = legaBracket.rounds[r][i];
+    m.data = document.getElementById("legaData").value;
+    m.ora = document.getElementById("legaOra").value;
+    m.luogo = document.getElementById("legaLuogo").value;
+
+    // Salva
+    try{ localStorage.setItem("legaBracket", JSON.stringify(legaBracket)); }catch(e){}
+    try{ if(window.salvaDati) window.salvaDati(); }catch(e){}
+    try{ if(window.salvaTutto) window.salvaTutto(); }catch(e){}
+    try{ if(window.saveData) window.saveData(); }catch(e){}
+
+    // Ridisegna il tabellone
+    try{ if(window.renderLegaBracket) window.renderLegaBracket(); }catch(e){}
+    try{ if(window.renderLega) window.renderLega(); }catch(e){}
+    try{ if(window.renderAll) window.renderAll(); }catch(e){}
+    try{ if(window.aggiornaTutto) window.aggiornaTutto(); }catch(e){}
+    try{ if(window.render) window.render(); }catch(e){}
+
+    document.getElementById("legaMsg").innerText = "Salvato! " + m.casa + " vs " + m.tras + " - " + m.data + " " + m.ora + " " + m.luogo;
+    // Ricarica la pagina per far vedere il trattino diventato data
+    setTimeout(function(){ location.reload(); }, 600);
+  };
+
+  riempiTurni();
+})();
+</script>
 </body>
 <script>
 (function(){

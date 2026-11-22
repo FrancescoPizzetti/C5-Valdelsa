@@ -4479,7 +4479,18 @@ function classeComp(comp){
   if(comp.indexOf('Coppa')===0 || comp.indexOf('Conference')===0) return 'coppa';
   return 'a';
 }
-function ridisegnaHome(){
+function _isRiposa(nome){
+  if(!nome) return false;
+  if(String(nome).trim().toUpperCase()==="RIPOSA") return true;
+  try{
+    for(var i=0;i<(window.teams||[]).length;i++){
+      if(window.teams[i].n===nome && window.teams[i].ritirata) return true;
+    }
+  }catch(e){}
+  return false;
+}
+window._isRiposa = _isRiposa;
+  function ridisegnaHome(){
   try{
     // PROSSIME - 4 partite
     var box=document.getElementById('upcomingMatches');

@@ -6948,4 +6948,62 @@ function modificaDataOraCoppa(){
   setTimeout(converti, 800);
 })();
 </script>
+<script>
+// FIX PULIZIE - 1a Fas + Ancora nessuna partita + Squadre 30
+(function(){
+  if(window.__fixPulizie) return;
+  window.__fixPulizie = true;
+
+  function pulisci(){
+    // --- 1) FOTO 1: Nascondi colonna 1a Fas solo in B1 e B2 ---
+    var titolo = document.body.innerText || '';
+    var siamoInB1B2 = titolo.indexOf('Classifica - Serie B1') !== -1 || titolo.indexOf('Classifica - Serie B2') !== -1;
+    if(siamoInB1B2){
+      document.querySelectorAll('table th, table td, th, td').forEach(function(cella){
+        if((cella.textContent||'').trim() === '1a Fas' || (cella.textContent||'').trim() === '1a Fase'){
+          cella.style.display = 'none';
+        }
+      });
+      // Se la tabella è fatta a div, nascondi anche le celle di quella colonna
+      // Trova l'indice della colonna 1a Fas
+      document.querySelectorAll('table').forEach(function(tab){
+        var intestazioni = tab.querySelectorAll('thead th, tr:first-child th, tr:first-child td');
+        var idx = -1;
+        intestazioni.forEach(function(th, i){ if((th.textContent||'').trim().indexOf('1a Fas') !== -1) idx = i; });
+        if(idx !== -1){
+          tab.querySelectorAll('tr').forEach(function(riga){
+            var celle = riga.querySelectorAll('th, td');
+            if(celle[idx]) celle[idx].style.display = 'none';
+          });
+        }
+      });
+    }
+
+    // --- 2) FOTO 2: Nascondi "Ancora nessuna partita..." in tutte le Coppe ---
+    document.querySelectorAll('p, div, small, span').forEach(function(el){
+      var t = (el.textContent||'').trim();
+      if(t.indexOf('Ancora nessuna partita') !== -1){
+        el.style.display = 'none';
+        // Nascondi anche la riga dopo "Metti i risultati..."
+        var dopo = el.nextElementSibling;
+        if(dopo && (dopo.textContent||'').indexOf('Metti i risultati') !== -1) dopo.style.display = 'none';
+      }
+      if(t.indexOf('Metti i risultati e qui vedi le qualificate') !== -1){
+        el.style.display = 'none';
+      }
+    });
+
+    // --- 3) FOTO 3: Nascondi "Squadre: 30 - Tabellone da 32 - BYE: 2" ---
+    document.querySelectorAll('p, div, small, span').forEach(function(el){
+      var t = (el.textContent||'').trim();
+      if(t.indexOf('Squadre:') !== -1 && t.indexOf('Tabellone da') !== -1 && t.indexOf('BYE:') !== -1){
+        el.style.display = 'none';
+      }
+    });
+  }
+
+  setInterval(pulisci, 1000);
+  setTimeout(pulisci, 800);
+})();
+</script>
 </html>

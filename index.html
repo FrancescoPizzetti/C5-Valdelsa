@@ -4435,11 +4435,11 @@ function p3Prossime(){
     var box=document.getElementById('upcomingMatches');
     if(!box) return;
     var list=[];
-    var camp=(window.matches||[]).filter(function(m){return m && m.stato==='Programmata' && m.data;});
+    var camp=(window.matches||[]).filter(function(m){return m && m.stato==='Programmata' && m.data && !_isRiposa(m.casa) && !_isRiposa(m.tras);});
     for(var i=0;i<camp.length;i++){
       list.push({data:camp[i].data, ora:camp[i].ora||'', casa:camp[i].casa, tras:camp[i].tras, luogo:camp[i].luogo||'', etichetta:'Giornata '+(camp[i].giornata||1)});
     }
-    var cop=(window.coppaMatches||[]).filter(function(m){return m && m.stato==='Programmata' && m.data;});
+    var cop=(window.coppaMatches||[]).filter(function(m){return m && m.stato==='Programmata' && m.data && !_isRiposa(m.casa) && !_isRiposa(m.tras);});
     for(var j=0;j<cop.length;j++){
       list.push({data:cop[j].data, ora:cop[j].ora||'', casa:cop[j].casa, tras:cop[j].tras, luogo:cop[j].luogo||'', etichetta:(cop[j].coppa||'Coppa')+' - '+(cop[j].fase||'')});
     }
@@ -6694,6 +6694,43 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
       albo.classList.add("comp-mostra");
     }
   }, 500);
+})();
+</script>
+<script>
+// FIX RIPOSA v1 - Calendario = RIPOSA mai Da giocare / Home = via card RIPOSA
+(function(){
+  if(window.__fixRiposaV1) return;
+  window.__fixRiposaV1 = true;
+  function isRip(n){
+    if(!n) return false;
+    if(String(n).trim().toUpperCase()==="RIPOSA") return true;
+    try{
+      for(var i=0;i<(window.teams||[]).length;i++){
+        if(window.teams[i].n===n && window.teams[i].ritirata) return true;
+      }
+    }catch(e){}
+    return false;
+  }
+  function pulisci(){
+    try{
+      // 1. CALENDARIO: riga con RIPOSA -> badge diventa RIPOSA
+      document.querySelectorAll('#calList .row').forEach(function(row){
+        if(row.textContent.indexOf('RIPOSA')!==-1){
+          row.querySelectorAll('.badge').forEach(function(b){
+            if(b.textContent.trim()==='Da giocare') b.textContent='RIPOSA';
+          });
+        }
+      });
+      // 2. HOME: card con RIPOSA -> sparisce del tutto
+      document.querySelectorAll('#upcomingMatches .row, #upcomingMatches .mCard').forEach(function(card){
+        if(card.textContent.indexOf('RIPOSA')!==-1) card.remove();
+      });
+    }catch(e){}
+  }
+  var _r = window.render;
+  window.render = function(){ if(_r) _r(); setTimeout(pulisci, 50); };
+  setInterval(pulisci, 1000);
+  setTimeout(pulisci, 800);
 })();
 </script>
 </body>

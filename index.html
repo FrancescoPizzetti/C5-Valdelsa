@@ -5039,7 +5039,7 @@ function rigaCal(m){
 
     // --- CAMPIONATO: Serie A / B / B1 / B2, solo m.fase, ordinato 1,2,3...26 ---
     var list = (window.matches||[]).filter(function(m){ return legaDi(m) === cf; });
-    list.sort(function(a,b){ return numG(a.giornata) - numG(b.giornata); });
+    list.sort(function(a,b){ var g=numG(a.giornata)-numG(b.giornata); if(g) return g; var da=String(a.data||'').split('/').reverse().join('-'); var db=String(b.data||'').split('/').reverse().join('-'); if(da!==db) return da<db?-1:1; return String(a.ora||'')<String(b.ora||'')?-1:1; });
     var lastG = -1;
     for(var q=0;q<list.length;q++){
       var m3 = list[q];

@@ -6440,17 +6440,21 @@ Vi partecipano 4 squadre: la vincente della Serie A, la vincente della Coppa Cam
     });
     var arr = Object.keys(mappa).map(function(k){ return mappa[k]; });
     // Se non ci sono marcatori registrati, usa il totale giocatori (vecchi dati)
-    if(arr.length === 0 && window.players){
-      window.players.forEach(function(p){
-        if(!p || !p.n) return;
-        var lega = legaDiSquadra(p.t || "");
-        var eB = (lega === "Serie B" || lega === "Serie B1" || lega === "Serie B2");
-        var eA = (lega === "Serie A");
-        if(famiglia === "A" && !eA) return;
-        if(famiglia === "B" && !eB) return;
-        if((p.g || 0) > 0) arr.push({ nome: p.n, squadra: p.t || "", gol: p.g });
-      });
-    }
+if(window.players){
+  window.players.forEach(function(p){
+    if(!p || !p.n) return;
+    if(!(p.base || 0)) return;
+    var lega = legaDiSquadra(p.t || "");
+    var eB = (lega === "Serie B" || lega === "Serie B1" || lega === "Serie B2");
+    var eA = (lega === "Serie A");
+    if(famiglia === "A" && !eA) return;
+    if(famiglia === "B" && !eB) return;
+    var chiave = p.n + "||" + (p.t || "");
+    if(!mappa[chiave]) mappa[chiave] = { nome: p.n, squadra: p.t || "", gol: 0 };
+    mappa[chiave].gol += (p.base || 0);
+  });
+  arr = Object.keys(mappa).map(function(k){ return mappa[k]; });
+}
     arr.sort(function(a,b){ return b.gol - a.gol || a.nome.localeCompare(b.nome); });
     return arr.slice(0, 5);
   }

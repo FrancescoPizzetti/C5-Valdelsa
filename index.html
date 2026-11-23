@@ -2868,6 +2868,7 @@ var html="";
 for(var fi=0;fi<fasi.length;fi++){
 var f=fasi[fi];
 var fm=list.filter(function(m){return m.fase===f;});
+  fm.sort(function(a,b){function k(x){var d=(x.data||"");if(d.indexOf("/")>=0){var p=d.split("/");d=p[2]+"-"+p[1]+"-"+p[0];}return d+" "+(x.ora||"");}var ka=k(a),kb=k(b);return ka<kb?-1:ka>kb?1:0;});
 if(!fm.length)continue;
 html+="<div class='faseTitle'>"+f+" - "+curCoppa+"</div>";
 for(var fj=0;fj<fm.length;fj++){

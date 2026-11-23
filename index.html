@@ -4992,7 +4992,8 @@ function rigaCal(m){
       var br = window.legaBracket;
       if(br && br.size && br.rounds && br.rounds.length){
         for(var r=0;r<br.rounds.length;r++){
-          var round = br.rounds[r] || [];
+          var round = (br.rounds[r] || []).slice();
+round.sort(function(a,b){function k(x){var d=String(x.data||"");if(d.indexOf("/")>=0){var p=d.split("/");d=p[2]+"-"+p[1]+"-"+p[0];}return d+" "+String(x.ora||"");}var ka=k(a),kb=k(b);return ka<kb?-1:ka>kb?1:0;});
           if(!round.length) continue;
           var titolo = "TURNO " + (r+1);
           try{ if(typeof legaRoundName === "function") titolo = legaRoundName(round.length*2); }catch(e){}

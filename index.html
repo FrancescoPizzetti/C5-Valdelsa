@@ -2788,7 +2788,8 @@ if(el('alboInds')){
   var listInd=indTitles.slice();
   if(curAlboYearInd)listInd=listInd.filter(function(x){return x.anno==curAlboYearInd});
 if(curIndTrofeo)listInd=listInd.filter(function(x){return x.trofeo==curIndTrofeo});
-var hai="";
+listInd.sort(function(a,b){return b.anno - a.anno;});
+  var hai="";
 for(var ii=0;ii<listInd.length;ii++){
 hai+="<div class='row'><div><b>"+listInd[ii].nome+"</b><br><span class='small'>"+listInd[ii].trofeo+"</span></div><span class='badge'>"+listInd[ii].anno+"</span></div>";
 }

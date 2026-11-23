@@ -2115,6 +2115,23 @@ save();
 alert("Calendario ripristinato!");
 }catch(e){alert("Backup non trovato.");}
 }
+function toRomano(num){
+var map=[[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];
+var out="";
+for(var i=0;i<map.length;i++){while(num>=map[i][0]){out+=map[i][1];num-=map[i][0];}}
+return out;
+}
+function aggiornaHeaderStagione(){
+var st=settings.stagione||"2026/27";
+var p=st.split("/");
+var a1=parseInt(p[0]);
+if(isNaN(a1))a1=2026;
+var a2=a1+1;
+var edizione=a1-2013;
+var rom=toRomano(edizione);
+var txt=rom+" campionato di C5 della Valdelsa<br><span style='font-size:12px;opacity:0.8'>Stagione "+a1+"/"+a2+"</span>";
+if(el('hdrSub'))el('hdrSub').innerHTML=txt;
+}
 function applySettings(){
 if(el('hdrSub'))el('hdrSub').textContent=settings.sub;
 if(el('sTitle'))el('sTitle').value=settings.title;

@@ -1174,8 +1174,28 @@ var clA=cl.filter(function(x){return teamLeague(x[0])==="Serie A";});
 var clB=cl.filter(function(x){return teamLeague(x[0])==="Serie B";});
 var clB1=cl.filter(function(x){return teamLeague(x[0])==="Serie B1";});
 var clB2=cl.filter(function(x){return teamLeague(x[0])==="Serie B2";});
-var capA=players.slice().filter(function(p){return teamLeague(p.t)==="Serie A";}).sort(function(a,b){return b.g-a.g;})[0];
-var capB=players.slice().filter(function(p){return teamLeague(p.t)==="Serie B";}).sort(function(a,b){return b.g-a.g;})[0];
+function golCampionato(p){
+  var tot = p.base || 0;
+  for(var mi=0; mi<matches.length; mi++){
+    var mm = matches[mi];
+    if(!mm.scorers) continue;
+    for(var si=0; si<mm.scorers.length; si++){
+      if(mm.scorers[si].n===p.n && !mm.scorers[si].autogol) tot += (mm.scorers[si].gol||0);
+    }
+  }
+  return tot;
+}
+var capA = players.slice().filter(function(p){return teamLeague(p.t)==="Serie A";}).sort(function(a,b){return golCampionato(b)-golCampionato(a);})[0];
+var capB = players.slice().filter(function(p){var l=teamLeague(p.t); return l==="Serie B"||l==="Serie B1"||l==="Serie B2";}).sort(function(a,b){return golCampionato(b)-golCampionato(a);})[0];
+function assegnaIndAuto(nome, squadra, trofeo){
+  if(!nome) return;
+  for(var ii=0; ii<indTitles.length; ii++){
+    if(indTitles[ii].trofeo===trofeo && indTitles[ii].anno===annoTitolo) return;
+  }
+  indTitles.push({nome:nome, trofeo:trofeo, anno:annoTitolo, team:squadra||""});
+}
+if(capA) assegnaIndAuto(capA.n, capA.t, "Capocannoniere Serie A");
+if(capB) assegnaIndAuto(capB.n, capB.t, "Capocannoniere Serie B");
 var vincCoppa=coppaWinners("Coppa di Lega","Finale")[0]||"";
 var partsAnno=stag.split("/");
 var annoTitolo=2026;

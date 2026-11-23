@@ -2058,7 +2058,6 @@ players.sort(function(a,b){ return (a.n||"").toLowerCase().localeCompare((b.n||"
   for(var _p=0;_p<players.length;_p++) players[_p].g=players[_p].base||0;
   var _all=[];
   if(window.matches) _all=_all.concat(matches);
-  if(window.coppaMatches) _all=_all.concat(coppaMatches);
   for(var _i=0;_i<_all.length;_i++){
     var _m=_all[_i]; if(!_m||!_m.scorers) continue;
     for(var _k=0;_k<_m.scorers.length;_k++){

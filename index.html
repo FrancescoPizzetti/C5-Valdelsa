@@ -6748,7 +6748,10 @@ function aggiornaAbbinamentiCoppa(){
   var lista = [];
   var visti = {};
 
-  function aggiungi(casa, tras, fase){
+  function aggiungi(casa, tras, fase, stato, golC, golT, winner){
+    if(stato==="Giocata") return;
+    if(winner) return;
+    if(golC!=="" && golC!=null && golT!=="" && golT!=null) return;
     if(!casa || !tras || casa==="BYE" || tras==="BYE" || casa==="—" || tras==="—") return;
     var k = casa+"||"+tras+"||"+fase;
     if(visti[k]) return;

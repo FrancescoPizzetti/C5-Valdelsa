@@ -6946,5 +6946,28 @@ function modificaDataOraCoppa(){
   setInterval(converti, 1000);
   setTimeout(converti, 800);
 })();
+// FIX Albo d'Oro - dal piu' recente al piu' vecchio
+function ordinaAlboDOro(){
+  var sezioni = document.querySelectorAll('[id*="albo"], [class*="albo"]');
+  var contenitori = sezioni.length ? sezioni : [document.body];
+  for(var c=0; c<contenitori.length; c++){
+    var cont = contenitori[c];
+    var figli = [];
+    for(var i=0; i<cont.children.length; i++){ figli.push(cont.children[i]); }
+    var conAnno = [];
+    for(var k=0; k<figli.length; k++){
+      if(/\b(19|20)\d{2}\b/.test(figli[k].textContent)){ conAnno.push(figli[k]); }
+    }
+    if(conAnno.length < 2) continue;
+    conAnno.sort(function(a,b){
+      var mA = a.textContent.match(/\b(19|20)\d{2}\b/) || [0];
+      var mB = b.textContent.match(/\b(19|20)\d{2}\b/) || [0];
+      return parseInt(mB[0]) - parseInt(mA[0]);
+    });
+    for(var j=0; j<conAnno.length; j++){ cont.appendChild(conAnno[j]); }
+  }
+}
+setTimeout(ordinaAlboDOro, 500);
+setTimeout(ordinaAlboDOro, 1500);
 </script>
 </html>

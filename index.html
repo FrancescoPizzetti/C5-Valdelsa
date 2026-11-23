@@ -2142,11 +2142,11 @@ break;
 }
 }
 for(var j=0;j<tutti.length;j++){
-if(tutti[j].textContent.trim()==="C5"){
+if(tutti[j].children.length===0 && tutti[j].textContent.trim()==="C5"){
 tutti[j].style.display="none";
 break;
 }
-}
+  }
 if(el('hdrSub'))el('hdrSub').innerHTML="Stagione "+a1+"/"+a2;
   }
 function applySettings(){

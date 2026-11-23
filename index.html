@@ -4731,7 +4731,7 @@ function renderCal45(){
     for(var i=0;i<(window.matches||[]).length;i++){
       if(legaCal(window.matches[i]) === cf) list.push(window.matches[i]);
     }
-    list.sort(function(a,b){ return (a.giornata||99)-(b.giornata||99); });
+    list.sort(function(a,b){ var g=(a.giornata||99)-(b.giornata||99); if(g) return g; var da=String(a.data||'').split('/').reverse().join('-'); var db=String(b.data||'').split('/').reverse().join('-'); if(da!==db) return da<db?-1:1; return String(a.ora||'')<String(b.ora||'')?-1:1; });
     var lastG = -1;
     for(var j=0;j<list.length;j++){
       var m = list[j];
@@ -4861,7 +4861,7 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
     var cur = sel.value;
     var h = "";
     var list = (window.matches||[]).slice();
-    list.sort(function(a,b){ return (a.giornata||1)-(b.giornata||1); });
+    list.sort(function(a,b){ var g=(a.giornata||99)-(b.giornata||99); if(g) return g; var da=String(a.data||'').split('/').reverse().join('-'); var db=String(b.data||'').split('/').reverse().join('-'); if(da!==db) return da<db?-1:1; return String(a.ora||'')<String(b.ora||'')?-1:1; });
     for(var i=0;i<list.length;i++){
       var m = list[i];
       if(g && String(m.giornata||1) !== String(g)) continue;

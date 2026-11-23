@@ -5026,7 +5026,9 @@ round.sort(function(a,b){function k(x){var d=String(x.data||"");if(d.indexOf("/"
         var fa = String(a.fase||"").toLowerCase(), fb = String(b.fase||"").toLowerCase();
         var oa = 99, ob = 99;
         for(var k in ordine){ if(fa.indexOf(k)!==-1) oa = ordine[k]; if(fb.indexOf(k)!==-1) ob = ordine[k]; }
-        return oa - ob;
+        if(oa!==ob) return oa - ob;
+function k(x){var d=String(x.data||"");if(d.indexOf("/")>=0){var p=d.split("/");d=p[2]+"-"+p[1]+"-"+p[0];}return d+" "+String(x.ora||"");}
+var ka=k(a),kb=k(b);return ka<kb?-1:ka>kb?1:0;
       });
       var lastF = "";
       for(var j=0;j<listC.length;j++){

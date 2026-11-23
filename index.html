@@ -6765,7 +6765,7 @@ function aggiornaAbbinamentiCoppa(){
       for(var r=0;r<legaBracket.rounds.length;r++){
         for(var m=0;m<legaBracket.rounds[r].length;m++){
           var mm = legaBracket.rounds[r][m];
-          if(mm) aggiungi(mm.casa, mm.tras, mm.fase || mm.round || "");
+          if(mm) aggiungi(mm.casa, mm.tras, mm.fase || mm.round || "", mm.stato, mm.golC, mm.golT, mm.winner);
         }
       }
     }

@@ -6775,7 +6775,7 @@ function aggiornaAbbinamentiCoppa(){
   try{
     for(var k=0;k<(window.coppaMatches||[]).length;k++){
       var cm = coppaMatches[k];
-      if(cm && cm.coppa===coppa) aggiungi(cm.casa, cm.tras, cm.fase);
+      if(cm && cm.coppa===coppa) aggiungi(cm.casa, cm.tras, cm.fase, cm.stato, cm.golC, cm.golT, cm.winner);
     }
   }catch(e){}
 

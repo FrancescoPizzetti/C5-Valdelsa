@@ -6946,39 +6946,5 @@ function modificaDataOraCoppa(){
   setInterval(converti, 1000);
   setTimeout(converti, 800);
 })();
-// FIX v2 Albo d'Oro - ordina per anno decrescente
-function ordinaAlboV2(){
-  var tutti = document.querySelectorAll('div, ul, section');
-  for(var t=0; t<tutti.length; t++){
-    var cont = tutti[t];
-    if(cont.children.length < 2) continue;
-    // prendi solo i figli che hanno un anno tipo 2022
-    var conAnno = [];
-    for(var i=0; i<cont.children.length; i++){
-      var el = cont.children[i];
-      if(/\b(19|20)\d{2}\b/.test(el.textContent)){ conAnno.push(el); }
-    }
-    // se non sono almeno 2 con anno, o se sono troppi (tutta la pagina), salta
-    if(conAnno.length < 2 || conAnno.length > 50) continue;
-    // controlla che siano davvero una lista di trofei: tutti devono avere un anno
-    // e il padre non deve essere body
-    if(cont.tagName === 'BODY') continue;
-    conAnno.sort(function(a,b){
-      var mA = a.textContent.match(/\b(19|20)\d{2}\b/) || [0];
-      var mB = b.textContent.match(/\b(19|20)\d{2}\b/) || [0];
-      return parseInt(mB[0]) - parseInt(mA[0]);
-    });
-    for(var j=0; j<conAnno.length; j++){ cont.appendChild(conAnno[j]); }
-  }
-}
-// Provalo piu' volte perche' l'Albo si carica dopo
-setTimeout(ordinaAlboV2, 500);
-setTimeout(ordinaAlboV2, 1200);
-setTimeout(ordinaAlboV2, 2500);
-// E anche ogni volta che clicchi qualcosa nel menu
-document.addEventListener('click', function(){
-  setTimeout(ordinaAlboV2, 600);
-  setTimeout(ordinaAlboV2, 1500);
-});
 </script>
 </html>

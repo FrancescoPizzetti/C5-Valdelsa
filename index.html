@@ -2132,23 +2132,27 @@ var edizione=a1-2013;
 var rom=toRomano(edizione);
 var txtGrande=rom+" campionato di C5 della Valdelsa";
 var tutti=document.querySelectorAll('h1,h2,h3,div,span');
+var elVal=null;
 for(var i=0;i<tutti.length;i++){
 if(tutti[i].textContent.trim()==="VALDELSA"){
-tutti[i].textContent=txtGrande;
-tutti[i].style.fontSize="30px";
-tutti[i].style.lineHeight="1.1";
-tutti[i].style.textAlign="center";
+elVal=tutti[i];
+elVal.textContent=txtGrande;
+elVal.style.fontSize="30px";
+elVal.style.lineHeight="1.1";
+elVal.style.textAlign="center";
 break;
 }
 }
-for(var j=0;j<tutti.length;j++){
-if(tutti[j].children.length===0 && tutti[j].textContent.trim()==="C5"){
-tutti[j].style.display="none";
-break;
+if(elVal && elVal.parentNode){
+var nodi=elVal.parentNode.childNodes;
+for(var k=0;k<nodi.length;k++){
+if(nodi[k]!==elVal && nodi[k].textContent && nodi[k].textContent.trim()==="C5"){
+if(nodi[k].nodeType===3){ nodi[k].textContent=""; } else { nodi[k].style.display="none"; }
 }
-  }
+}
+}
 if(el('hdrSub'))el('hdrSub').innerHTML="Stagione "+a1+"/"+a2;
-  }
+}
 function applySettings(){
 aggiornaHeaderStagione();
 if(el('sTitle'))el('sTitle').value=settings.title;

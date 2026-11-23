@@ -561,10 +561,11 @@ function showCalTab(t){
 </script>
 <div id="adminSec-coppe" style="display:none">
 <h3>🏆 CALENDARIO COPPE</h3>
-<div class="label">COPPA</div><select id="fCoppa"><option>Coppa di Lega</option><option>Coppa Mitropa</option><option>Coppa Campioni</option><option>Conference</option><option>Supercoppa</option><option>Playout Serie A</option><option>Playoff Serie B</option></select>
+<div class="label">COPPA</div><select id="fCoppa" onchange="aggiornaAbbinamentiCoppa()"><option>Coppa di Lega</option><option>Coppa Mitropa</option><option>Coppa Campioni</option><option>Conference</option><option>Supercoppa</option><option>Playout Serie A</option><option>Playoff Serie B</option></select>
+<div class="label">ABBINAMENTO</div><select id="fCoppaAbbinamento" onchange="scegliAbbinamentoCoppa()"><option value="">Caricamento...</option></select>
 <div class="label">TURNO / FASE</div><select id="fFase"><option>Sedicesimi di Finale</option><option>Ottavi di Finale</option><option>Quarti di Finale</option><option>Semifinale</option><option>Finale</option><option>Girone</option></select>
-<div class="label">SQUADRA CASA</div><select id="fCoppaCasa" onchange="aggiornaTendinaVincRigori()"></select>
-<div class="label">SQUADRA TRASFERTA</div><select id="fCoppaTras" onchange="aggiornaTendinaVincRigori()"></select>
+<div style="display:none"><div class="label">SQUADRA CASA</div><select id="fCoppaCasa" onchange="aggiornaTendinaVincRigori()"></select>
+<div class="label">SQUADRA TRASFERTA</div><select id="fCoppaTras" onchange="aggiornaTendinaVincRigori()"></select></div>
 <div class="label">DATA</div><input id="fCoppaData" type="date">
 <div class="label">ORA</div><input id="fCoppaOra" type="time" value="21:00">
 <div class="label">LUOGO</div>
@@ -6738,6 +6739,79 @@ if(window.players){
 </script>
 </body>
 <script>
+// ABBINAMENTO COPPA - 1 cella invece di Casa + Trasferta
+function aggiornaAbbinamentiCoppa(){
+  var selCoppa = document.getElementById('fCoppa');
+  var selAbb = document.getElementById('fCoppaAbbinamento');
+  if(!selCoppa || !selAbb) return;
+  var coppa = selCoppa.value;
+  var lista = [];
+  var visti = {};
+
+  function aggiungi(casa, tras, fase){
+    if(!casa || !tras || casa==="BYE" || tras==="BYE" || casa==="—" || tras==="—") return;
+    var k = casa+"||"+tras+"||"+fase;
+    if(visti[k]) return;
+    visti[k] = 1;
+    lista.push({casa:casa, tras:tras, fase:fase||""});
+  }
+
+  // 1) Coppa di Lega: da legaBracket
+  try{
+    if(coppa==="Coppa di Lega" && window.legaBracket && legaBracket.rounds){
+      for(var r=0;r<legaBracket.rounds.length;r++){
+        for(var m=0;m<legaBracket.rounds[r].length;m++){
+          var mm = legaBracket.rounds[r][m];
+          if(mm) aggiungi(mm.casa, mm.tras, mm.fase || mm.round || "");
+        }
+      }
+    }
+  }catch(e){}
+
+  // 2) Tutte le coppe: da coppaMatches
+  try{
+    for(var k=0;k<(window.coppaMatches||[]).length;k++){
+      var cm = coppaMatches[k];
+      if(cm && cm.coppa===coppa) aggiungi(cm.casa, cm.tras, cm.fase);
+    }
+  }catch(e){}
+
+  if(!lista.length){
+    selAbb.innerHTML = "<option value=''>Nessun abbinamento nel tabellone</option>";
+    return;
+  }
+
+  var ordine = {"Sedicesimi di Finale":1,"Ottavi di Finale":2,"Quarti di Finale":3,"Semifinale":4,"Finale":5,"Girone":6,"BYE":99};
+  lista.sort(function(a,b){ return (ordine[a.fase]||99)-(ordine[b.fase]||99); });
+
+  var html = "<option value=''>Scegli abbinamento...</option>";
+  var turnoCorr = "___";
+  for(var i=0;i<lista.length;i++){
+    var t = lista[i].fase || "Altro";
+    if(t !== turnoCorr){ if(turnoCorr!=="___") html += "</optgroup>"; html += "<optgroup label='"+t+"'>"; turnoCorr = t; }
+    html += "<option value='"+lista[i].casa+"||"+lista[i].tras+"||"+lista[i].fase+"'>"+lista[i].casa+" vs "+lista[i].tras+"</option>";
+  }
+  if(turnoCorr!=="___") html += "</optgroup>";
+  selAbb.innerHTML = html;
+}
+
+function scegliAbbinamentoCoppa(){
+  var selAbb = document.getElementById('fCoppaAbbinamento');
+  if(!selAbb || !selAbb.value) return;
+  var p = selAbb.value.split('||');
+  var casa = document.getElementById('fCoppaCasa');
+  var tras = document.getElementById('fCoppaTras');
+  var fase = document.getElementById('fFase');
+  if(casa) casa.value = p[0];
+  if(tras) tras.value = p[1];
+  if(fase && p[2]) fase.value = p[2];
+  if(typeof aggiornaTendinaVincRigori === "function") aggiornaTendinaVincRigori();
+}
+
+setTimeout(aggiornaAbbinamentiCoppa, 800);
+setTimeout(aggiornaAbbinamentiCoppa, 2000);
+</script>
+  <script>
 (function(){
   function dataLunga(data){
     var mesi = ["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];

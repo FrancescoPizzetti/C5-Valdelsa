@@ -7235,10 +7235,11 @@ function mostraMarcatoriCal(btn){
 })();
 </script>
 <script>
-// FIX HOME V6 - Come V5, ma con display:none !important, così batte il CSS. Non tocca altre funzioni.
+// FIX HOME V7 - Nasconde ritirate SOLO in Home / Mostra Altro. Calendario NON toccato.
+// In Calendario RIPOSA deve restare visibile.
 (function(){
-  if(window.__fixHomeV6) return;
-  window.__fixHomeV6 = true;
+  if(window.__fixHomeV7) return;
+  window.__fixHomeV7 = true;
 
   function nomiRitirate(){
     var out = ["RIPOSA"];
@@ -7265,6 +7266,13 @@ function mostraMarcatoriCal(btn){
     return false;
   }
 
+  // VERO FIX: nascondi SOLO se la card è in Home / Mostra Altro, MAI in Calendario
+  function inHome(el){
+    if(!el || !el.closest) return false;
+    if(el.closest("#cal, #calList, #calendario, .calendario")) return false;
+    return !!el.closest("#mostraAltroScreen, #home, #upcomingMatches, #pastMatches, #nextMatch");
+  }
+
   function trovaCard(el){
     var cur = el;
     for(var i=0;i<8 && cur && cur !== document.body;i++){
@@ -7281,7 +7289,6 @@ function mostraMarcatoriCal(btn){
   }
 
   function nascondi(card){
-    // QUESTA è la riga che cambia tutto: !important batte il CSS che la teneva visibile
     card.style.setProperty("display", "none", "important");
     card.dataset.nascostaRiposa = "1";
   }
@@ -7293,13 +7300,16 @@ function mostraMarcatoriCal(btn){
   function pulisci(){
     try{
       var lista = nomiRitirate();
+
+      // 1) Nascondi solo in Home / Mostra Altro
       var nascoste = new Set();
-      document.querySelectorAll("b, div, span, p").forEach(function(el){
+      document.querySelectorAll("#mostraAltroScreen b, #mostraAltroScreen div, #mostraAltroScreen span, #mostraAltroScreen p, #home b, #home div, #home span, #home p").forEach(function(el){
         if(el.children.length > 0) return;
         var txt = el.textContent || "";
         if(txt.indexOf(" vs ") < 0) return;
         if(!eRitirata(txt, lista)) return;
         var card = trovaCard(el);
+        if(!inHome(card)) return;
         nascondi(card);
         nascoste.add(card);
       });
@@ -7307,19 +7317,20 @@ function mostraMarcatoriCal(btn){
         if(!nascoste.has(card) && !eRitirata(card.textContent||"", lista)) mostra(card);
       });
 
-      // Conteggio
+      // 2) Conteggio SOLO nei titoli di Mostra Altro, mai in Calendario
       var titoli = [];
-      document.querySelectorAll("div, h2, h3, p, span").forEach(function(el){
+      document.querySelectorAll("#mostraAltroScreen div, #mostraAltroScreen h2, #mostraAltroScreen h3, #mostraAltroScreen p, #mostraAltroScreen span").forEach(function(el){
         if(el.children.length > 0) return;
         var t = el.textContent || "";
         if(/partit/i.test(t) && /\d{2}\/\d{2}\/\d{4}/.test(t)) titoli.push(el);
       });
       var tutteCard = [];
       var visti = new Set();
-      document.querySelectorAll("b, div, span, p").forEach(function(el){
+      document.querySelectorAll("#mostraAltroScreen b, #mostraAltroScreen div, #mostraAltroScreen span, #mostraAltroScreen p, #home b, #home div, #home span, #home p").forEach(function(el){
         if(el.children.length > 0) return;
         if((el.textContent||"").indexOf(" vs ") < 0) return;
         var card = trovaCard(el);
+        if(!inHome(card)) return;
         if(visti.has(card)) return;
         visti.add(card);
         tutteCard.push(card);

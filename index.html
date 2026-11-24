@@ -1253,9 +1253,37 @@ save();
 alert("Titolo assegnato!");
 }
 function delTeamTitle(i){
-if(!confirm("Cancellare?"))return;
-teamTitles.splice(i,1);
-save();
+  if(!confirm("Cancellare?"))return;
+  teamTitles.splice(i,1);
+  save();
+  renderAlboAdmin();
+}
+function delIndTitle(i){
+  if(!confirm("Cancellare?"))return;
+  indTitles.splice(i,1);
+  save();
+  renderAlboAdmin();
+}
+function renderAlboAdmin(){
+  if(el('alboAdminList')){
+    var haa="";
+    for(var aa=0;aa<teamTitles.length;aa++){
+      haa+="<div class='row'><div><small>"+teamTitles[aa].team+" - "+teamTitles[aa].trofeo+" "+teamTitles[aa].anno+"</small></div>";
+      haa+="<button class='del' type='button' onclick='delTeamTitle("+aa+")'>X</button></div>";
+    }
+    if(!haa)haa="<p class='small'>Albo vuoto</p>";
+    el('alboAdminList').innerHTML=haa;
+  }
+  if(el('alboIndAdminList')){
+    var hai2="";
+    for(var ai=0;ai<indTitles.length;ai++){
+      hai2+="<div class='row'><div><small>"+indTitles[ai].nome+" - "+indTitles[ai].trofeo+" "+indTitles[ai].anno+"</small></div>";
+      hai2+="<button class='del' type='button' onclick='delIndTitle("+ai+")'>X</button></div>";
+    }
+    if(!hai2)hai2="<p class='small'>Nessun individuale</p>";
+    el('alboIndAdminList').innerHTML=hai2;
+  }
+  render();
 }
 function saveIndTitle(){
 var nome=el('fIndNome').value.trim();

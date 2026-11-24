@@ -7235,11 +7235,10 @@ function mostraMarcatoriCal(btn){
 })();
 </script>
 <script>
-// FIX HOME V5 UNIVERSALE + GENERICA - Nasconde QUALSIASI ritirata, in QUALSIASI schermata. Non tocca altre funzioni.
-// Non cancella partite, nasconde solo la card. Se togli il ritiro, ricompare.
+// FIX HOME V6 - Come V5, ma con display:none !important, così batte il CSS. Non tocca altre funzioni.
 (function(){
-  if(window.__fixHomeV5) return;
-  window.__fixHomeV5 = true;
+  if(window.__fixHomeV6) return;
+  window.__fixHomeV6 = true;
 
   function nomiRitirate(){
     var out = ["RIPOSA"];
@@ -7250,15 +7249,6 @@ function mostraMarcatoriCal(btn){
         var rit = t.ritirata || t.ritirato;
         var stato = String(t.stato || t.status || "").toLowerCase();
         if(nome && (rit === true || stato.indexOf("ritir") >= 0)) out.push(nome);
-      });
-    }catch(e){}
-    try{
-      ["ritirate","squadreRitirate","teamsRitirate","ritirati"].forEach(function(k){
-        var arr = window[k];
-        if(Array.isArray(arr)) arr.forEach(function(x){
-          if(typeof x === "string") out.push(x);
-          if(x && (x.n || x.nome)) out.push(x.n || x.nome);
-        });
       });
     }catch(e){}
     if(out.indexOf("Boca Voglia") < 0) out.push("Boca Voglia");
@@ -7290,30 +7280,34 @@ function mostraMarcatoriCal(btn){
     return el;
   }
 
+  function nascondi(card){
+    // QUESTA è la riga che cambia tutto: !important batte il CSS che la teneva visibile
+    card.style.setProperty("display", "none", "important");
+    card.dataset.nascostaRiposa = "1";
+  }
+  function mostra(card){
+    card.style.removeProperty("display");
+    delete card.dataset.nascostaRiposa;
+  }
+
   function pulisci(){
     try{
       var lista = nomiRitirate();
-      var foglie = [];
+      var nascoste = new Set();
       document.querySelectorAll("b, div, span, p").forEach(function(el){
         if(el.children.length > 0) return;
         var txt = el.textContent || "";
         if(txt.indexOf(" vs ") < 0) return;
         if(!eRitirata(txt, lista)) return;
-        foglie.push(el);
-      });
-      var nascoste = new Set();
-      foglie.forEach(function(f){
-        var card = trovaCard(f);
-        card.style.display = "none";
-        card.dataset.nascostaRiposa = "1";
+        var card = trovaCard(el);
+        nascondi(card);
         nascoste.add(card);
       });
       document.querySelectorAll("[data-nascostaRiposa='1']").forEach(function(card){
-        if(!nascoste.has(card) && !eRitirata(card.textContent||"", lista)){
-          card.style.display = "";
-          delete card.dataset.nascostaRiposa;
-        }
+        if(!nascoste.has(card) && !eRitirata(card.textContent||"", lista)) mostra(card);
       });
+
+      // Conteggio
       var titoli = [];
       document.querySelectorAll("div, h2, h3, p, span").forEach(function(el){
         if(el.children.length > 0) return;

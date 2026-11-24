@@ -4974,7 +4974,7 @@ function rigaCal(m){
     var sc = _rip
       ? "<b>RIPOSA</b>"
       : (m.stato === "Giocata")
-      ? "<button type='button' onclick='mostraMarcatoriCal(this)' data-casa='"+(m.casa||"")+"' data-tras='"+(m.tras||"")+"' data-giornata='"+(m.giornata||"")+"' data-fase='"+(m.fase||"")+"' style='background:#facc15;color:#000;border:0;border-radius:10px;padding:10px 14px;font-weight:900;font-size:15px;cursor:pointer;white-space:nowrap' title='Vedi marcatori'>"+(m.golC==null?"":m.golC)+" - "+(m.golT==null?"":m.golT)+" ⚽</button>"
+      ? "<button type='button' onclick='mostraMarcatoriCal(this)' data-casa='"+(m.casa||"")+"' data-tras='"+(m.tras||"")+"' data-giornata='"+(m.giornata||"")+"' data-fase='"+(m.fase||"")+"' style='background:#facc15;color:#000;border:0;border-radius:10px;padding:10px 14px;font-weight:900;font-size:15px;cursor:pointer;white-space:nowrap' title='Vedi marcatori'>"+(m.golC==null?"":m.golC)+" - "+(m.golT==null?"":m.golT)+"</button>"
       : "<span class='badge'>Da giocare</span>";
     return "<div class='row'><div><b>" + (m.casa||"") + " vs " + (m.tras||"") + "</b><br><span class='small'>"
       + (m.data||"") + " " + (m.ora||"") + " - " + (m.luogo||"") + "</span></div>" + sc + "</div>";

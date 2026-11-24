@@ -547,6 +547,14 @@ div:has(> img){
 <button class="big" type="button" style="background:#facc15;color:#000" onclick="addScorer()">+ AGGIUNGI MARCATORE</button>
 <div id="scorersAdminList"></div>
 </div>
+<div class="card" id="cardsBox" style="border-color:#ef4444;background:#1a1a1a">
+<h3 style="margin:0 0 6px">🟨🟥 CARTELLINI</h3>
+<div class="label">SQUADRA</div><select id="fCardTeam" onchange="refreshCardPlayers()"></select>
+<div class="label">GIOCATORE</div><select id="fCardPlayer"></select>
+<div class="label">TIPO</div><select id="fCardTipo"><option value="giallo">🟨 Giallo</option><option value="doppio">🟨🟨🟥 Doppio Giallo + Rosso - Espulso per somma</option><option value="rosso">🟥 Rosso Diretto</option></select>
+<button class="big" type="button" style="background:#ef4444;color:#fff" onclick="addCard()">+ AGGIUNGI CARTELLINO</button>
+<div id="cardsAdminList"></div>
+</div>
 <div id="matchesList"></div>
 <button class="big" type="button" style="background:#22c55e;color:#fff" onclick="salvaOraEVerifica()">💾 SALVA ORA E VERIFICA</button>
 <button class="big" type="button" style="background:#f97316;color:#fff" onclick="ripristinaCalendarioBackup()">↩️ RIPRISTINA ULTIMO CALENDARIO SALVATO</button>
@@ -1917,6 +1925,7 @@ html+=list[li].n+" ("+list[li].g+" gol)</option>";
 if(!list.length)html+="<option value=''>Nessun giocatore in rosa</option>";
 playSel.innerHTML=html;
 if(curP)playSel.value=curP;
+try{ refreshCardPlayers(); }catch(e){}
 }
 function addScorer(){
 var idx=findMatchBySelect();
@@ -1966,6 +1975,63 @@ break;
 }
 m.scorers.splice(scorerIdx,1);
 save();
+}
+function cardIcons(tipo){
+  var y = "<span style='display:inline-block;width:12px;height:18px;background:#facc15;border:1px solid #000;border-radius:2px;vertical-align:middle'></span>";
+  var r = "<span style='display:inline-block;width:12px;height:18px;background:#ef4444;border:1px solid #000;border-radius:2px;vertical-align:middle'></span>";
+  if(tipo==="doppio") return "<span style='display:inline-block;white-space:nowrap'>" + y + "<span style='display:inline-block;width:12px;height:18px;background:#facc15;border:1px solid #000;border-radius:2px;vertical-align:middle;margin-left:-6px'></span>" + "<span style='display:inline-block;width:12px;height:18px;background:#ef4444;border:1px solid #000;border-radius:2px;vertical-align:middle;margin-left:4px'></span></span>";
+  if(tipo==="rosso") return r;
+  return y;
+}
+function cardLabel(tipo){
+  if(tipo==="doppio") return "Doppio Giallo + Rosso";
+  if(tipo==="rosso") return "Rosso Diretto";
+  return "Giallo";
+}
+// Punti Coppa Disciplina - LI IMPOSTIAMO DOPO, ora solo struttura
+function cardPuntiDisciplina(tipo){
+  if(tipo==="doppio") return 0;
+  if(tipo==="rosso") return 0;
+  return 0;
+}
+function refreshCardPlayers(){
+  var idx=findMatchBySelect();
+  var teamSel=el('fCardTeam');
+  var playSel=el('fCardPlayer');
+  if(!teamSel||!playSel) return;
+  if(idx<0){ teamSel.innerHTML="<option value=''>Scegli prima la partita sopra</option>"; playSel.innerHTML="<option value=''>-</option>"; return; }
+  var m=matches[idx];
+  var curT=teamSel.value;
+  teamSel.innerHTML="<option value='"+m.casa+"'>"+m.casa+" (Casa)</option><option value='"+m.tras+"'>"+m.tras+" (Trasferta)</option>";
+  if(curT&&(curT===m.casa||curT===m.tras)) teamSel.value=curT;
+  var squadra=teamSel.value||m.casa;
+  var list=players.filter(function(p){return p.t===squadra;});
+  var curP=playSel.value;
+  var html="";
+  for(var li=0;li<list.length;li++){ html+="<option value='"+list[li].n+"'>"+list[li].n+"</option>"; }
+  if(!list.length) html+="<option value=''>Nessun giocatore in rosa</option>";
+  playSel.innerHTML=html;
+  if(curP) playSel.value=curP;
+}
+function addCard(){
+  var idx=findMatchBySelect();
+  if(idx<0){alert("Scegli prima la partita!");return;}
+  var m=matches[idx];
+  if(!m.cards) m.cards=[];
+  var squadra=el('fCardTeam').value;
+  var nome=el('fCardPlayer').value;
+  var tipo=el('fCardTipo').value||"giallo";
+  if(!squadra||!nome){alert("Scegli squadra e giocatore!");return;}
+  m.cards.push({n:nome,team:squadra,tipo:tipo});
+  save();
+  alert("Cartellino aggiunto!");
+}
+function delCard(matchIdx,cardIdx){
+  var m=matches[matchIdx];
+  if(!m||!m.cards) return;
+  if(!confirm("Cancellare questo cartellino?")) return;
+  m.cards.splice(cardIdx,1);
+  save();
 }
 function scorersHtml(m){
 if(!m.scorers||!m.scorers.length)return "";
@@ -3284,6 +3350,23 @@ if(!sm.scorers.length)hsa+="<p class='small'>Ancora nessun marcatore.</p>";
 el('scorersAdminList').innerHTML=hsa;
 }else{
 el('scorersAdminList').innerHTML="<p class='small'>Scegli una partita sopra.</p>";
+}
+if(el('cardsAdminList')){
+  var cIdx=findMatchBySelect();
+  if(cIdx>=0){
+    var cm=matches[cIdx];
+    if(!cm.cards) cm.cards=[];
+    var hca="<p class='small'><b>Cartellini di "+cm.casa+" vs "+cm.tras+"</b></p>";
+    for(var ci=0;ci<cm.cards.length;ci++){
+      var cc=cm.cards[ci];
+      hca+="<div class='row'><div><small>"+cc.team+" - <b>"+cc.n+"</b> - "+cardIcons(cc.tipo)+" "+cardLabel(cc.tipo)+"</small></div>";
+      hca+="<button class='del' type='button' onclick='delCard("+cIdx+","+ci+")'>X</button></div>";
+    }
+    if(!cm.cards.length) hca+="<p class='small'>Ancora nessun cartellino.</p>";
+    el('cardsAdminList').innerHTML=hca;
+  }else{
+    el('cardsAdminList').innerHTML="<p class='small'>Scegli una partita sopra.</p>";
+  }
 }
 }
 if(el('coppaAdminList')){

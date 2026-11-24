@@ -7235,6 +7235,9 @@ function mostraMarcatoriCal(btn){
     + "<div style='display:flex;gap:12px;margin-top:16px'><div style='flex:1'><div style='text-align:center;font-weight:900;color:#facc15;margin-bottom:6px'>⚽ "+casa+"</div>"+listaScoreri(casa)+"</div>"
     + "<div style='width:1px;background:#444'></div>"
     + "<div style='flex:1'><div style='text-align:center;font-weight:900;color:#facc15;margin-bottom:6px'>⚽ "+tras+"</div>"+listaScoreri(tras)+"</div></div>"
+    + "<div style='display:flex;gap:12px;margin-top:16px'><div style='flex:1'><div style='text-align:center;font-weight:900;color:#ef4444;margin-bottom:6px'>🟨🟥 "+casa+"</div>"+listaCartellini(m,casa)+"</div>"
++ "<div style='width:1px;background:#444'></div>"
++ "<div style='flex:1'><div style='text-align:center;font-weight:900;color:#ef4444;margin-bottom:6px'>🟨🟥 "+tras+"</div>"+listaCartellini(m,tras)+"</div></div>"
     + "<button onclick=\"document.getElementById('popupMarcatori').remove()\" style='width:100%;margin-top:16px;padding:12px;border-radius:10px;background:#facc15;color:#000;font-weight:900;border:0'>Chiudi</button></div>";
   div.addEventListener("click", function(e){ if(e.target===div) div.remove(); });
   document.body.appendChild(div);

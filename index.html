@@ -7144,4 +7144,94 @@ function mostraMarcatoriCal(btn){
   document.body.appendChild(div);
 }
 </script>
+<script>
+// FIX PENALITA - asterisco in classifica + legenda senza nome squadra
+(function(){
+  if(window.__fixPenAsterisco) return;
+  window.__fixPenAsterisco = true;
+
+  function penDi(nome){
+    try{
+      for(var i=0;i<(window.teams||[]).length;i++){
+        if(teams[i].n===nome) return parseInt(teams[i].penalita||0)||0;
+      }
+    }catch(e){}
+    return 0;
+  }
+
+  function aggiorna(){
+    var conPen = [];
+    (window.teams||[]).forEach(function(t){
+      var p = parseInt(t.penalita||0)||0;
+      if(p>0) conPen.push({nome:t.n, punti:p});
+    });
+    if(!conPen.length){
+      document.querySelectorAll(".penLegend").forEach(function(e){ e.remove(); });
+      return;
+    }
+    // Valori diversi = asterischi diversi
+    // 1 punto -> *, 3 punti -> **
+    var valori = [];
+    conPen.forEach(function(x){ if(valori.indexOf(x.punti)<0) valori.push(x.punti); });
+    valori.sort(function(a,b){ return a-b; });
+    var mappa = {};
+    valori.forEach(function(v,idx){ mappa[v] = "*".repeat(idx+1); });
+
+    // 1) Asterisco sui Pti in tutte le classifiche
+    ["classTableA","classTableB","classTableB1","classTableB2"].forEach(function(id){
+      var tab = document.getElementById(id);
+      if(!tab) return;
+      tab.querySelectorAll("tr").forEach(function(tr){
+        var nomeEl = tr.querySelector(".teamName");
+        if(!nomeEl) return;
+        var nome = nomeEl.textContent.trim();
+        var pen = penDi(nome);
+        var tdPti = tr.querySelectorAll("td")[2];
+        if(!tdPti) return;
+        if(!tdPti.dataset.orig) tdPti.dataset.orig = tdPti.textContent.trim();
+        var base = tdPti.dataset.orig;
+        if(pen>0){
+          tdPti.innerHTML = "<b>"+base+"<span style='color:#facc15'>"+mappa[pen]+"</span></b>";
+          tdPti.title = pen+" punti di penalità";
+        } else {
+          tdPti.innerHTML = "<b>"+base+"</b>";
+        }
+      });
+    });
+
+    // 2) Legenda sotto ogni classifica - SOLO "* X punti di penalità", senza nome
+    ["classABox","classBBox","classB1Box","classB2Box"].forEach(function(boxId){
+      var box = document.getElementById(boxId);
+      if(!box) return;
+      var vecchia = box.querySelector(".penLegend");
+      if(vecchia) vecchia.remove();
+      var tabella = box.querySelector("table");
+      var testoTab = tabella ? tabella.textContent : "";
+      // Mostra in questa lega solo i valori che ci sono davvero in questa tabella
+      var valoriInQuesta = valori.filter(function(v){
+        return conPen.some(function(x){ return x.punti===v && testoTab.indexOf(x.nome)>=0; });
+      });
+      if(!valoriInQuesta.length) return;
+      var leg = document.createElement("div");
+      leg.className = "penLegend small";
+      leg.style.cssText = "margin-top:8px;padding:8px 10px;background:#1f2937;border-radius:10px";
+      leg.innerHTML = valoriInQuesta.map(function(v){
+        var stelle = mappa[v];
+        return "<div><span style='color:#facc15;font-weight:900'>"+stelle+"</span> "+v+(v===1?" punto di penalità":" punti di penalità")+"</div>";
+      }).join("");
+      var wrap = box.querySelector(".tableWrap");
+      if(wrap) wrap.after(leg); else box.appendChild(leg);
+    });
+  }
+
+  var _r = window.render;
+  if(_r && !_r.__fixPenAsterisco){
+    var nuovo = function(){ _r.apply(this, arguments); try{ aggiorna(); }catch(e){} };
+    nuovo.__fixPenAsterisco = true;
+    window.render = nuovo;
+  }
+  setInterval(function(){ try{ aggiorna(); }catch(e){} }, 1000);
+  setTimeout(aggiorna, 800);
+})();
+</script>
 </html>

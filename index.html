@@ -232,7 +232,8 @@ div:has(> img){
 <button type="button" onclick="goMenu('team')">👥 Squadre e Rose</button>
 <button type="button" onclick="goMenu('albo')">👑 Albo d'oro</button>
 <button type="button" onclick="goMenu('contatti')">📞 Contatti</button>
-<button type="button" onclick="goMenu('admin')">🔒 Admin</button>
+<button type="button" onclick="goMenu('dispDisc');setTimeout(function(){showDisp('AMMONITI','Serie A')},50)">👨‍⚖️ DISP. DISCIPLINARI</button>
+  <button type="button" onclick="goMenu('admin')">🔒 Admin</button>
 <p class="small" style="text-align:center;margin-top:14px;opacity:0.6">Versione 1.5 • by FCAM</p>
 </div>
 <header>
@@ -417,7 +418,26 @@ div:has(> img){
 <div id="contatti" class="hidden">
 <div class="card"><h2>📞 Contatti Lega</h2><div id="contactsPublicList"></div></div>
 </div>
-<div id="admin" class="hidden">
+<div id="dispDisc" class="hidden">
+<div class="card"><h2>👨‍⚖️ DISP. DISCIPLINARI</h2>
+<p class="small">Ammoniti, Diffidati, Squalificati e Provvedimenti. B1 e B2 si aggiornano da soli quando una squadra passa da B a B1 / B2.</p>
+<div class="subnav">
+<button type="button" data-disp-tipo="AMMONITI" class="on" onclick="showDisp('AMMONITI')">🟨 AMMONITI</button>
+<button type="button" data-disp-tipo="DIFFIDATI" onclick="showDisp('DIFFIDATI')">⚠️ DIFFIDATI</button>
+<button type="button" data-disp-tipo="SQUALIFICATI" onclick="showDisp('SQUALIFICATI')">🟥 SQUALIFICATI</button>
+<button type="button" data-disp-tipo="PROVVEDIMENTI" onclick="showDisp('PROVVEDIMENTI')">📋 PROVVEDIMENTI</button>
+</div>
+<div class="subnav">
+<button type="button" data-disp-lega="Serie A" class="on" onclick="showDisp(null,'Serie A')">SERIE A</button>
+<button type="button" data-disp-lega="Serie B" onclick="showDisp(null,'Serie B')">SERIE B</button>
+<button type="button" data-disp-lega="Serie B1" onclick="showDisp(null,'Serie B1')">SERIE B1</button>
+<button type="button" data-disp-lega="Serie B2" onclick="showDisp(null,'Serie B2')">SERIE B2</button>
+<button type="button" data-disp-lega="Coppa di Lega" onclick="showDisp(null,'Coppa di Lega')">COPPA DI LEGA</button>
+</div>
+<div id="dispDiscBox"></div>
+</div>
+</div>
+  <div id="admin" class="hidden">
 <div class="card"><h2>🔒 Admin</h2>
 <div id="loginBox"><input id="pw" type="password" placeholder="Password Admin"><button class="big" type="button" onclick="login()">Entra come Admin</button></div>
 <div id="adminPanel" class="hidden">
@@ -661,6 +681,7 @@ ids.push('team');
 ids.push('albo');
 ids.push('contatti');
 ids.push('chiSiamo');
+ids.push('dispDisc');
 ids.push('admin');
 for(var i=0;i<ids.length;i++){
 var e=el(ids[i]);
@@ -996,7 +1017,143 @@ if(w&&w.indexOf("Pareggio")<0)list.push(w);
 }
 return list;
 // TABELLA DISPOSIZIONI DISCIPLINARI - Tutte le partite, tutti i rossi
-function mostraDisposizioni(){
+// 👨‍⚖️ DISP. DISCIPLINARI - Conta dai cartellini già salvati
+// Lega presa SEMPRE da teamLeague(squadra) in quel momento.
+// Quindi se una squadra passa da B a B1, il giocatore passa da B a B1 da solo.
+function tutteLeCard(){
+  var out=[];
+  for(var i=0;i<matches.length;i++){
+    var m=matches[i];
+    if(!m.cards) continue;
+    for(var k=0;k<m.cards.length;k++){
+      var c=m.cards[k];
+      out.push({c:c, comp:'CAMPIONATO', lega: teamLeague(c.team), partita: m.casa+' vs '+m.tras});
+    }
+  }
+  // Coppa: se in futuro metti cartellini anche nelle partite di Coppa, li conta qui, a parte
+  for(var j=0;j<coppaMatches.length;j++){
+    var mc=coppaMatches[j];
+    if(!mc.cards) continue;
+    for(var k2=0;k2<mc.cards.length;k2++){
+      var cc=mc.cards[k2];
+      out.push({c:cc, comp:'COPPA', lega:'Coppa di Lega', partita: mc.coppa+' - '+mc.casa+' vs '+mc.tras});
+    }
+  }
+  return out;
+}
+function contaGialli(nome, squadra, comp){
+  var n=0;
+  var all=tutteLeCard();
+  for(var i=0;i<all.length;i++){
+    if(all[i].comp!==comp) continue;
+    if(all[i].c.n===nome && all[i].c.team===squadra && all[i].c.tipo==='giallo') n++;
+  }
+  return n;
+}
+function statoGiocatore(nome, squadra, comp){
+  var gialli=contaGialli(nome,squadra,comp);
+  // 3 gialli = diffidato, 4° giallo = 1 giornata. Dopo la squalifica il conto riparte ogni 4.
+  var resto=gialli%4;
+  var squalGialli = (gialli>=4 && resto===0) ? 1 : 0;
+  return {gialli:gialli, diffidato:(resto===3), squalGialli:squalGialli};
+}
+// Mostra una tabella per tipo + lega
+function mostraDisp(tipo, lega){
+  var all=tutteLeCard();
+  var html="<h3>"+tipo+" - "+lega+"</h3>";
+  html+="<table style='width:100%;border-collapse:collapse;font-size:13px;'><tr><th style='text-align:left;'>Giocatore</th><th style='text-align:left;'>Squadra</th><th style='text-align:left;'>Dettaglio</th></tr>";
+  var trovate=0;
+  if(tipo==='AMMONITI'){
+    var mappa={};
+    for(var i=0;i<all.length;i++){
+      if(all[i].lega!==lega) continue;
+      if(all[i].c.tipo!=='giallo') continue;
+      var key=all[i].c.n+'|'+all[i].c.team;
+      if(!mappa[key]) mappa[key]={n:all[i].c.n, team:all[i].c.team, gialli:0};
+      mappa[key].gialli++;
+    }
+    for(var k in mappa){
+      trovate++;
+      html+="<tr><td>"+mappa[k].n+"</td><td>"+mappa[k].team+"</td><td>"+mappa[k].gialli+" gialli</td></tr>";
+    }
+  }
+  if(tipo==='DIFFIDATI'){
+    var visti={};
+    for(var j=0;j<all.length;j++){
+      if(all[j].lega!==lega) continue;
+      var st=statoGiocatore(all[j].c.n, all[j].c.team, all[j].comp);
+      var key2=all[j].c.n+'|'+all[j].c.team;
+      if(st.diffidato && !visti[key2]){
+        visti[key2]=1; trovate++;
+        html+="<tr><td>"+all[j].c.n+"</td><td>"+all[j].c.team+"</td><td>Diffidato - "+st.gialli+" gialli - al prossimo giallo 1 giornata</td></tr>";
+      }
+    }
+  }
+  if(tipo==='SQUALIFICATI'){
+    for(var s=0;s<all.length;s++){
+      if(all[s].lega!==lega) continue;
+      var c=all[s].c;
+      if(c.tipo==='rosso'){
+        trovate++;
+        html+="<tr><td>"+c.n+"</td><td>"+c.team+"</td><td>Rosso - Art. "+(c.motivo||"-")+" - "+(c.giornate||0)+" giornate"+(c.capitano?" - Capitano":"")+(c.motivazione?" - "+c.motivazione:"")+"</td></tr>";
+      }
+      if(c.tipo==='doppio'){
+        trovate++;
+        html+="<tr><td>"+c.n+"</td><td>"+c.team+"</td><td>Doppio giallo - 1 giornata</td></tr>";
+      }
+      if(c.tipo==='giallo'){
+        var st2=statoGiocatore(c.n, c.team, all[s].comp);
+        if(st2.squalGialli>0){
+          // Mostra una sola volta per giocatore
+          var key3=c.n+'|'+c.team+'|gialli';
+          if(!window['_sq_'+key3]){ window['_sq_'+key3]=1; }
+        }
+      }
+    }
+    // Squalifiche per somma gialli, una riga per giocatore
+    var vistiSq={};
+    for(var s2=0;s2<all.length;s2++){
+      if(all[s2].lega!==lega) continue;
+      var st3=statoGiocatore(all[s2].c.n, all[s2].c.team, all[s2].comp);
+      var key4=all[s2].c.n+'|'+all[s2].c.team;
+      if(st3.squalGialli>0 && !vistiSq[key4]){
+        vistiSq[key4]=1; trovate++;
+        html+="<tr><td>"+all[s2].c.n+"</td><td>"+all[s2].c.team+"</td><td>4° giallo da diffidato - 1 giornata</td></tr>";
+      }
+    }
+  }
+  if(tipo==='PROVVEDIMENTI'){
+    for(var p=0;p<all.length;p++){
+      if(all[p].lega!==lega) continue;
+      var cp=all[p].c;
+      if(cp.tipo==='rosso'){
+        trovate++;
+        html+="<tr><td>"+cp.n+"</td><td>"+cp.team+"</td><td>Art. "+(cp.motivo||"-")+" - "+(cp.giornate||0)+" giornate"+(cp.capitano?" - Art. 6.15 Capitano +1":"")+(cp.motivazione?" - "+cp.motivazione:"")+" - "+all[p].partita+"</td></tr>";
+      }
+      if(cp.tipo==='doppio'){
+        trovate++;
+        html+="<tr><td>"+cp.n+"</td><td>"+cp.team+"</td><td>Doppio giallo - 1 giornata - "+all[p].partita+"</td></tr>";
+      }
+    }
+  }
+  if(!trovate) html+="<tr><td colspan='3'>Nessuno in questa categoria.</td></tr>";
+  html+="</table>";
+  return html;
+}
+var curDispTipo='AMMONITI';
+var curDispLega='Serie A';
+function showDisp(tipo, lega){
+  if(tipo) curDispTipo=tipo;
+  if(lega) curDispLega=lega;
+  var box=el('dispDiscBox');
+  if(box) box.innerHTML=mostraDisp(curDispTipo, curDispLega);
+  // Accende i bottoni giusti
+  var btns=document.querySelectorAll('[data-disp-tipo]');
+  for(var i=0;i<btns.length;i++){ btns[i].classList.toggle('on', btns[i].getAttribute('data-disp-tipo')===curDispTipo); }
+  var btns2=document.querySelectorAll('[data-disp-lega]');
+  for(var j=0;j<btns2.length;j++){ btns2[j].classList.toggle('on', btns2[j].getAttribute('data-disp-lega')===curDispLega); }
+}
+  function mostraDisposizioni(){
   var html="<h3>📋 DISPOSIZIONI DISCIPLINARI - Rossi Diretti</h3>";
   html+="<table style='width:100%;border-collapse:collapse;font-size:13px;'><tr><th style='text-align:left;'>Giocatore</th><th style='text-align:left;'>Articolo</th><th style='text-align:left;'>Giornate</th><th style='text-align:left;'>Motivazione</th></tr>";
   var trovate=0;

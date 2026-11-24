@@ -412,7 +412,7 @@ div:has(> img){
 <div class="card"><h2>👥 Scegli Squadra per vedere la Rosa</h2><select id="teamFilter" onchange="render()"></select><div id="teamInfo"></div><div id="teamList"></div></div>
 <div class="card"><h2>⚽ Marcatori</h2><div id="scorers"></div></div>
 <div class="card" style="display:none"><h2>📋 Tutte le 30 Squadre</h2><div id="allTeams"></div></div>
-<div class="card" style="display:none"><h2>🟨 Classifica Disciplina - Tutte partono da 50</h2><div id="discTable"></div></div>
+<div class="card" style="display:none"><h2>🟨 Classifica Disciplina - Tutte partono da tot. giornate X2</h2><div id="discTable"></div></div>
 </div>
 <div id="contatti" class="hidden">
 <div class="card"><h2>📞 Contatti Lega</h2><div id="contactsPublicList"></div></div>
@@ -552,6 +552,10 @@ div:has(> img){
 <div class="label">SQUADRA</div><select id="fCardTeam" onchange="refreshCardPlayers()"></select>
 <div class="label">GIOCATORE</div><select id="fCardPlayer"></select>
 <div class="label">TIPO</div><select id="fCardTipo"><option value="giallo">🟨 Giallo</option><option value="doppio">🟨🟨🟥 Doppio Giallo + Rosso - Espulso per somma</option><option value="rosso">🟥 Rosso Diretto</option></select>
+  <div class="label">MOTIVO ROSSO DIRETTO - ART. 6</div><select id="fCardMotivo"><option value="">-- Scegli motivo (solo se rosso diretto) --</option><option value="6.2">Art. 6.2 - Fallo da tergo non violento = 1 giornata</option><option value="6.3">Art. 6.3 - Fallo non violento chiara occasione = 1 giornata</option><option value="6.4">Art. 6.4 - Comportamento antisportivo = 1 giornata</option><option value="6.6">Art. 6.6 - Proteste = 1 giornata</option><option value="6.5">Art. 6.5 - Fallo violento o di reazione = 2 giornate</option><option value="6.7">Art. 6.7 - Offese verso ufficiale = 2 giornate</option><option value="6.8">Art. 6.8 - Offese / minacce avversario = 2 giornate</option><option value="6.11">Art. 6.11 - Violenze ad avversario = 3 giornate</option><option value="6.9">Art. 6.9 - Offese razziali = oltre 3 mesi</option><option value="6.10">Art. 6.10 - Violenze verso ufficiale = oltre 3 mesi</option><option value="6.13">Art. 6.13 - Danni dolosi impianto = tutta la stagione</option><option value="6.13.1">Art. 6.13.1 - Danni non dolosi = 1 giornata</option><option value="6.12">Art. 6.12 - Rissa = 1 giornata</option><option value="6.1.1">Art. 6.1.1 - Infrazione Art. 24.1 = 1 giornata</option></select>
+<div class="label"><input type="checkbox" id="fCardCapitano"> Era capitano / accompagnatore? +1 giornata - Art. 6.15</div>
+<div class="label">GIORNATE MANUALI (se vuota vale calcolo automatico)</div><input id="fCardGiornateMan" type="number" placeholder="Es. 4">
+<div class="label">MOTIVAZIONE (obbligatoria se metti giornate manuali)</div><input id="fCardMotivazione" type="text" placeholder="Es. Reazione violenta dopo il fischio">
 <button class="big" type="button" style="background:#ef4444;color:#fff" onclick="addCard()">+ AGGIUNGI CARTELLINO</button>
 <div id="cardsAdminList"></div>
 </div>
@@ -2027,6 +2031,19 @@ function refreshCardPlayers(){
   if(!list.length) html+="<option value=''>Nessun giocatore in rosa</option>";
   playSel.innerHTML=html;
   if(curP) playSel.value=curP;
+}
+// ART. 6 - Tabella Rossi Diretti
+var TABELLA_ROSSI=[
+  {art:"6.2",giornate:1},{art:"6.3",giornate:1},{art:"6.4",giornate:1},{art:"6.6",giornate:1},
+  {art:"6.5",giornate:2},{art:"6.7",giornate:2},{art:"6.8",giornate:2},
+  {art:"6.11",giornate:3},
+  {art:"6.9",giornate:0,aTempo:true},{art:"6.10",giornate:0,aTempo:true},{art:"6.13",giornate:0,aTempo:true},
+  {art:"6.13.1",giornate:1},{art:"6.12",giornate:1},{art:"6.1.1",giornate:1}
+];
+// ART. 6.15 - Capitano / accompagnatore: +1 giornata
+function giornateRosso(art,isCapitano){
+  for(var i=0;i<TABELLA_ROSSI.length;i++){ if(TABELLA_ROSSI[i].art===art){ if(TABELLA_ROSSI[i].aTempo) return 0; return TABELLA_ROSSI[i].giornate + (isCapitano?1:0); } }
+  return 0;
 }
 function addCard(){
   var idx=findMatchBySelect();

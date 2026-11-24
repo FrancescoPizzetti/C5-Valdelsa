@@ -7136,6 +7136,19 @@ function modificaDataOraCoppa(){
   setInterval(rinomina, 1000);
   setTimeout(rinomina, 800);
 })();
+  function listaCartellini(m, squadra){
+  if(!m || !m.cards || !m.cards.length) return "<p class='small' style='text-align:center'>Nessun cartellino</p>";
+  var out="";
+  var trovati=0;
+  for(var k=0;k<m.cards.length;k++){
+    var c=m.cards[k];
+    if(c.team!==squadra) continue;
+    trovati++;
+    out+="<div style='padding:8px 0;border-bottom:1px solid #333;text-align:center'>"+cardIcons(c.tipo)+" <b>"+c.n+"</b><br><span class='small'>"+cardLabel(c.tipo)+"</span></div>";
+  }
+  if(!trovati) return "<p class='small' style='text-align:center'>Nessun cartellino</p>";
+  return out;
+  }
 </script>
 <script>
 // FIX DATE ITALIANE - da 2026-11-23 a 23/11/2026

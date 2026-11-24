@@ -2065,6 +2065,19 @@ function addCard(){
   save();
   alert("Cartellino aggiunto!" + (tipo==="rosso" ? " Giornate: " + giornateFinali : ""));
 }
+// ANNULLA CARTELLINO SBAGLIATO - Art. 6 / Disciplina
+// Se annulli un rosso, toglie anche le giornate e rimette i punti disciplina
+function annullaCartellino(matchIdx, cardIdx){
+  var m = matches[matchIdx];
+  if(!m || !m.cards || !m.cards[cardIdx]) return;
+  var c = m.cards[cardIdx];
+  var testo = "Annullare questo cartellino?\n" + c.n + " - " + c.tipo + " - Art. " + (c.motivo || "-") + " - " + (c.giornate || 0) + " giornate";
+  if(!confirm(testo)) return;
+  m.cards.splice(cardIdx, 1);
+  save();
+  renderAll();
+  alert("Cartellino annullato. Disciplina e giornate aggiornate.");
+}
 function delCard(matchIdx,cardIdx){
   var m=matches[matchIdx];
   if(!m||!m.cards) return;

@@ -7235,53 +7235,110 @@ function mostraMarcatoriCal(btn){
 })();
 </script>
 <script>
-// FIX FINALE HOME v3 - Agisce direttamente sulla card .partitaSettimana. Non tocca altre funzioni.
+// FIX HOME V5 UNIVERSALE + GENERICA - Nasconde QUALSIASI ritirata, in QUALSIASI schermata. Non tocca altre funzioni.
+// Non cancella partite, nasconde solo la card. Se togli il ritiro, ricompare.
 (function(){
-  if(window.__fixHomeFinaleV3) return;
-  window.__fixHomeFinaleV3 = true;
+  if(window.__fixHomeV5) return;
+  window.__fixHomeV5 = true;
 
-  var DA_NASCONDERE = ["RIPOSA", "Boca Voglia"];
+  function nomiRitirate(){
+    var out = ["RIPOSA"];
+    try{
+      (window.teams || []).forEach(function(t){
+        if(!t) return;
+        var nome = t.n || t.nome || t.name || "";
+        var rit = t.ritirata || t.ritirato;
+        var stato = String(t.stato || t.status || "").toLowerCase();
+        if(nome && (rit === true || stato.indexOf("ritir") >= 0)) out.push(nome);
+      });
+    }catch(e){}
+    try{
+      ["ritirate","squadreRitirate","teamsRitirate","ritirati"].forEach(function(k){
+        var arr = window[k];
+        if(Array.isArray(arr)) arr.forEach(function(x){
+          if(typeof x === "string") out.push(x);
+          if(x && (x.n || x.nome)) out.push(x.n || x.nome);
+        });
+      });
+    }catch(e){}
+    if(out.indexOf("Boca Voglia") < 0) out.push("Boca Voglia");
+    var unici = [];
+    out.forEach(function(n){ if(n && unici.indexOf(n) < 0) unici.push(n); });
+    return unici;
+  }
+
+  function eRitirata(txt, lista){
+    for(var i=0;i<lista.length;i++){
+      var nome = lista[i];
+      if(txt.indexOf(nome + " vs ") >= 0 || txt.indexOf(" vs " + nome) >= 0) return true;
+    }
+    return false;
+  }
+
+  function trovaCard(el){
+    var cur = el;
+    for(var i=0;i<8 && cur && cur !== document.body;i++){
+      var cls = (cur.className || "").toString();
+      if(cls.indexOf("partitaSettimana")>=0 || cls.indexOf("mCard")>=0 || cls.indexOf("matchCard")>=0) return cur;
+      var p = cur.parentElement;
+      if(p){
+        var vs = (p.textContent||"").match(/ vs /g);
+        if(vs && vs.length > 1) return cur;
+      }
+      cur = p;
+    }
+    return el;
+  }
 
   function pulisci(){
     try{
-      // 1) Nascondi TUTTA la card di Mostra Altro
-      document.querySelectorAll(".partitaSettimana").forEach(function(card){
-        var txt = card.textContent || "";
-        var match = false;
-        DA_NASCONDERE.forEach(function(nome){
-          // "Boca Voglia vs S. Gimignano" oppure "RIPOSA vs ..."
-          if(txt.indexOf(nome + " vs ") >= 0 || txt.indexOf(" vs " + nome) >= 0) match = true;
-        });
-        if(match){
-          card.style.display = "none";
-          card.dataset.nascostaRiposa = "1";
-        } else {
-          if(card.dataset.nascostaRiposa === "1"){
-            card.style.display = "";
-            delete card.dataset.nascostaRiposa;
-          }
+      var lista = nomiRitirate();
+      var foglie = [];
+      document.querySelectorAll("b, div, span, p").forEach(function(el){
+        if(el.children.length > 0) return;
+        var txt = el.textContent || "";
+        if(txt.indexOf(" vs ") < 0) return;
+        if(!eRitirata(txt, lista)) return;
+        foglie.push(el);
+      });
+      var nascoste = new Set();
+      foglie.forEach(function(f){
+        var card = trovaCard(f);
+        card.style.display = "none";
+        card.dataset.nascostaRiposa = "1";
+        nascoste.add(card);
+      });
+      document.querySelectorAll("[data-nascostaRiposa='1']").forEach(function(card){
+        if(!nascoste.has(card) && !eRitirata(card.textContent||"", lista)){
+          card.style.display = "";
+          delete card.dataset.nascostaRiposa;
         }
       });
-
-      // 1b) Stessa cosa per le card normali di Home, se ci sono (.mCard)
-      document.querySelectorAll(".mCard, .matchCard").forEach(function(card){
-        var txt = card.textContent || "";
-        var match = false;
-        DA_NASCONDERE.forEach(function(nome){
-          if(txt.indexOf(nome + " vs ") >= 0 || txt.indexOf(" vs " + nome) >= 0) match = true;
-        });
-        if(match){ card.style.display = "none"; card.dataset.nascostaRiposa = "1"; }
+      var titoli = [];
+      document.querySelectorAll("div, h2, h3, p, span").forEach(function(el){
+        if(el.children.length > 0) return;
+        var t = el.textContent || "";
+        if(/partit/i.test(t) && /\d{2}\/\d{2}\/\d{4}/.test(t)) titoli.push(el);
       });
-
-      // 2) Sistema il conteggio nei titoli gialli "Martedì 24/11/2026 • 4 partite"
-      document.querySelectorAll(".giornoTitolo").forEach(function(titolo){
-        // Conta le card visibili dopo questo titolo fino al titolo dopo
+      var tutteCard = [];
+      var visti = new Set();
+      document.querySelectorAll("b, div, span, p").forEach(function(el){
+        if(el.children.length > 0) return;
+        if((el.textContent||"").indexOf(" vs ") < 0) return;
+        var card = trovaCard(el);
+        if(visti.has(card)) return;
+        visti.add(card);
+        tutteCard.push(card);
+      });
+      titoli.forEach(function(titolo, idx){
+        var prossimo = titoli[idx+1];
         var count = 0;
-        var el = titolo.nextElementSibling;
-        while(el && !el.classList.contains("giornoTitolo")){
-          if(el.classList.contains("partitaSettimana") && el.style.display !== "none") count++;
-          el = el.nextElementSibling;
-        }
+        tutteCard.forEach(function(card){
+          if(card.dataset.nascostaRiposa === "1") return;
+          if(titolo.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING){
+            if(!prossimo || (prossimo.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_PRECEDING)) count++;
+          }
+        });
         if(count === 0) return;
         var m = titolo.textContent.match(/(\d+)\s*partit/);
         if(!m) return;
@@ -7290,12 +7347,11 @@ function mostraMarcatoriCal(btn){
           titolo.textContent = titolo.textContent.replace(vecchio + " partite", count + " partite").replace(vecchio + " partita", count + " partita");
         }
       });
-
     }catch(e){}
   }
 
-  setInterval(pulisci, 800);
-  setTimeout(pulisci, 800);
+  setInterval(pulisci, 700);
+  setTimeout(pulisci, 700);
 })();
 </script>
 </html>

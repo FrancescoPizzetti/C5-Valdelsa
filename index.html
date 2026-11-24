@@ -7234,4 +7234,102 @@ function mostraMarcatoriCal(btn){
   setTimeout(aggiorna, 800);
 })();
 </script>
+<script>
+// FIX SOLO HOME - Nasconde RIPOSA / ritirata da Mostra Altro. NON tocca altre funzioni.
+// Non sovrascrive render, calc, save. Non modifica i dati. Nasconde solo la card.
+(function(){
+  if(window.__fixHomeRiposaSafe) return;
+  window.__fixHomeRiposaSafe = true;
+
+  function nomiDaNascondere(){
+    var out = ["RIPOSA"];
+    try{
+      (window.teams||[]).forEach(function(t){
+        if(t.ritirata) out.push(t.n);
+      });
+    }catch(e){}
+    return out;
+  }
+
+  function pulisci(){
+    try{
+      var daNascondere = nomiDaNascondere();
+      // 1) Trova le card delle partite in Home
+      // Una card vera ha: " vs " + ora (es. 20:30) + luogo
+      var tutte = document.querySelectorAll("div");
+      var nascosteOggi = {}; // data -> quante nascoste, es. "24/11" -> 1
+
+      tutte.forEach(function(card){
+        if(card.dataset.fixRiposaCheck) return;
+        var txt = card.textContent || "";
+        if(txt.indexOf(" vs ") < 0) return;
+        if(txt.indexOf(":") < 0) return; // deve avere un'ora
+        if(card.querySelectorAll("div").length > 8) return; // salta i contenitori grandi
+        card.dataset.fixRiposaCheck = "1";
+
+        // Estrai Casa e Trasferta
+        // Es. "Boca Voglia vs S. Gimignano 24/11/2026 20:30 Bernino Indoor"
+        var parti = txt.split(" vs ");
+        if(parti.length < 2) return;
+        var casa = parti[0].trim().split("\n").pop().trim();
+        var tras = parti[1].trim().split("\n")[0].trim().split("  ")[0].trim();
+
+        var match = false;
+        daNascondere.forEach(function(nome){
+          if(casa === nome || tras === nome) match = true;
+        });
+        if(!match) return;
+
+        // Nascondi solo questa card, non cancellare niente
+        card.style.display = "none";
+        card.dataset.nascostaRiposa = "1";
+
+        // Memorizza la data per sistemare il conteggio
+        var mData = txt.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if(mData){
+          var chiave = mData[1] + "/" + mData[2]; // es. "24/11"
+          nascosteOggi[chiave] = (nascosteOggi[chiave] || 0) + 1;
+        }
+        // Salva la data sulla card per il giro dopo
+        if(mData) card.dataset.dataRiposa = mData[1] + "/" + mData[2];
+      });
+
+      // 2) Sistema il conteggio "Martedì 24/11/2026 • 4 partite"
+      // Lo fa solo 1 volta per titolo, e solo se in quel giorno c'è davvero una nascosta
+      document.querySelectorAll("div, h2, h3, p, span").forEach(function(h){
+        if(h.children.length > 0) return;
+        if(h.textContent.indexOf("partite") < 0 && h.textContent.indexOf("partita") < 0) return;
+        if(h.dataset.fixRiposaConto) return;
+        var m = h.textContent.match(/(\d+)\s*partit/);
+        if(!m) return;
+        var vecchio = parseInt(m[1], 10);
+        if(vecchio <= 0) return;
+
+        // Questa intestazione di che giorno è?
+        var mDataH = h.textContent.match(/(\d{2})\/(\d{2})/);
+        if(!mDataH) return;
+        var chiaveH = mDataH[1] + "/" + mDataH[2];
+
+        // Conta quante card nascoste ci sono per quel giorno in tutta la pagina
+        var quante = 0;
+        document.querySelectorAll("[data-nascosta-riposa='1']").forEach(function(c){
+          if(c.dataset.dataRiposa === chiaveH) quante++;
+        });
+        // Se non ne ho trovate con la data salvata, prova con quelle appena nascoste in questo giro
+        if(!quante && nascosteOggi[chiaveH]) quante = nascosteOggi[chiaveH];
+        if(!quante) return;
+
+        h.dataset.fixRiposaConto = "1";
+        var nuovo = vecchio - quante;
+        if(nuovo < 0) nuovo = 0;
+        h.textContent = h.textContent.replace(vecchio + " partite", nuovo + " partite").replace(vecchio + " partita", nuovo + " partita");
+      });
+
+    }catch(e){ /* se qualcosa va storto, non rompe nient'altro */ }
+  }
+
+  setInterval(pulisci, 900);
+  setTimeout(pulisci, 900);
+})();
+</script>
 </html>

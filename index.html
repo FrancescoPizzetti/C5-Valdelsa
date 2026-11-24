@@ -7713,4 +7713,47 @@ function mostraMarcatoriCal(btn){
   setTimeout(pulisci, 700);
 })();
 </script>
+<script>
+// FIX IND - La pagina a schermo intero deve filtrare per trofeo cliccato
+(function(){
+  if(window.__fixIndV2) return;
+  window.__fixIndV2 = true;
+
+  var origShow = window.showIndTrofeo;
+  window.showIndTrofeo = function(which){
+    curIndTrofeo = which;
+    if(typeof aggiornaIndHero === "function") aggiornaIndHero();
+    document.querySelectorAll(".ind-btn").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-trofeo") === which);
+    });
+    // Ridisegna la lista filtrata, senza aspettare render()
+    var box = document.getElementById("alboInds");
+    if(box){
+      var list = (window.indTitles || []).slice();
+      list = list.filter(function(x){ return x.trofeo === which; });
+      list.sort(function(a,b){ return (b.anno||0) - (a.anno||0); });
+      var h = "";
+      for(var i=0;i<list.length;i++){
+        h += "<div class='row'><div><b>"+list[i].nome+"</b><br><span class='small'>"+list[i].trofeo+"</span></div><span class='badge'>"+list[i].anno+"</span></div>";
+      }
+      if(!h) h = "<p class='small'>Ancora nessun trofeo individuale per "+which+".</p>";
+      box.innerHTML = h;
+    }
+    if(typeof render === "function") render();
+    // Dopo render(), ridisegna di nuovo perché render() potrebbe aver rimesso la lista vecchia
+    setTimeout(function(){
+      var box2 = document.getElementById("alboInds");
+      if(!box2) return;
+      var list2 = (window.indTitles || []).slice().filter(function(x){ return x.trofeo === curIndTrofeo; });
+      list2.sort(function(a,b){ return (b.anno||0) - (a.anno||0); });
+      var h2 = "";
+      for(var j=0;j<list2.length;j++){
+        h2 += "<div class='row'><div><b>"+list2[j].nome+"</b><br><span class='small'>"+list2[j].trofeo+"</span></div><span class='badge'>"+list2[j].anno+"</span></div>";
+      }
+      if(!h2) h2 = "<p class='small'>Ancora nessun trofeo individuale per "+curIndTrofeo+".</p>";
+      box2.innerHTML = h2;
+    }, 50);
+  };
+})();
+</script>
 </html>

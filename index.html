@@ -603,6 +603,7 @@ function showCalTab(t){
 <div style="display:flex;gap:8px"><button class="big" type="button" style="background:#3b82f6" onclick="setDiscTo(50)">🔄 Rimetti a 50</button><button class="big" type="button" style="background:#f97316" onclick="setDiscCustom()">✏️ Imposta valore esatto</button></div>
 <button class="big" type="button" style="background:#ef4444" onclick="resetAllDisc()">⚠️ Rimetti TUTTE a 50</button>
 <div id="discList"></div>
+  <div id="boxDisposizioniAdmin" style="margin-top:12px;"></div>
 </div>
 <div id="adminSec-giocatori" style="display:none">
 <h3>👤 Giocatore</h3>
@@ -994,10 +995,30 @@ if(w&&w.indexOf("Pareggio")<0)list.push(w);
 }
 }
 return list;
+// TABELLA DISPOSIZIONI DISCIPLINARI - Tutte le partite, tutti i rossi
+function mostraDisposizioni(){
+  var html="<h3>📋 DISPOSIZIONI DISCIPLINARI - Rossi Diretti</h3>";
+  html+="<table style='width:100%;border-collapse:collapse;font-size:13px;'><tr><th style='text-align:left;'>Giocatore</th><th style='text-align:left;'>Articolo</th><th style='text-align:left;'>Giornate</th><th style='text-align:left;'>Motivazione</th></tr>";
+  var trovate=0;
+  for(var mi=0;mi<matches.length;mi++){
+    var m=matches[mi];
+    if(!m.cards) continue;
+    for(var ci=0;ci<m.cards.length;ci++){
+      var c=m.cards[ci];
+      if(c.tipo!=="rosso") continue;
+      trovate++;
+      html+="<tr><td>"+c.n+" - "+c.team+"</td><td>Art. "+(c.motivo||"-")+"</td><td>"+(c.giornate||"-")+(c.capitano?" - Capitano":"")+"</td><td>"+(c.motivazione||"-")+"</td></tr>";
+    }
+  }
+  if(!trovate) html+="<tr><td colspan='4'>Nessuna disposizione al momento.</td></tr>";
+  html+="</table>";
+  return html;
+}
 }function showDiscCurrent(){
 var t=el('dTeam')?el('dTeam').value:"";
 if(!t)return;
 if(el('discCurrent'))el('discCurrent').textContent=discVal(t)+" punti - "+t;
+  if(el('boxDisposizioniAdmin'))el('boxDisposizioniAdmin').innerHTML=mostraDisposizioni();
 }
 function showPromoCurrent(){
 var t=el('promoTeam')?el('promoTeam').value:"";
@@ -3412,7 +3433,7 @@ if(el('cardsAdminList')){
     var hca="<p class='small'><b>Cartellini di "+cm.casa+" vs "+cm.tras+"</b></p>";
     for(var ci=0;ci<cm.cards.length;ci++){
       var cc=cm.cards[ci];
-      hca+="<div class='row'><div><small>"+cc.team+" - <b>"+cc.n+"</b> - "+cardIcons(cc.tipo)+" "+cardLabel(cc.tipo)+"</small></div>";
+      hca+="<div class='row'><div><small>"+cc.team+" - <b>"+cc.n+"</b> - "+cardIcons(cc.tipo)+" "+cardLabel(cc.tipo)+(cc.tipo==="rosso" ? " - Art. "+(cc.motivo||"-")+" - "+(cc.giornate||0)+" giorn."+(cc.capitano?" - Capitano":"")+(cc.motivazione?" - "+cc.motivazione:"") : "")+"</small></div>";
       hca+="<button class='del' type='button' onclick='delCard("+cIdx+","+ci+")'>X</button></div>";
     }
     if(!cm.cards.length) hca+="<p class='small'>Ancora nessun cartellino.</p>";
@@ -7197,7 +7218,7 @@ function modificaDataOraCoppa(){
     var c=m.cards[k];
     if(c.team!==squadra) continue;
     trovati++;
-    out+="<div style='padding:8px 0;border-bottom:1px solid #333;text-align:center'>"+cardIcons(c.tipo)+" <b>"+c.n+"</b><br><span class='small'>"+cardLabel(c.tipo)+"</span></div>";
+    out+="<div style='padding:8px 0;border-bottom:1px solid #333;text-align:center'>"+cardIcons(c.tipo)+" <b>"+c.n+"</b><br><span class='small'>"+cardLabel(c.tipo)+"</span>" + (c.tipo==="rosso" ? "<br><span class='small'>Art. "+(c.motivo||"-")+" - "+(c.giornate||0)+" giornate"+(c.capitano?" - Capitano +1":"")+(c.motivazione?" - "+c.motivazione:"")+"</span>" : "") + "</div>";
   }
   if(!trovati) return "<p class='small' style='text-align:center'>Nessun cartellino</p>";
   return out;

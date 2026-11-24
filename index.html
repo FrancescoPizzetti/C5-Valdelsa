@@ -7235,29 +7235,21 @@ function mostraMarcatoriCal(btn){
 })();
 </script>
 <script>
-// FIX HOME v2 - Nasconde TUTTA la card RIPOSA / ritirata. Non tocca altre funzioni.
+// FIX FINALE HOME - Nasconde Boca Voglia (ritirata) / RIPOSA. Non tocca altre funzioni.
 (function(){
-  if(window.__fixHomeRiposaV2) return;
-  window.__fixHomeRiposaV2 = true;
+  if(window.__fixHomeFinale) return;
+  window.__fixHomeFinale = true;
 
-  function nomiDaNascondere(){
-    var out = ["RIPOSA"];
-    try{ (window.teams||[]).forEach(function(t){ if(t.ritirata) out.push(t.n); }); }catch(e){}
-    return out;
-  }
+  // Scritto diretto, non dipende dal flag ritirata
+  var DA_NASCONDERE = ["RIPOSA", "Boca Voglia"];
 
-  function contaVs(txt){
-    var m = txt.match(/ vs /g);
-    return m ? m.length : 0;
-  }
+  function contaVs(txt){ var m=(txt||"").match(/ vs /g); return m?m.length:0; }
 
-  // Dalla scritta "Boca vs Gimignano" risale fino alla CARD intera
   function trovaCard(foglia){
     var el = foglia;
     while(el.parentElement && el.parentElement !== document.body){
       var p = el.parentElement;
-      // Se il genitore contiene più di 1 partita, fermati: el è la card
-      if(contaVs(p.textContent || "") > 1) break;
+      if(contaVs(p.textContent||"") > 1) break; // il genitore ha più partite = el è la card
       el = p;
     }
     return el;
@@ -7265,63 +7257,50 @@ function mostraMarcatoriCal(btn){
 
   function pulisci(){
     try{
-      var daNascondere = nomiDaNascondere();
-
-      // --- 1) Trova tutte le CARD vere (una per partita) ---
+      // 1) Trova 1 card per partita
       var cards = [];
       var visti = new Set();
       document.querySelectorAll("div").forEach(function(el){
-        if(el.children.length > 0) return; // solo foglie, quelle con il testo
-        var txt = el.textContent || "";
-        if(txt.indexOf(" vs ") < 0) return;
+        if(el.children.length>0) return;
+        var txt = el.textContent||"";
+        if(txt.indexOf(" vs ")<0) return;
         var card = trovaCard(el);
         if(visti.has(card)) return;
         visti.add(card);
         cards.push(card);
       });
 
-      // --- 2) Nascondi SOLO le card con RIPOSA / ritirata ---
+      // 2) Nascondi TUTTA la card se una delle 2 è da nascondere
       cards.forEach(function(card){
-        var txt = card.textContent || "";
+        var txt = card.textContent||"";
         var parti = txt.split(" vs ");
-        if(parti.length < 2) return;
+        if(parti.length<2) return;
         var casa = parti[0].trim().split("\n").pop().trim();
-        var tras = parti[1].trim().split("\n")[0].trim();
-        // La trasferta può avere "21:30" dopo, toglilo
-        tras = tras.split("  ")[0].trim();
+        var trasRaw = parti[1].trim();
+        var tras = trasRaw.split("\n")[0].trim();
+        if(tras.indexOf("Serie")>0) tras = tras.substring(0, tras.indexOf("Serie")).trim();
         var match = false;
-        daNascondere.forEach(function(nome){
-          if(casa === nome || tras === nome || tras.indexOf(nome) === 0) match = true;
+        DA_NASCONDERE.forEach(function(nome){
+          if(casa===nome || tras===nome || casa.indexOf(nome)===0 || tras.indexOf(nome)===0) match = true;
         });
-        // Mostra di nuovo se non è più da nascondere, nascondi se lo è
         if(match){
-          card.style.display = "none";
-          card.dataset.nascostaRiposa = "1";
+          if(card.style.display!=="none"){
+            card.style.display = "none";
+            card.dataset.nascostaRiposa = "1";
+          }
         } else {
-          if(card.dataset.nascostaRiposa === "1"){
+          if(card.dataset.nascostaRiposa==="1"){
             card.style.display = "";
             delete card.dataset.nascostaRiposa;
           }
         }
       });
 
-      // --- 3) Sistema il conteggio, contando le card VISIBILI ---
-      // Prendo tutti gli elementi in ordine: intestazioni + card
-      var inOrdine = [];
-      document.querySelectorAll("div, h2, h3, p, span").forEach(function(el){
-        if(el.children.length > 0) return;
-        var t = el.textContent || "";
-        if(/partit/i.test(t) && /\d{2}\/\d{2}\/\d{4}/.test(t)){
-          inOrdine.push({tipo:"titolo", el:el});
-        }
-      });
-      // Per ogni titolo, conto le card visibili dopo di lui fino al titolo dopo
-      // Lo faccio guardando la posizione nella pagina: la card sta dopo il titolo
-      // e prima del titolo successivo
+      // 3) Sistema il conteggio: per ogni titolo, conta le card visibili tra lui e il titolo dopo
       var titoli = [];
       document.querySelectorAll("div, h2, h3, p, span").forEach(function(el){
-        if(el.children.length > 0) return;
-        var t = el.textContent || "";
+        if(el.children.length>0) return;
+        var t = el.textContent||"";
         if(/partit/i.test(t) && /\d{2}\/\d{2}\/\d{4}/.test(t)) titoli.push(el);
       });
 
@@ -7329,20 +7308,19 @@ function mostraMarcatoriCal(btn){
         var prossimo = titoli[idx+1];
         var count = 0;
         cards.forEach(function(card){
-          if(card.dataset.nascostaRiposa === "1") return; // nascosta, non contare
-          // La card deve stare tra questo titolo e il prossimo
+          if(card.dataset.nascostaRiposa==="1") return;
           if(titolo.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING){
             if(!prossimo || (prossimo.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_PRECEDING)){
               count++;
             }
           }
         });
-        if(count === 0) return; // se non ho trovato card, non tocco il titolo
+        if(count===0) return;
         var m = titolo.textContent.match(/(\d+)\s*partit/);
         if(!m) return;
-        var vecchio = parseInt(m[1], 10);
-        if(vecchio !== count){
-          titolo.textContent = titolo.textContent.replace(vecchio + " partite", count + " partite").replace(vecchio + " partita", count + " partita");
+        var vecchio = parseInt(m[1],10);
+        if(vecchio!==count){
+          titolo.textContent = titolo.textContent.replace(vecchio+" partite", count+" partite").replace(vecchio+" partita", count+" partita");
         }
       });
 

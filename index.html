@@ -4970,14 +4970,15 @@ body, html{ overflow-x:hidden!important; max-width:100%!important; }
 }
 function rigaCal(m){
     var _rip = _isRiposa(m.casa) || _isRiposa(m.tras);
+    var _clic = !_rip && m.stato === "Giocata";
     var sc = _rip
       ? "<b>RIPOSA</b>"
       : (m.stato === "Giocata")
-      ? "<b>" + (m.golC==null?"":m.golC) + " - " + (m.golT==null?"":m.golT) + "</b>"
+      ? "<button type='button' onclick='mostraMarcatoriCal(this)' data-casa='"+(m.casa||"")+"' data-tras='"+(m.tras||"")+"' data-giornata='"+(m.giornata||"")+"' data-fase='"+(m.fase||"")+"' style='background:#facc15;color:#000;border:0;border-radius:10px;padding:10px 14px;font-weight:900;font-size:15px;cursor:pointer;white-space:nowrap' title='Vedi marcatori'>"+(m.golC==null?"":m.golC)+" - "+(m.golT==null?"":m.golT)+" ⚽</button>"
       : "<span class='badge'>Da giocare</span>";
     return "<div class='row'><div><b>" + (m.casa||"") + " vs " + (m.tras||"") + "</b><br><span class='small'>"
       + (m.data||"") + " " + (m.ora||"") + " - " + (m.luogo||"") + "</span></div>" + sc + "</div>";
-  }
+}
 
   function renderCalFix(){
     var box = document.getElementById("calList");
@@ -7085,5 +7086,62 @@ function modificaDataOraCoppa(){
   setInterval(converti, 1000);
   setTimeout(converti, 800);
 })();
+</script>
+<script>
+function logoSquadraCal(nome){
+  try{
+    for(var i=0;i<(window.teams||[]).length;i++){
+      if(teams[i].n===nome && teams[i].logo) return teams[i].logo;
+    }
+  }catch(e){}
+  return "";
+}
+function mostraMarcatoriCal(btn){
+  var casa = btn.getAttribute("data-casa");
+  var tras = btn.getAttribute("data-tras");
+  var gior = btn.getAttribute("data-giornata");
+  var m = null;
+  for(var i=0;i<(window.matches||[]).length;i++){
+    if(matches[i].casa===casa && matches[i].tras===tras && String(matches[i].giornata||"")===String(gior)){ m=matches[i]; break; }
+  }
+  if(!m){
+    for(var j=0;j<(window.coppaMatches||[]).length;j++){
+      if(coppaMatches[j].casa===casa && coppaMatches[j].tras===tras){ m=coppaMatches[j]; break; }
+    }
+  }
+  function listaScoreri(squadra){
+    if(!m || !m.scorers || !m.scorers.length) return "<p class='small' style='text-align:center'>Nessun marcatore</p>";
+    var out = "";
+    var trovati = 0;
+    for(var k=0;k<m.scorers.length;k++){
+      var s = m.scorers[k];
+      if(s.team!==squadra) continue;
+      trovati++;
+      out += "<div style='padding:8px 0;border-bottom:1px solid #333;text-align:center'><b>"+s.n+"</b><br><span class='small'>"+(s.autogol?"AUTOGOL • ":"")+ "⚽ "+s.gol+(s.gol>1?" gol":" gol")+"</span></div>";
+    }
+    if(!trovati) return "<p class='small' style='text-align:center'>Nessun marcatore</p>";
+    return out;
+  }
+  function bloccoSquadra(nome){
+    var logo = logoSquadraCal(nome);
+    var img = logo ? "<img src='"+logo+"' onerror=\"this.style.display='none'\" style='width:64px;height:64px;object-fit:contain;border-radius:50%;background:#fff;padding:4px'>" : "<div style='width:64px;height:64px;border-radius:50%;background:#333;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900'>"+String(nome||"?").charAt(0)+"</div>";
+    return "<div style='flex:1;text-align:center'>"+img+"<div style='font-weight:900;margin-top:8px;line-height:1.2'>"+nome+"</div></div>";
+  }
+  var vecchia = document.getElementById("popupMarcatori");
+  if(vecchia) vecchia.remove();
+  var div = document.createElement("div");
+  div.id = "popupMarcatori";
+  div.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px";
+  div.innerHTML = "<div style='background:#111827;border:1px solid #facc15;border-radius:16px;padding:16px;width:100%;max-width:400px'>"
+    + "<div style='display:flex;align-items:center;gap:8px'>"+bloccoSquadra(casa)
+    + "<div style='text-align:center;min-width:80px'><div style='font-size:30px;font-weight:900;white-space:nowrap'>"+(m?((m.golC??"")+" - "+(m.golT??"")):"")+"</div><div class='small'>"+(m?(m.data||"")+" "+(m.ora||""):"")+"<br>"+(m?(m.luogo||""):"")+"</div></div>"
+    + bloccoSquadra(tras) + "</div>"
+    + "<div style='display:flex;gap:12px;margin-top:16px'><div style='flex:1'><div style='text-align:center;font-weight:900;color:#facc15;margin-bottom:6px'>⚽ "+casa+"</div>"+listaScoreri(casa)+"</div>"
+    + "<div style='width:1px;background:#444'></div>"
+    + "<div style='flex:1'><div style='text-align:center;font-weight:900;color:#facc15;margin-bottom:6px'>⚽ "+tras+"</div>"+listaScoreri(tras)+"</div></div>"
+    + "<button onclick=\"document.getElementById('popupMarcatori').remove()\" style='width:100%;margin-top:16px;padding:12px;border-radius:10px;background:#facc15;color:#000;font-weight:900;border:0'>Chiudi</button></div>";
+  div.addEventListener("click", function(e){ if(e.target===div) div.remove(); });
+  document.body.appendChild(div);
+}
 </script>
 </html>

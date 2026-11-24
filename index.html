@@ -1281,10 +1281,6 @@ var t=teamTitles[i].team;
 if(!counts[t])counts[t]=[];
 counts[t].push(teamTitles[i]);
 }
-// BONUS SOLO PER LA 1a DI B1 E LA 1a DI B2
-if(bonusB1 && bonusB1.team && t[bonusB1.team]) t[bonusB1.team].pti+=bonusB1.pti;
-if(bonusB2 && bonusB2.team && t[bonusB2.team]) t[bonusB2.team].pti+=bonusB2.pti;
-var arr=[];
 var arr=[];
 for(var k in counts){
 counts[k].sort(function(a,b){return b.anno-a.anno});

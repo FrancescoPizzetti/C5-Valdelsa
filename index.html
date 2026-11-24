@@ -518,7 +518,7 @@ div:has(> img){
 <button onclick="showCalTab('risultati')" id="btnCalRisultati" style="flex:1;padding:12px;font-weight:bold;background:#222;color:#fff;border-radius:10px">2. METTI RISULTATI</button>
 </div>
 <div id="tabCalCrea">
-<h3>📅 PASSO 1 - Calendario Campionato</h3>
+<h3>Crea Calendario Campionato di Serie A, B, B1 e B2</h3>
 <div class="label">LEGA</div>
 <select id="fLegaMatch" onchange="render()"><option>Serie A</option><option>Serie B</option><option>Serie B1</option><option>Serie B2</option></select>
 <div class="label">SQUADRA DI CASA</div><select id="fCasa"></select>
@@ -533,7 +533,7 @@ div:has(> img){
 <button class="big" type="button" onclick="saveMatchCal()">+ Aggiungi Partita al Calendario</button>
 </div>
 <div id="tabCalRisultati" style="display:none">
-<h3>📋 PASSO 2 - Risultato Campionato</h3>
+<h3>Gestione risultati, marcatori, cartellini o canc. partite</h3>
 <div class="label">SCEGLI LA PARTITA</div><select id="fMatchSelect" onchange="refreshScorerPlayers()"></select>
 <div style="display:flex;gap:8px"><div style="flex:1"><div class="label">GOL CASA</div><input id="fResGolC" type="number" placeholder="Gol Casa"></div><div style="flex:1"><div class="label">GOL TRASFERTA</div><input id="fResGolT" type="number" placeholder="Gol Trasferta"></div></div>
 <button class="big" type="button" style="background:#22c55e" onclick="saveResultFromCal()">✅ SALVA RISULTATO</button>

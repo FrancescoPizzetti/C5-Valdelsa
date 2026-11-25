@@ -2270,25 +2270,47 @@ function giornateRosso(art,isCapitano){
   return 0;
 }
 function addCard(){
-  var idx=findMatchBySelect();
-  if(idx<0){alert("Scegli prima la partita!");return;}
-  var m=matches[idx];
-  if(!m.cards) m.cards=[];
-  var squadra=el('fCardTeam').value;
-  var nome=el('fCardPlayer').value;
-  var tipo=el('fCardTipo').value||"giallo";
-  if(!squadra||!nome){alert("Scegli squadra e giocatore!");return;}
-  var motivoRosso=el('fCardMotivo')?el('fCardMotivo').value:"";
-  var isCapitano=el('fCardCapitano')?el('fCardCapitano').checked:false;
-  var giornateMan=el('fCardGiornateMan')?parseInt(el('fCardGiornateMan').value||"0"):0;
-  var motivazione=el('fCardMotivazione')?el('fCardMotivazione').value.trim():"";
-  if(tipo==="rosso" && !motivoRosso){alert("Scegli il motivo del rosso diretto - Art. 6");return;}
-  if(giornateMan>0 && !motivazione){alert("Se metti giornate manuali devi scrivere la motivazione");return;}
-  var giornateFinali = giornateMan>0 ? giornateMan : giornateRosso(motivoRosso,isCapitano);
-  m.cards.push({n:nome,team:squadra,tipo:tipo,motivo:motivoRosso,capitano:isCapitano,giornate:giornateFinali,giornateManuali:giornateMan,motivazione:motivazione});
+  var idx = findMatchBySelect();
+  if(idx < 0){ alert("Scegli prima la partita!"); return; }
+  var m = matches[idx];
+  if(!m.cards) m.cards = [];
+  var squadra = el('fCardTeam').value;
+  var nome = el('fCardPlayer').value;
+  var tipo = el('fCardTipo').value || "giallo";
+  if(!squadra || !nome){ alert("Scegli squadra e giocatore!"); return; }
+  var motivoRosso = el('fCardMotivo') ? el('fCardMotivo').value : "";
+  var isCapitano = el('fCardCapitano') ? el('fCardCapitano').checked : false;
+  var giornateMan = el('fCardGiornateMan') ? parseInt(el('fCardGiornateMan').value || "0") : 0;
+  var motivazione = el('fCardMotivazione') ? el('fCardMotivazione').value.trim() : "";
+  var puntiMan = el('fCardPuntiMan') ? parseInt(el('fCardPuntiMan').value || "") : NaN;
+  if(tipo === "rosso" && !motivoRosso){ alert("Scegli il motivo del rosso diretto - Art. 6"); return; }
+  if(giornateMan > 0 && !motivazione){ alert("Se metti giornate manuali devi scrivere la motivazione"); return; }
+  var isCoppa = !!(m.coppa);
+  var giornateFinali = 0;
+  var aTempo = false;
+  if(tipo === "giallo"){
+    giornateFinali = 0;
+  } else if(tipo === "doppio"){
+    giornateFinali = giornateMan > 0 ? giornateMan : 1;
+  } else if(tipo === "rosso"){
+    if(giornateMan > 0){
+      giornateFinali = giornateMan;
+    } else {
+      giornateFinali = giornateRosso(motivoRosso, isCapitano);
+      var row = null;
+      for(var r = 0; r < TABELLA_ROSSI.length; r++){ if(TABELLA_ROSSI[r].art === motivoRosso) row = TABELLA_ROSSI[r]; }
+      if(row && row.aTempo) aTempo = true;
+    }
+  }
+  var nuovaCard = {n: nome, team: squadra, tipo: tipo, motivo: motivoRosso, capitano: isCapitano, giornate: giornateFinali, giornateManuali: giornateMan, motivazione: motivazione, aTempo: aTempo};
+  var punti = !isNaN(puntiMan) ? puntiMan : cardPuntiDisciplina(nuovaCard, isCoppa);
+  nuovaCard.puntiDisciplina = punti;
+  m.cards.push(nuovaCard);
+  if(!disciplina[squadra]) disciplina[squadra] = giornateCampionato() * 2;
+  disciplina[squadra] -= punti;
   save();
-  alert("Cartellino aggiunto!" + (tipo==="rosso" ? " Giornate: " + giornateFinali : ""));
-}
+  alert("Cartellino aggiunto! Punti disciplina tolti: " + punti + ((tipo === "rosso" || tipo === "doppio") ? " - Giornate: " + (aTempo ? "a tempo (15 punti)" : giornateFinali) : ""));
+                                                }
 function delCard(matchIdx,cardIdx){
   var m=matches[matchIdx];
   if(!m||!m.cards) return;

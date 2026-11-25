@@ -8016,4 +8016,75 @@ window.showDisp = function(tipo, lega){
   };
 })();
 </script>
+<script>
+// RESCUE ALBO - Ridefinisce Assegna Titolo e Assegna Trofeo, così il bottone funziona sempre
+function _alboEl(id){ return document.getElementById(id); }
+function _alboRender(){
+  // Se esiste la versione vecchia, usala
+  if(typeof renderAlboAdmin === 'function'){
+    try{ renderAlboAdmin(); return; }catch(e){}
+  }
+  // Altrimenti ridisegna a mano le 2 liste Admin
+  var l1=_alboEl('alboAdminList');
+  if(l1){
+    var h="";
+    for(var i=0;i<(window.teamTitles||[]).length;i++){
+      h+="<div class='row'><div><small>"+window.teamTitles[i].team+" - "+window.teamTitles[i].trofeo+" "+window.teamTitles[i].anno+"</small></div>";
+      h+="<button class='del' type='button' onclick='delTeamTitle("+i+")'>X</button></div>";
+    }
+    if(!h) h="<p class='small'>Albo vuoto</p>";
+    l1.innerHTML=h;
+  }
+  var l2=_alboEl('alboIndAdminList');
+  if(l2){
+    var h2="";
+    for(var j=0;j<(window.indTitles||[]).length;j++){
+      h2+="<div class='row'><div><small>"+window.indTitles[j].nome+" - "+window.indTitles[j].trofeo+" "+window.indTitles[j].anno+"</small></div>";
+      h2+="<button class='del' type='button' onclick='delIndTitle("+j+")'>X</button></div>";
+    }
+    if(!h2) h2="<p class='small'>Nessun individuale</p>";
+    l2.innerHTML=h2;
+  }
+}
+window.saveTeamTitle = function(){
+  var teamEl=_alboEl('fAlboTeam');
+  var trofeoEl=_alboEl('fAlboTrofeo');
+  var annoEl=_alboEl('fAlboAnno');
+  var team=teamEl ? teamEl.value : "";
+  var trofeo=trofeoEl ? trofeoEl.value : "";
+  var anno=annoEl ? parseInt(annoEl.value) : NaN;
+  if(!team){ alert("Scegli la squadra"); return; }
+  if(!anno){ alert("Metti l'anno"); return; }
+  if(!window.teamTitles) window.teamTitles=[];
+  window.teamTitles.push({team:team, trofeo:trofeo, anno:anno});
+  if(typeof save === 'function'){ try{ save(); }catch(e){} }
+  _alboRender();
+  alert("Titolo assegnato!");
+};
+window.saveIndTitle = function(){
+  var nomeEl=_alboEl('fIndNome');
+  var trofeoEl=_alboEl('fIndTrofeo');
+  var annoEl=_alboEl('fIndAnno');
+  var teamEl=_alboEl('fIndTeam');
+  var nome=nomeEl ? nomeEl.value.trim() : "";
+  if(!nome){ alert("Scrivi il nome"); return; }
+  var trofeo=trofeoEl ? trofeoEl.value : "";
+  var anno=annoEl ? parseInt(annoEl.value) : NaN;
+  var team=teamEl ? teamEl.value : "";
+  if(!anno){ alert("Metti l'anno - se la lista anno è vuota, dimmelo"); return; }
+  if(!window.indTitles) window.indTitles=[];
+  window.indTitles.push({nome:nome, trofeo:trofeo, anno:anno, team:team});
+  if(nomeEl) nomeEl.value="";
+  if(typeof save === 'function'){ try{ save(); }catch(e){} }
+  _alboRender();
+  alert("Trofeo assegnato!");
+};
+// Se il blocco vecchio ha lasciato i bottoni senza funzione, li riaggancio anche da qui
+(function(){
+  var b1=document.querySelector("button[onclick*='saveTeamTitle']");
+  var b2=document.querySelector("button[onclick*='saveIndTitle']");
+  if(b1) b1.onclick=function(){ window.saveTeamTitle(); };
+  if(b2) b2.onclick=function(){ window.saveIndTitle(); };
+})();
+</script>
 </html>

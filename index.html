@@ -1242,13 +1242,14 @@ showPromoCurrent();
 alert("RETROCESSA in Serie B!");
 }
 function saveTeamTitle(){
-var team=el('fAlboTeam').value;
-var trofeo=el('fAlboTrofeo').value;
-var anno=parseInt(el('fAlboAnno').value);
-if(!anno){alert("Metti l'anno");return;}
-teamTitles.push({team:team,trofeo:trofeo,anno:anno});
-save();
-alert("Titolo assegnato!");
+  var team=el('fAlboTeam').value;
+  var trofeo=el('fAlboTrofeo').value;
+  var anno=parseInt(el('fAlboAnno').value);
+  if(!anno){alert("Metti l'anno");return;}
+  teamTitles.push({team:team,trofeo:trofeo,anno:anno});
+  save();
+  renderAlboAdmin();
+  alert("Titolo assegnato!");
 }
 function delTeamTitle(i){
   if(!confirm("Cancellare?"))return;
@@ -1284,16 +1285,17 @@ function renderAlboAdmin(){
   render();
 }
 function saveIndTitle(){
-var nome=el('fIndNome').value.trim();
-if(!nome){alert("Scrivi il nome");return;}
-var trofeo=el('fIndTrofeo').value;
-var anno=parseInt(el('fIndAnno').value);
-var team=el('fIndTeam').value;
-if(!anno){alert("Metti l'anno");return;}
-indTitles.push({nome:nome,trofeo:trofeo,anno:anno,team:team});
-el('fIndNome').value="";
-save();
-alert("Trofeo assegnato!");
+  var nome=el('fIndNome').value.trim();
+  if(!nome){alert("Scrivi il nome");return;}
+  var trofeo=el('fIndTrofeo').value;
+  var anno=parseInt(el('fIndAnno').value);
+  var team=el('fIndTeam').value;
+  if(!anno){alert("Metti l'anno");return;}
+  indTitles.push({nome:nome,trofeo:trofeo,anno:anno,team:team});
+  el('fIndNome').value="";
+  save();
+  renderAlboAdmin();
+  alert("Trofeo assegnato!");
 }
 function calcAlbo(){
 var counts={};

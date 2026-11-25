@@ -636,6 +636,8 @@ function showCalTab(t){
 <div class="label">SQUADRA</div><select id="fPlayerTeam"></select>
 <button class="big" type="button" onclick="addPlayerNew()">+ Aggiungi Giocatore alla Rosa</button>
 </div>
+<div class="label">MOSTRA SOLO SQUADRA</div>
+<select id="filtroSquadraAdmin" onchange="render()"><option value="">Tutte le squadre</option></select>
 <div id="playersList"></div>
 </div>
 <div id="adminSec-contatti" style="display:none">

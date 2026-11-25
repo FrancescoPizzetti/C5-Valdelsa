@@ -8131,7 +8131,20 @@ function _palmaresDati6(){
   arr.sort(function(a,b){ if(b.tot!==a.tot) return b.tot-a.tot; return b.ultimo-a.ultimo; });
   return arr.slice(0,5);
 }
-function openPalmares(){
+function _palmaresTeamLogo6(nome){
+  try{
+    if(typeof teamObj === 'function'){
+      var t = teamObj(nome);
+      if(t && t.logo) return '<img src="'+t.logo+'" alt="'+nome+'" style="width:44px;height:44px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;">';
+      if(t && t.c) return '<span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:'+t.c+';color:#000;font-weight:900;font-size:20px;">'+nome.charAt(0)+'</span>';
+    }
+  }catch(e){}
+  try{
+    if(typeof logoHtml === 'function') return logoHtml(nome);
+  }catch(e){}
+  return '<span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:#facc15;color:#000;font-weight:900;font-size:20px;">'+nome.charAt(0)+'</span>';
+}
+  function openPalmares(){
   var old = document.getElementById('paginaPalmares');
   if(old) old.remove();
   var arr = _palmaresDati6();
@@ -8144,6 +8157,7 @@ function openPalmares(){
       var club = arr[j];
       html += "<div style='display:flex;gap:10px;align-items:flex-start;background:#111;padding:12px;border-radius:12px;margin-bottom:10px;border:1px solid #333;'>";
       html += "<div style='font-size:20px;font-weight:900;min-width:34px;text-align:center;'>"+med[j]+"</div>";
+      html += "<div style='flex-shrink:0;'>" + _palmaresTeamLogo6(club.team) + "</div>";
       html += "<div style='flex:1;min-width:0;'>";
       html += "<div style='display:flex;justify-content:space-between;gap:8px;align-items:center;'><b>"+club.team+"</b><span class='badge'>"+club.tot+" 🏆</span></div>";
       html += "<div style='display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;'>";

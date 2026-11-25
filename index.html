@@ -2845,9 +2845,17 @@ save();
 alert("Aggiornato!");
 }
 function delMatch(i){
-if(!confirm("Cancellare questa partita?"))return;
-matches.splice(i,1);
-save();
+  if(!confirm("Cancellare questa partita?")) return;
+  var mDel = matches[i];
+  if(mDel && mDel.cards){
+    for(var k = 0; k < mDel.cards.length; k++){
+      var cc = mDel.cards[k];
+      var pp = (cc.puntiDisciplina !== undefined) ? cc.puntiDisciplina : cardPuntiDisciplina(cc, !!mDel.coppa);
+      disciplina[cc.team] = (disciplina[cc.team] || 0) + pp;
+    }
+  }
+  matches.splice(i, 1);
+  save();
 }
 function svuotaCalendario(){
 if(!confirm("CANCELLARE TUTTE LE PARTITE?"))return;
@@ -7805,4 +7813,34 @@ function mostraMarcatoriCal(btn){
   };
 })();
 </script>
+      <script>
+function ricalcolaDisciplina(){
+  if(!confirm("Ricalcolo tutta la Coppa Disciplina da zero? Base + cartellini. Le penalità manuali tipo ritardi / danni vanno rimesse a mano dopo.")) return;
+  var base = giornateCampionato() * 2;
+  var ns = teamNames();
+  for(var i = 0; i < ns.length; i++){ disciplina[ns[i]] = base; }
+  for(var j = 0; j < matches.length; j++){
+    var mm = matches[j];
+    if(!mm.cards) continue;
+    for(var k = 0; k < mm.cards.length; k++){
+      var c1 = mm.cards[k];
+      var p1 = cardPuntiDisciplina(c1, !!mm.coppa);
+      c1.puntiDisciplina = p1;
+      disciplina[c1.team] = (disciplina[c1.team] || base) - p1;
+    }
+  }
+  for(var z = 0; z < coppaMatches.length; z++){
+    var cm = coppaMatches[z];
+    if(!cm.cards) continue;
+    for(var w = 0; w < cm.cards.length; w++){
+      var c2 = cm.cards[w];
+      var p2 = cardPuntiDisciplina(c2, true);
+      c2.puntiDisciplina = p2;
+      disciplina[c2.team] = (disciplina[c2.team] || base) - p2;
+    }
+  }
+  save();
+  alert("Ricalcolo fatto! Ora i punti disciplina sono: base - cartellini.");
+}
+      </script>
 </html>

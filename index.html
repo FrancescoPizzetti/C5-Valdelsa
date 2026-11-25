@@ -3255,7 +3255,7 @@ else html+="<span class='badge'>Da giocare</span>";
 html+="</div></div>";
 }
 }
-if(!html)html=""
+if(!html)html="<p class='small' style='text-align:center;padding:12px'>Ancora nessuna competizione per "+curCoppa+". Le coppe si creano a fine campionato dalla classifica.</p>"
 el('coppeList').innerHTML=html;
 if(curCoppa==='Coppa di Lega'&&legaBracket&&legaBracket.size>0){ el('coppeList').innerHTML=legaBracketHtml(false)+el('coppeList').innerHTML; }
 }

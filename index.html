@@ -1048,16 +1048,24 @@ function contaGialli(nome, squadra, comp){
   var all=tutteLeCard();
   for(var i=0;i<all.length;i++){
     if(all[i].comp!==comp) continue;
-    if(all[i].c.n===nome && all[i].c.team===squadra && all[i].c.tipo==='giallo') n++;
+    if(all[i].c.n===nome && all[i].c.team===squadra){
+      if(all[i].c.tipo==='giallo') n+=1;
+      if(all[i].c.tipo==='doppio') n+=2;
+    }
   }
   return n;
 }
 function statoGiocatore(nome, squadra, comp){
   var gialli=contaGialli(nome,squadra,comp);
-  // 3 gialli = diffidato, 4° giallo = 1 giornata. Dopo la squalifica il conto riparte ogni 4.
-  var resto=gialli%4;
-  var squalGialli = (gialli>=4 && resto===0) ? 1 : 0;
-  return {gialli:gialli, diffidato:(resto===3), squalGialli:squalGialli};
+  if(gialli<=0) return {gialli:0, diffidato:false, squalGialli:0};
+  // Art. 12.1 Coppa: diffida a 1, squalifica a 2, poi riparte ogni 2
+  if(comp==='COPPA'){
+    var restoCoppa=gialli%2;
+    return {gialli:gialli, diffidato:(restoCoppa===1), squalGialli:(restoCoppa===0)?1:0};
+  }
+  // Art. 6.14 Campionato: diffida a 2, squalifica a 3, poi riparte ogni 3
+  var resto=gialli%3;
+  return {gialli:gialli, diffidato:(resto===2), squalGialli:(resto===0)?1:0};
 }
 // Mostra una tabella per tipo + lega
 function mostraDisp(tipo, lega){
@@ -1069,10 +1077,11 @@ function mostraDisp(tipo, lega){
     var mappa={};
     for(var i=0;i<all.length;i++){
       if(all[i].lega!==lega) continue;
-      if(all[i].c.tipo!=='giallo') continue;
+      if(all[i].c.tipo!=='giallo' && all[i].c.tipo!=='doppio') continue;
       var key=all[i].c.n+'|'+all[i].c.team;
       if(!mappa[key]) mappa[key]={n:all[i].c.n, team:all[i].c.team, gialli:0};
-      mappa[key].gialli++;
+      if(all[i].c.tipo==='giallo') mappa[key].gialli+=1;
+      if(all[i].c.tipo==='doppio') mappa[key].gialli+=2;
     }
     for(var k in mappa){
       trovate++;
@@ -1103,14 +1112,6 @@ function mostraDisp(tipo, lega){
         trovate++;
         html+="<tr><td>"+c.n+"</td><td>"+c.team+"</td><td>Doppio giallo - 1 giornata</td></tr>";
       }
-      if(c.tipo==='giallo'){
-        var st2=statoGiocatore(c.n, c.team, all[s].comp);
-        if(st2.squalGialli>0){
-          // Mostra una sola volta per giocatore
-          var key3=c.n+'|'+c.team+'|gialli';
-          if(!window['_sq_'+key3]){ window['_sq_'+key3]=1; }
-        }
-      }
     }
     // Squalifiche per somma gialli, una riga per giocatore
     var vistiSq={};
@@ -1120,7 +1121,7 @@ function mostraDisp(tipo, lega){
       var key4=all[s2].c.n+'|'+all[s2].c.team;
       if(st3.squalGialli>0 && !vistiSq[key4]){
         vistiSq[key4]=1; trovate++;
-        html+="<tr><td>"+all[s2].c.n+"</td><td>"+all[s2].c.team+"</td><td>4° giallo da diffidato - 1 giornata</td></tr>";
+                html+="<tr><td>"+all[s2].c.n+"</td><td>"+all[s2].c.team+"</td><td>3° giallo da diffidato - 1 giornata</td></tr>";
       }
     }
   }

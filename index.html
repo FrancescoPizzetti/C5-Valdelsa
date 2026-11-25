@@ -3796,11 +3796,12 @@ if(el('alboYearFilter'))el('alboYearFilter').value=curAlboYear;
 if(el('alboYearFilterInd'))el('alboYearFilterInd').value=curAlboYearInd;
 refreshScorerPlayers();
 }
-  function selectTeamStrip(n){
+var teamSelezionata = "";
+function selectTeamStrip(n){
+  teamSelezionata = n;
   var s=document.getElementById('teamFilter');
   if(s) s.value=n;
   render();
-  // Nascondi le griglie, mostra solo la rosa = pagina a parte
   var a=document.getElementById('stripA'); if(a) a.style.display='none';
   var b=document.getElementById('stripB'); if(b) b.style.display='none';
   var titles=document.querySelectorAll('.stripTitle'); for(var i=0;i<titles.length;i++) titles[i].style.display='none';

@@ -7067,6 +7067,67 @@ if(window.players){
   }, 500);
 })();
 </script>
+<!-- FINESTRA ROSA - si apre cliccando una squadra -->
+<div id="rosaModal" onclick="if(event.target===this) chiudiRosa()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
+  <div style="background:#111827;border:2px solid #facc15;border-radius:18px;width:100%;max-width:480px;margin-top:20px;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <h2 id="rosaTitolo" style="margin:0;font-size:19px;">Rosa</h2>
+      <button type="button" onclick="chiudiRosa()" style="background:#facc15;color:#000;font-weight:900;border:0;padding:8px 14px;border-radius:10px;cursor:pointer;">✕ Chiudi</button>
+    </div>
+    <div id="rosaContenuto" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<script>
+function apriRosaSquadra(n){
+  var team = null;
+  for(var i=0;i<teams.length;i++){ if(teams[i].n===n){ team=n; break; } }
+  // Se il nome cliccato non è identico a quello dei giocatori, proviamo a trovare la squadra vera
+  var nomeVero = n;
+  var rosa = players.filter(function(p){ return p.t===n; });
+  if(!rosa.length){
+    // Fallback: cerca per pezzo di nome, es. "Atl. Madrink" vs "Atletico Madrink"
+    for(var j=0;j<players.length;j++){
+      if(!players[j].t) continue;
+      var a = (players[j].t||"").toLowerCase();
+      var b = n.toLowerCase();
+      var corto = b.split(" ")[0].replace(".","");
+      if(a.indexOf(corto)===0 || a.indexOf(b)!==-1){ nomeVero = players[j].t; break; }
+    }
+    rosa = players.filter(function(p){ return p.t===nomeVero; });
+  }
+  var pres = "Non indicato";
+  for(var k=0;k<players.length;k++){
+    if(players[k].t===nomeVero && (players[k].r==="Presidente"||players[k].r==="Presidenti")){ pres = players[k].n; break; }
+  }
+  var ordine = {"Mister":0,"Accompagnatore":1,"Portiere":2,"Portieri":2,"Difensore":2,"Difensori":2,"Laterale":2,"Laterali":2,"Centrocampista":2,"Centrocampisti":2,"Attaccante":2,"Attaccanti":2,"Giocatore":2,"Giocatori":2,"Presidente":99};
+  rosa.sort(function(a,b){
+    var da = (ordine[a.r]!==undefined?ordine[a.r]:99), db = (ordine[b.r]!==undefined?ordine[b.r]:99);
+    if(da!==db) return da-db;
+    return (a.n||"").localeCompare(b.n||"");
+  });
+  var html = "";
+  html += "<p style='margin:0 0 12px;color:#ccc;'><b>"+nomeVero+"</b> - "+teamLeague(nomeVero)+" - Presidente: <b style='color:#fff;'>"+pres+"</b></p>";
+  if(!rosa.length){
+    html += "<p>Nessun giocatore in rosa per questa squadra.</p>";
+  } else {
+    for(var r=0;r<rosa.length;r++){
+      if(rosa[r].r==="Presidente") continue;
+      html += "<div style='display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #333;'><div><b>"+rosa[r].n+"</b><br><span style='font-size:12px;color:#ccc;'>"+(rosa[r].r||"Giocatore")+"</span></div><div style='font-weight:900;color:#facc15;'>"+(rosa[r].g||0)+" gol</div></div>";
+    }
+  }
+  document.getElementById('rosaTitolo').textContent = "👥 " + nomeVero;
+  document.getElementById('rosaContenuto').innerHTML = html;
+  var m = document.getElementById('rosaModal');
+  m.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function chiudiRosa(){
+  var m = document.getElementById('rosaModal');
+  if(m) m.style.display = 'none';
+  document.body.style.overflow = '';
+}
+</script>
 </body>
 <script>
 // ABBINAMENTO COPPA - 1 cella invece di Casa + Trasferta

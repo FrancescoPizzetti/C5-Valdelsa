@@ -8087,4 +8087,90 @@ window.saveIndTitle = function(){
   if(b2) b2.onclick=function(){ window.saveIndTitle(); };
 })();
 </script>
+<script>
+// RESCUE PALMARES - Top 5 club più titolati, da teamTitles, con loghi competizioni
+function _palmaresIcon(trofeo){
+  // 1) Se esiste già la funzione dei loghi coppe, usa quella, così i loghi sono identici alla pagina Coppe
+  try{
+    if(typeof cupIconHtml === 'function'){
+      var h = cupIconHtml(trofeo);
+      if(h) return '<span title="'+trofeo+'" style="display:inline-block;vertical-align:middle;">'+h+'</span>';
+    }
+  }catch(e){}
+  // 2) Fallback: cerchietto colorato con iniziale, se quel trofeo non ha un logo
+  var colori = {
+    'Serie A':'#2563eb', 'Serie B':'#f59e0b', 'Serie B1':'#f59e0b', 'Serie B2':'#f59e0b',
+    'Coppa di Lega':'#9333ea', 'Coppa Campioni':'#facc15', 'Mitropa Cup':'#22c55e', 'Conference':'#38bdf8'
+  };
+  var c = colori[trofeo] || '#888';
+  var ini = (trofeo||'?').charAt(0);
+  return '<span title="'+trofeo+'" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:'+c+';color:#000;font-weight:900;font-size:14px;">'+ini+'</span>';
+}
+function renderPalmares(){
+  var box = document.getElementById('palmaresBox');
+  // Se il contenitore non c'è, lo creo sotto Albo d'oro
+  if(!box){
+    var anchor = document.getElementById('alboPreview') || document.getElementById('alboTeams') || document.getElementById('alboByYear');
+    if(!anchor) return;
+    box = document.createElement('div');
+    box.id = 'palmaresBox';
+    box.style.marginTop = '16px';
+    anchor.parentNode.insertBefore(box, anchor.nextSibling);
+  }
+  var titles = window.teamTitles || [];
+  if(!titles.length){
+    box.innerHTML = "<h3>🏆 PALMARES - TOP 5 CLUB</h3><p class='small'>Ancora nessun titolo assegnato.</p>";
+    return;
+  }
+  // Raggruppa per squadra, conta per trofeo
+  var map = {};
+  for(var i=0;i<titles.length;i++){
+    var t = titles[i];
+    if(!map[t.team]) map[t.team] = {team:t.team, tot:0, per:{}, ultimo:0};
+    map[t.team].tot++;
+    if(!map[t.team].per[t.trofeo]) map[t.team].per[t.trofeo]=0;
+    map[t.team].per[t.trofeo]++;
+    if(t.anno > map[t.team].ultimo) map[t.team].ultimo = t.anno;
+  }
+  var arr = [];
+  for(var k in map) arr.push(map[k]);
+  // Ordina: prima per totale, poi per anno più recente, così chi scavalca sale davvero
+  arr.sort(function(a,b){ if(b.tot!==a.tot) return b.tot-a.tot; return b.ultimo-a.ultimo; });
+  arr = arr.slice(0,5);
+  var medaglie = ['🥇','🥈','🥉','4°','5°'];
+  var html = "<h3>🏆 PALMARES - TOP 5 CLUB</h3>";
+  for(var j=0;j<arr.length;j++){
+    var club = arr[j];
+    html += "<div style='display:flex;gap:10px;align-items:flex-start;background:#111;padding:10px;border-radius:12px;margin-bottom:8px;border:1px solid #333;'>";
+    html += "<div style='font-size:20px;font-weight:900;min-width:34px;text-align:center;'>"+medaglie[j]+"</div>";
+    html += "<div style='flex:1;min-width:0;'>";
+    html += "<div style='display:flex;justify-content:space-between;gap:8px;align-items:center;'><b>"+club.team+"</b><span class='badge'>"+club.tot+" 🏆</span></div>";
+    html += "<div style='display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;'>";
+    // Un badge per trofeo: logo + xN
+    var trofei = Object.keys(club.per).sort(function(a,b){ return club.per[b]-club.per[a]; });
+    for(var ti=0;ti<trofei.length;ti++){
+      var tr = trofei[ti];
+      html += "<span style='display:inline-flex;align-items:center;gap:4px;background:#222;padding:4px 8px;border-radius:999px;font-size:13px;font-weight:900;'>" + _palmaresIcon(tr) + " x" + club.per[tr] + "</span>";
+    }
+    html += "</div></div></div>";
+  }
+  box.innerHTML = html;
+}
+// Si aggiorna da solo a ogni render() e a ogni save(), così non devi riordinare niente
+(function(){
+  if(window.__palmaresHook) return;
+  window.__palmaresHook = true;
+  var oldRender = window.render;
+  if(typeof oldRender === 'function'){
+    window.render = function(){ var r = oldRender.apply(this, arguments); try{ renderPalmares(); }catch(e){} return r; };
+  }
+  var oldSave = window.save;
+  if(typeof oldSave === 'function'){
+    window.save = function(){ var p = oldSave.apply(this, arguments); try{ if(p && p.then) p.then(function(){ renderPalmares(); }); else renderPalmares(); }catch(e){} return p; };
+  }
+  // Primo disegno dopo il caricamento
+  setTimeout(function(){ try{ renderPalmares(); }catch(e){} }, 300);
+  setTimeout(function(){ try{ renderPalmares(); }catch(e){} }, 1500);
+})();
+</script>
 </html>

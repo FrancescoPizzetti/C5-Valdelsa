@@ -3444,11 +3444,8 @@ el('classTableB2').innerHTML=hb22;
 }
 var names=teamNames();
 var selTeam=names[0];
-if(teamSelezionata && names.indexOf(teamSelezionata) !== -1){
-  selTeam = teamSelezionata;
-}
 if(el('teamFilter')){
-var curT = selTeam;
+var curT=el('teamFilter').value;
 var ht="";
 for(var tf=0;tf<names.length;tf++){
 ht+="<option>"+names[tf]+"</option>";

@@ -3240,7 +3240,7 @@ fasi.push("Girone");
 var html="";
 for(var fi=0;fi<fasi.length;fi++){
 var f=fasi[fi];
-var fm=list.filter(function(m){return m.fase===f;});
+var fm=list.filter(function(m){return m.fase===f || (f==="Quarti di Finale" && m.fase==="Quarti") || (f==="Ottavi di Finale" && m.fase==="Ottavi") || (f==="Sedicesimi di Finale" && m.fase==="Sedicesimi");});
   fm.sort(function(a,b){function k(x){var d=(x.data||"");if(d.indexOf("/")>=0){var p=d.split("/");d=p[2]+"-"+p[1]+"-"+p[0];}return d+" "+(x.ora||"");}var ka=k(a),kb=k(b);return ka<kb?-1:ka>kb?1:0;});
 if(!fm.length)continue;
 html+="<div class='faseTitle'>"+f+" - "+curCoppa+"</div>";
@@ -3559,17 +3559,15 @@ var curPT=el('fPlayerTeam').value;
 el('fPlayerTeam').innerHTML=oGrouped;
 if(curPT)el('fPlayerTeam').value=curPT;
 }
-if(el('filtroSquadraAdmin')){
+if(el('filtroSquadraAdmin') && el('filtroSquadraAdmin').options.length<=1){
 el('filtroSquadraAdmin').innerHTML="<option value=''>Tutte le squadre</option>"+oGrouped;
-if(window.filtroAdminSalvato)el('filtroSquadraAdmin').value=window.filtroAdminSalvato;
 }
-if(el('fMatchSelect')){
 var curM=el('fMatchSelect').value;
 var prog2=matches.slice();
 var _filtroLega=el('fLegaMatch')?el('fLegaMatch').value:"";
 prog2.sort(function(a,b){return (a.giornata||1)-(b.giornata||1);});
 var hsel="";
-for(var smi=0;smi<prog2.length;smi++){
+var squadraFiltroAdmin=el('filtroSquadraAdmin')?el('filtroSquadraAdmin').value:(window.filtroAdminSalvato||"");
 var msel=prog2[smi];
 var gsel=msel.giornata||1;
 hsel+="<option value='";

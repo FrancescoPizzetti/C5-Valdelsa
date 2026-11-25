@@ -3559,6 +3559,11 @@ var curPT=el('fPlayerTeam').value;
 el('fPlayerTeam').innerHTML=oGrouped;
 if(curPT)el('fPlayerTeam').value=curPT;
 }
+if(el('filtroSquadraAdmin')){
+var curFA=el('filtroSquadraAdmin').value;
+el('filtroSquadraAdmin').innerHTML="<option value=''>Tutte le squadre</option>"+oGrouped;
+if(curFA)el('filtroSquadraAdmin').value=curFA;
+}
 if(el('fMatchSelect')){
 var curM=el('fMatchSelect').value;
 var prog2=matches.slice();

@@ -8088,23 +8088,14 @@ window.saveIndTitle = function(){
 })();
 </script>
 <style>
-#albo #palmaresBox{ display:block !important; }
-.palmaresBtn{
-  display:flex; align-items:center; justify-content:space-between;
-  width:100%; padding:18px 16px;
-  background:rgba(0,0,0,0.75); color:#fff; border:1px solid #E8C86A;
-  border-radius:14px; font-size:18px; font-weight:900; text-align:left; cursor:pointer;
-}
-.palmaresBtn span:last-child{ color:#E8C86A; font-size:22px; }
-#paginaPalmares{
-  position:fixed !important; inset:0; z-index:9999;
-  background:#0a0a0a; overflow-y:auto; padding:16px 12px 100px;
-}
+#btnPalmares{ display:flex !important; align-items:center; justify-content:space-between; width:100%; padding:18px 16px; margin-bottom:12px; background:rgba(0,0,0,0.75); color:#fff; border:1px solid #E8C86A; border-radius:14px; font-size:18px; font-weight:900; text-align:left; cursor:pointer; }
+#btnPalmares span:last-child{ color:#E8C86A; font-size:22px; }
+#paginaPalmares{ position:fixed !important; inset:0; z-index:999999 !important; background:#0a0a0a; overflow-y:auto; padding:16px 12px 100px; }
 .palmaresLogo{ width:36px; height:36px; object-fit:contain; border-radius:8px; background:#fff; padding:2px; }
 </style>
 <script>
-// RESCUE PALMARES V5 - Tasto che apre il Palmares, con loghi ufficiali PNG
-function _palmaresLogoFile(trofeo){
+// PALMARES V6 - Tasto dentro la griglia Albo, si ricrea da solo ogni secondo
+function _palmaresLogoFile6(trofeo){
   var m = {
     'Serie A':'logo-serie-a.png',
     'Serie B':'logo-serie-b.png',
@@ -8119,13 +8110,12 @@ function _palmaresLogoFile(trofeo){
   };
   return m[trofeo] || '';
 }
-function _palmaresLogoImg(trofeo){
-  var f = _palmaresLogoFile(trofeo);
-  if(!f) return '<span title="'+trofeo+'">🏆</span>';
-  // Se il PNG non si carica, mostro la coppa, così non resta un quadrato vuoto
-  return '<img class="palmaresLogo" src="'+f+'" alt="'+trofeo+'" title="'+trofeo+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline\';"><span title="'+trofeo+'" style="display:none;">🏆</span>';
+function _palmaresLogoImg6(trofeo){
+  var f = _palmaresLogoFile6(trofeo);
+  if(!f) return '<span>🏆</span>';
+  return '<img class="palmaresLogo" src="'+f+'" alt="'+trofeo+'" title="'+trofeo+'">';
 }
-function _palmaresDati(){
+function _palmaresDati6(){
   var titles = window.teamTitles || [];
   var map = {};
   for(var i=0;i<titles.length;i++){
@@ -8141,20 +8131,78 @@ function _palmaresDati(){
   arr.sort(function(a,b){ if(b.tot!==a.tot) return b.tot-a.tot; return b.ultimo-a.ultimo; });
   return arr.slice(0,5);
 }
-function _palmaresListaHtml(){
-  var arr = _palmaresDati();
-  if(!arr.length) return "<p class='small'>Ancora nessun titolo assegnato. Assegna un titolo in Admin > Albo e qui comparirà da solo.</p>";
-  var medaglie = ['🥇','🥈','🥉','4°','5°'];
+function openPalmares(){
+  var old = document.getElementById('paginaPalmares');
+  if(old) old.remove();
+  var arr = _palmaresDati6();
   var html = "";
-  for(var j=0;j<arr.length;j++){
-    var club = arr[j];
-    html += "<div style='display:flex;gap:10px;align-items:flex-start;background:#111;padding:12px;border-radius:12px;margin-bottom:10px;border:1px solid #333;'>";
-    html += "<div style='font-size:20px;font-weight:900;min-width:34px;text-align:center;'>"+medaglie[j]+"</div>";
-    html += "<div style='flex:1;min-width:0;'>";
-    html += "<div style='display:flex;justify-content:space-between;gap:8px;align-items:center;'><b>"+club.team+"</b><span class='badge'>"+club.tot+" 🏆</span></div>";
-    html += "<div style='display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;'>";
-    var trofei = Object.keys(club.per).sort(function(a,b){ return club.per[b]-club.per[a]; });
-    for(var ti=0;ti<trofei.length;ti++){
-      var tr = trofei[ti];
-      html += "<span style='display:inline-flex;align-items:center;gap:6px;background:#222;padding:4px 8px;border-radius:999px;font-size:13px;font-weight:900;'>" + _palmaresLogoImg(tr) + " x" + club.per[tr] +
+  if(!arr.length){
+    html = "<p class='small'>Ancora nessun titolo assegnato.</p>";
+  } else {
+    var med = ['🥇','🥈','🥉','4°','5°'];
+    for(var j=0;j<arr.length;j++){
+      var club = arr[j];
+      html += "<div style='display:flex;gap:10px;align-items:flex-start;background:#111;padding:12px;border-radius:12px;margin-bottom:10px;border:1px solid #333;'>";
+      html += "<div style='font-size:20px;font-weight:900;min-width:34px;text-align:center;'>"+med[j]+"</div>";
+      html += "<div style='flex:1;min-width:0;'>";
+      html += "<div style='display:flex;justify-content:space-between;gap:8px;align-items:center;'><b>"+club.team+"</b><span class='badge'>"+club.tot+" 🏆</span></div>";
+      html += "<div style='display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;'>";
+      var trofei = Object.keys(club.per).sort(function(a,b){ return club.per[b]-club.per[a]; });
+      for(var ti=0;ti<trofei.length;ti++){
+        var tr = trofei[ti];
+        html += "<span style='display:inline-flex;align-items:center;gap:6px;background:#222;padding:4px 8px;border-radius:999px;font-size:13px;font-weight:900;'>" + _palmaresLogoImg6(tr) + " x" + club.per[tr] + "</span>";
+      }
+      html += "</div></div></div>";
+    }
+  }
+  var pag = document.createElement('div');
+  pag.id = 'paginaPalmares';
+  pag.innerHTML = "<button type='button' style='margin-bottom:12px;' onclick='closePalmares()'>← Torna ad Albo d'oro</button>"
+    + "<h2>🏆 PALMARES - TOP 5 CLUB</h2>"
+    + "<p class='small'>Si aggiorna da solo da Albo d'oro.</p>" + html;
+  document.body.appendChild(pag);
+  window.scrollTo(0,0);
+}
+function closePalmares(){
+  var p = document.getElementById('paginaPalmares');
+  if(p) p.remove();
+}
+function _palmaresMettiTasto(){
+  // 1) Pulisci i vecchi box nudi, così non resta la lista vecchia in pagina
+  var vecchi = document.querySelectorAll('#palmaresBox');
+  for(var v=0;v<vecchi.length;v++){ vecchi[v].remove(); }
+  // 2) Se c'è la griglia delle coppe, metti PALMARES come primo tasto della griglia, come Serie A, Serie B, ecc.
+  var grid = document.getElementById('alboClubGrid');
+  if(grid){
+    if(!document.getElementById('btnPalmares')){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.id = 'btnPalmares';
+      b.className = 'alboCompBtn';
+      b.innerHTML = '<span>🏆 PALMARES</span><span>›</span>';
+      b.addEventListener('click', function(){ openPalmares(); });
+      grid.insertBefore(b, grid.firstChild);
+    }
+    return;
+  }
+  // 3) Se la griglia ancora non c'è, metti un tasto di riserva in #albo, lo sposterà al giro dopo
+  var albo = document.getElementById('albo');
+  if(albo && !document.getElementById('btnPalmares')){
+    var b2 = document.createElement('button');
+    b2.type = 'button';
+    b2.id = 'btnPalmares';
+    b2.className = 'alboCompBtn';
+    b2.innerHTML = '<span>🏆 PALMARES</span><span>›</span>';
+    b2.addEventListener('click', function(){ openPalmares(); });
+    albo.appendChild(b2);
+  }
+}
+(function(){
+  if(window.__palmaresV6) return;
+  window.__palmaresV6 = true;
+  // Ogni secondo lo ricontrolla, così anche se un vecchio blocco lo cancella o lo sposta, lui lo rimette
+  setInterval(_palmaresMettiTasto, 800);
+  setTimeout(_palmaresMettiTasto, 300);
+})();
+</script>
 </html>

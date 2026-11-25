@@ -3797,16 +3797,52 @@ if(el('alboYearFilterInd'))el('alboYearFilterInd').value=curAlboYearInd;
 refreshScorerPlayers();
 }
 function selectTeamStrip(n){
-  var s=document.getElementById('teamFilter');
-  if(s) s.value=n;
-  render();
+  try{
+    var s=document.getElementById('teamFilter');
+    if(s) s.value=n;
+    // NON chiamo render(), sennò mi rimette Atletico Madrink. Scrivo la rosa diretta.
+    var rosa = (window.players||[]).filter(function(p){ return p.t===n; });
+    var nomeVero = n;
+    if(!rosa.length){
+      for(var j=0;j<(window.players||[]).length;j++){
+        var tt = String(window.players[j].t||"").toLowerCase();
+        var bb = String(n||"").toLowerCase();
+        if(tt===bb || tt.indexOf(bb)!==-1 || bb.indexOf(tt)!==-1){ nomeVero = window.players[j].t; break; }
+      }
+      rosa = (window.players||[]).filter(function(p){ return p.t===nomeVero; });
+    }
+    var pres = "Non indicato";
+    for(var k=0;k<(window.players||[]).length;k++){
+      if(window.players[k].t===nomeVero && (window.players[k].r==="Presidente"||window.players[k].r==="Presidenti")){ pres = window.players[k].n; break; }
+    }
+    var ordine = {"Mister":0,"Accompagnatore":1,"Portiere":2,"Portieri":2,"Difensore":2,"Difensori":2,"Laterale":2,"Laterali":2,"Centrocampista":2,"Centrocampisti":2,"Attaccante":2,"Attaccanti":2,"Giocatore":2,"Giocatori":2,"Presidente":99};
+    rosa.sort(function(a,b){
+      var da = (ordine[a.r]!==undefined?ordine[a.r]:99), db = (ordine[b.r]!==undefined?ordine[b.r]:99);
+      if(da!==db) return da-db;
+      return String(a.n||"").localeCompare(String(b.n||""));
+    });
+    var info = document.getElementById('teamInfo');
+    if(info) info.innerHTML = "<p><b>"+nomeVero+"</b> - "+teamLeague(nomeVero)+" - Presidente: <b>"+pres+"</b></p>";
+    var list = document.getElementById('teamList');
+    if(list){
+      if(!rosa.length){ list.innerHTML = "<p>Nessun giocatore in rosa per questa squadra.</p>"; }
+      else {
+        var h = "";
+        for(var r=0;r<rosa.length;r++){
+          if(rosa[r].r==="Presidente") continue;
+          h += "<div class='row'><div><b>"+rosa[r].n+"</b><br><span class='small'>"+(rosa[r].r||"Giocatore")+"</span></div><div><b>"+(rosa[r].g||0)+" gol</b></div></div>";
+        }
+        list.innerHTML = h;
+      }
+    }
+  }catch(e){ alert("Non riesco ad aprire la rosa: " + e.message); }
   var a=document.getElementById('stripA'); if(a) a.style.display='none';
   var b=document.getElementById('stripB'); if(b) b.style.display='none';
   var titles=document.querySelectorAll('.stripTitle'); for(var i=0;i<titles.length;i++) titles[i].style.display='none';
-  if(s) s.style.display='none';
+  var ss=document.getElementById('teamFilter'); if(ss) ss.style.display='none';
   var bk=document.getElementById('backTeams'); if(bk) bk.style.display='block';
-  var info=document.getElementById('teamInfo');
-  if(info) info.scrollIntoView({behavior:'smooth'});
+  var inf2=document.getElementById('teamInfo');
+  if(inf2) inf2.scrollIntoView({behavior:'smooth'});
 }
   function backToTeams(){
   var a=document.getElementById('stripA'); if(a) a.style.display='grid';

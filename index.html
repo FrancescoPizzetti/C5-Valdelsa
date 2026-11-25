@@ -2311,14 +2311,19 @@ function addCard(){
   save();
   alert("Cartellino aggiunto! Punti disciplina tolti: " + punti + ((tipo === "rosso" || tipo === "doppio") ? " - Giornate: " + (aTempo ? "a tempo (15 punti)" : giornateFinali) : ""));
                                                 }
-function delCard(matchIdx,cardIdx){
-  var m=matches[matchIdx];
-  if(!m||!m.cards) return;
+function delCard(matchIdx, cardIdx){
+  var m = matches[matchIdx];
+  if(!m || !m.cards) return;
   if(!confirm("Cancellare questo cartellino?")) return;
-  m.cards.splice(cardIdx,1);
+  var c = m.cards[cardIdx];
+  if(c){
+    var punti = (c.puntiDisciplina !== undefined) ? c.puntiDisciplina : cardPuntiDisciplina(c, !!m.coppa);
+    disciplina[c.team] = (disciplina[c.team] || 0) + punti;
+  }
+  m.cards.splice(cardIdx, 1);
   save();
 }
-function scorersHtml(m){
+  function scorersHtml(m){
 if(!m.scorers||!m.scorers.length)return "";
 function fmt(team){
 var arr=m.scorers.filter(function(s){return s.team===team;});

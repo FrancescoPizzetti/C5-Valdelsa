@@ -8088,8 +8088,13 @@ window.saveIndTitle = function(){
 })();
 </script>
 <script>
-// RESCUE PALMARES V2 - Top 5 dentro la pagina Albo d'oro, non in Home
-function _palmaresIcon2(trofeo){
+<style>
+/* PALMARES deve restare visibile anche quando la griglia coppe nasconde le altre card */
+#albo #palmaresBox{ display:block !important; }
+</style>
+<script>
+// RESCUE PALMARES V3 - Dentro #albo, dopo la card dei bottoni, fuori da alboTeamBox
+function _palmaresIcon3(trofeo){
   try{
     if(typeof cupIconHtml === 'function'){
       var h = cupIconHtml(trofeo);
@@ -8098,46 +8103,29 @@ function _palmaresIcon2(trofeo){
   }catch(e){}
   var colori = {
     'Serie A':'#2563eb', 'Serie B':'#f59e0b', 'Serie B1':'#f59e0b', 'Serie B2':'#f59e0b',
-    'Coppa di Lega':'#9333ea', 'Coppa Campioni':'#facc15', 'Mitropa Cup':'#22c55e', 'Conference':'#38bdf8'
+    'Coppa di Lega':'#9333ea', 'Coppa Campioni':'#facc15', 'Mitropa Cup':'#22c55e', 'Conference':'#38bdf8', 'Supercoppa':'#e11d48'
   };
   var c = colori[trofeo] || '#888';
   var ini = (trofeo||'?').charAt(0);
   return '<span title="'+trofeo+'" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:'+c+';color:#000;font-weight:900;font-size:14px;">'+ini+'</span>';
 }
-function _palmaresTrovaAlbo(){
-  // Provo tutti i nomi possibili della sezione Albo, non solo alboPreview
-  var cands = ['#albo', '#alboPage', '#alboBox', '#alboTeamBox', '#alboTeams', '#alboByYear'];
-  for(var i=0;i<cands.length;i++){
-    var el = document.querySelector(cands[i]);
-    if(el) return el;
-  }
-  // Fallback: cerco l'h2/h3 che contiene ALBO D'ORO e prendo il suo contenitore
-  var heads = document.querySelectorAll('h1,h2,h3');
-  for(var j=0;j<heads.length;j++){
-    if((heads[j].textContent||'').toUpperCase().indexOf('ALBO') >= 0){
-      return heads[j].parentElement;
-    }
-  }
-  return null;
-}
 function renderPalmares(){
-  var box = document.getElementById('palmaresBox');
-  var albo = _palmaresTrovaAlbo();
+  var albo = document.getElementById('albo');
   if(!albo) return;
+  var box = document.getElementById('palmaresBox');
   if(!box){
     box = document.createElement('div');
     box.id = 'palmaresBox';
+    box.className = 'card';
     box.style.marginTop = '16px';
-    // Lo metto in cima alla pagina Albo, subito dopo i bottoni CLUB / INDIVIDUALI / STORICO
-    // così lo vedi senza scorrere tutta la lista delle coppe
-    var bottoni = albo.querySelectorAll('button');
-    if(bottoni.length){
-      var ultimo = bottoni[bottoni.length-1];
-      ultimo.parentNode.insertBefore(box, ultimo.nextSibling);
-      // Se i bottoni sono in un div loro, metto il box dopo quel div
-      if(ultimo.parentElement && ultimo.parentElement !== albo){
-        ultimo.parentElement.parentNode.insertBefore(box, ultimo.parentElement.nextSibling);
-      }
+    box.style.display = 'block';
+    // Punto fisso: subito dopo la prima card di #albo, quella con Albo d'oro + CLUB / INDIVIDUALI / STORICO
+    // Non dentro alboTeamBox, perché quella viene nascosta dal CSS comp-mostra
+    var primaCard = albo.querySelector(':scope > .card');
+    if(primaCard && primaCard.nextSibling){
+      albo.insertBefore(box, primaCard.nextSibling);
+    } else if(primaCard){
+      albo.appendChild(box);
     } else {
       albo.insertBefore(box, albo.firstChild);
     }
@@ -8172,27 +8160,29 @@ function renderPalmares(){
     var trofei = Object.keys(club.per).sort(function(a,b){ return club.per[b]-club.per[a]; });
     for(var ti=0;ti<trofei.length;ti++){
       var tr = trofei[ti];
-      html += "<span style='display:inline-flex;align-items:center;gap:4px;background:#222;padding:4px 8px;border-radius:999px;font-size:13px;font-weight:900;'>" + _palmaresIcon2(tr) + " x" + club.per[tr] + "</span>";
+      html += "<span style='display:inline-flex;align-items:center;gap:4px;background:#222;padding:4px 8px;border-radius:999px;font-size:13px;font-weight:900;'>" + _palmaresIcon3(tr) + " x" + club.per[tr] + "</span>";
     }
     html += "</div></div></div>";
   }
   box.innerHTML = html;
 }
 (function(){
-  if(window.__palmaresHook2) return;
-  window.__palmaresHook2 = true;
+  if(window.__palmaresHook3) return;
+  window.__palmaresHook3 = true;
   var oldRender = window.render;
   if(typeof oldRender === 'function'){
     window.render = function(){ var r = oldRender.apply(this, arguments); try{ renderPalmares(); }catch(e){} return r; };
   }
-  // Quando apri la pagina Albo, ridisegna il Palmares, anche se era nascosta
-  var oldShow = window.show;
-  if(typeof oldShow === 'function'){
-    window.show = function(id){ var r = oldShow.apply(this, arguments); if(id==='albo' || (typeof id==='string' && id.indexOf('albo')>=0)){ setTimeout(function(){ try{ renderPalmares(); }catch(e){} }, 100); } return r; };
-  }
-  var oldGoMenu = window.goMenu;
-  if(typeof oldGoMenu === 'function'){
-    window.goMenu = function(id){ var r = oldGoMenu.apply(this, arguments); if(id==='albo' || (typeof id==='string' && id.indexOf('albo')>=0)){ setTimeout(function(){ try{ renderPalmares(); }catch(e){} }, 150); } return r; };
+  // Mostra il Palmares solo nel tab CLUB, nascondilo in INDIVIDUALI
+  var oldShowAlbo = window.showAlbo;
+  if(typeof oldShowAlbo === 'function'){
+    window.showAlbo = function(which){
+      var r = oldShowAlbo.apply(this, arguments);
+      var b = document.getElementById('palmaresBox');
+      if(b) b.style.display = (which === 'team') ? 'block' : 'none';
+      if(which === 'team'){ setTimeout(function(){ try{ renderPalmares(); }catch(e){} }, 50); }
+      return r;
+    };
   }
   setTimeout(function(){ try{ renderPalmares(); }catch(e){} }, 300);
   setTimeout(function(){ try{ renderPalmares(); }catch(e){} }, 1500);

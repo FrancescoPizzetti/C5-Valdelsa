@@ -2209,12 +2209,32 @@ function cardLabel(tipo){
   if(tipo==="rosso") return "Rosso Diretto";
   return "Giallo";
 }
-// Punti Coppa Disciplina - LI IMPOSTIAMO DOPO, ora solo struttura
-function cardPuntiDisciplina(tipo){
-  if(tipo==="doppio") return 0;
-  if(tipo==="rosso") return 0;
+// Art. 4.2 - Punti da togliere per un cartellino
+// card = {tipo, giornate, aTempo}
+// isCoppa = true se la partita è di Coppa, Art. 4.2.1
+function cardPuntiDisciplina(card, isCoppa){
+  if(!card) return 0;
+  if(card.tipo === "giallo"){
+    if(isCoppa) return 0;
+    return 1;
+  }
+  if(card.tipo === "doppio"){
+    // 2 gialli = 2 + 1 giornata = 3, totale 5
+    // In Coppa 5 non è > 9, quindi non conta
+    if(isCoppa) return 0;
+    return 5;
+  }
+  if(card.tipo === "rosso"){
+    if(card.aTempo) return 15;
+    var g = card.giornate || 0;
+    if(g <= 0) return 15;
+    var p = g * 3;
+    if(p > 15) p = 15;
+    if(isCoppa && p <= 9) return 0;
+    return p;
+  }
   return 0;
-}
+  }
 function refreshCardPlayers(){
   var idx=findMatchBySelect();
   var teamSel=el('fCardTeam');

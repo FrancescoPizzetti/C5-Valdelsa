@@ -410,7 +410,7 @@ div:has(> img){
 <div class="stripTitle stripTitleB">🏆 SERIE B</div>
 <div class="gridTeams" id="stripB"></div>
 <div id="backTeams" style="display:none"><button onclick="backToTeams()" style="background:#22c55e;color:#000;font-weight:900;border:0;padding:10px 14px;border-radius:10px;cursor:pointer">← Torna alle Squadre</button></div>
-<div class="card"><h2>👥 Scegli Squadra per vedere la Rosa</h2><select id="teamFilter" onchange="render()"></select><div id="teamInfo"></div><div id="teamList"></div></div>
+<div class="card"><h2>👥 Scegli Squadra per vedere la Rosa</h2><div id="teamInfo"><select id="teamFilter" onchange="window.squadraScelta=this.value;render()"></select></div><div id="teamList"></div></div>
 <div class="card"><h2>⚽ Marcatori</h2><div id="scorers"></div></div>
 <div class="card" style="display:none"><h2>📋 Tutte le 30 Squadre</h2><div id="allTeams"></div></div>
 <div class="card" style="display:none"><h2>🟨 Classifica Disciplina - Tutte partono da tot. giornate X2</h2><div id="discTable"></div></div>
@@ -3226,7 +3226,7 @@ var list=[];
 if(curCoppa==='Altre'){
 list=coppaMatches.filter(function(m){return m.coppa!=="Coppa di Lega"&&m.coppa!=="Coppa Mitropa"&&m.coppa!=="Coppa Campioni";});
 }else{
-list=coppaMatches.filter(function(m){return m.coppa.indexOf(curCoppa)!==-1;});
+list=coppaMatches.filter(function(m){return m && m.coppa && m.coppa.indexOf(curCoppa)!==-1;});
 }
 var fasi=[];
 fasi.push("Sedicesimi di Finale");
@@ -3444,16 +3444,19 @@ el('classTableB2').innerHTML=hb22;
 }
 var names=teamNames();
 var selTeam=names[0];
+var selTeam=window.squadraScelta||names[0];
 if(el('teamFilter')){
-var curT=el('teamFilter').value;
+if(el('teamFilter').options.length<=1){
 var ht="";
 for(var tf=0;tf<names.length;tf++){
 ht+="<option>"+names[tf]+"</option>";
 }
 el('teamFilter').innerHTML=ht;
-if(curT)el('teamFilter').value=curT;
-selTeam=el('teamFilter').value;
 }
+if(window.squadraScelta)el('teamFilter').value=window.squadraScelta;
+selTeam=el('teamFilter').value||window.squadraScelta||names[0];
+window.squadraScelta=selTeam;
+                                                         }
 if(el('teamInfo')){
 var presN="Non indicato"; for(var pr=0;pr<players.length;pr++){if(players[pr].t===selTeam&&(players[pr].r==="Presidente"||players[pr].r==="Presidenti")){presN=players[pr].n;break;}} el('teamInfo').innerHTML="<p><b>"+selTeam+"</b> - "+teamLeague(selTeam)+" - Presidente: <b>"+presN+"</b></p>";
 }
@@ -3553,9 +3556,10 @@ el('promoTeam').innerHTML=o;
 if(curP)el('promoTeam').value=curP;
 }
 if(el('fPlayerTeam')){
-var curPT=el('fPlayerTeam').value;
+if(el('fPlayerTeam').options.length<=1){
 el('fPlayerTeam').innerHTML=oGrouped;
-if(curPT)el('fPlayerTeam').value=curPT;
+}
+if(window.filtroAdminSalvato)el('fPlayerTeam').value=window.filtroAdminSalvato;
 }
 if(el('fMatchSelect')){
 var curM=el('fMatchSelect').value;
@@ -3741,8 +3745,8 @@ el('alboIndAdminList').innerHTML=hai2;
 var hpl="";
 var ordineRuoli={"Mister":0,"Accompagnatore":1,"Giocatore":2,"Giocatori":2,"Portiere":2,"Portieri":2,"Difensore":2,"Difensori":2,"Laterale":2,"Laterali":2,"Attaccante":2,"Attaccanti":2,"Centrocampista":2,"Centrocampisti":2,"Presidente":99};
 players.sort(function(a,b){var da=(ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99),db=(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99);var d=da-db;if(d)return d;var ca=a.n,cb=b.n;return ca.localeCompare(cb);});
-if(el('fPlayerTeam')){el('fPlayerTeam').onchange=function(){render();};}
-var squadraFiltroAdmin=el('fPlayerTeam')?el('fPlayerTeam').value:"";
+if(el('fPlayerTeam')){el('fPlayerTeam').onchange=function(){window.filtroAdminSalvato=this.value;render();};}
+var squadraFiltroAdmin=window.filtroAdminSalvato||(el('fPlayerTeam')?el('fPlayerTeam').value:"");
 for(var pi=0;pi<players.length;pi++){ if(squadraFiltroAdmin && players[pi].t!==squadraFiltroAdmin){continue;}
 hpl+="<div class='row'><div><b>";
 hpl+=players[pi].n;
@@ -3797,9 +3801,9 @@ if(el('alboYearFilterInd'))el('alboYearFilterInd').value=curAlboYearInd;
 refreshScorerPlayers();
 }
   function selectTeamStrip(n){
-  var s=document.getElementById('teamFilter');
-  if(s) s.value=n;
-  render();
+var s=document.getElementById('teamFilter');
+if(s) s.value=n;
+render();
   // Nascondi le griglie, mostra solo la rosa = pagina a parte
   var a=document.getElementById('stripA'); if(a) a.style.display='none';
   var b=document.getElementById('stripB'); if(b) b.style.display='none';

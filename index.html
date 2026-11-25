@@ -410,7 +410,7 @@ div:has(> img){
 <div class="stripTitle stripTitleB">🏆 SERIE B</div>
 <div class="gridTeams" id="stripB"></div>
 <div id="backTeams" style="display:none"><button onclick="backToTeams()" style="background:#22c55e;color:#000;font-weight:900;border:0;padding:10px 14px;border-radius:10px;cursor:pointer">← Torna alle Squadre</button></div>
-<div class="card"><h2>👥 Scegli Squadra per vedere la Rosa</h2><div id="teamInfo"><select id="teamFilter" onchange="window.squadraScelta=this.value;render()"></select></div><div id="teamList"></div></div>
+<div class="card"><h2>👥 Scegli Squadra per vedere la Rosa</h2><select id="teamFilter" onchange="window.squadraScelta=this.value;render()"></select><div id="teamInfo"></div><div id="teamList"></div></div>
 <div class="card"><h2>⚽ Marcatori</h2><div id="scorers"></div></div>
 <div class="card" style="display:none"><h2>📋 Tutte le 30 Squadre</h2><div id="allTeams"></div></div>
 <div class="card" style="display:none"><h2>🟨 Classifica Disciplina - Tutte partono da tot. giornate X2</h2><div id="discTable"></div></div>
@@ -3443,7 +3443,6 @@ for(var cb22=0;cb22<clB2.length;cb22++){hb22+=rowClassB1(clB2[cb22],cb22);}
 el('classTableB2').innerHTML=hb22;
 }
 var names=teamNames();
-var selTeam=names[0];
 var selTeam=window.squadraScelta||names[0];
 if(el('teamFilter')){
 if(el('teamFilter').options.length<=1){
@@ -3800,7 +3799,8 @@ if(el('alboYearFilter'))el('alboYearFilter').value=curAlboYear;
 if(el('alboYearFilterInd'))el('alboYearFilterInd').value=curAlboYearInd;
 refreshScorerPlayers();
 }
-  function selectTeamStrip(n){
+function selectTeamStrip(n){
+window.squadraScelta=n;
 var s=document.getElementById('teamFilter');
 if(s) s.value=n;
 render();

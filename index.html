@@ -3559,8 +3559,11 @@ var curPT=el('fPlayerTeam').value;
 el('fPlayerTeam').innerHTML=oGrouped;
 if(curPT)el('fPlayerTeam').value=curPT;
 }
-if(el('filtroSquadraAdmin') && el('filtroSquadraAdmin').options.length<=1){
+if(el('filtroSquadraAdmin')){
+if(el('filtroSquadraAdmin').options.length<=1){
 el('filtroSquadraAdmin').innerHTML="<option value=''>Tutte le squadre</option>"+oGrouped;
+}
+if(window.filtroAdminSalvato) el('filtroSquadraAdmin').value=window.filtroAdminSalvato;
 }
 if(el('fMatchSelect')){
 var curM=el('fMatchSelect').value;
@@ -3746,7 +3749,7 @@ el('alboIndAdminList').innerHTML=hai2;
 var hpl="";
 var ordineRuoli={"Mister":0,"Accompagnatore":1,"Giocatore":2,"Giocatori":2,"Portiere":2,"Portieri":2,"Difensore":2,"Difensori":2,"Laterale":2,"Laterali":2,"Attaccante":2,"Attaccanti":2,"Centrocampista":2,"Centrocampisti":2,"Presidente":99};
 players.sort(function(a,b){var da=(ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99),db=(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99);var d=da-db;if(d)return d;var ca=a.n,cb=b.n;return ca.localeCompare(cb);});
-var squadraFiltroAdmin=el('filtroSquadraAdmin')?el('filtroSquadraAdmin').value:(window.filtroAdminSalvato||"");
+var squadraFiltroAdmin=window.filtroAdminSalvato||(el('filtroSquadraAdmin')?el('filtroSquadraAdmin').value:"");
 for(var pi=0;pi<players.length;pi++){ if(squadraFiltroAdmin && players[pi].t!==squadraFiltroAdmin){continue;}
 hpl+="<div class='row'><div><b>";
 hpl+=players[pi].n;
@@ -3825,20 +3828,22 @@ function selectTeamStrip(n){
       if(da!==db) return da-db;
       return String(a.n||"").localeCompare(String(b.n||""));
     });
-    var info = document.getElementById('teamInfo');
+      var info = document.getElementById('teamInfo');
     if(info) info.innerHTML = "<p><b>"+nomeVero+"</b> - "+teamLeague(nomeVero)+" - Presidente: <b>"+pres+"</b></p>";
-    var list = document.getElementById('teamList');
-    if(list){
-      if(!rosa.length){ list.innerHTML = "<p>Nessun giocatore in rosa per questa squadra.</p>"; }
-      else {
-        var h = "";
-        for(var r=0;r<rosa.length;r++){
-          if(rosa[r].r==="Presidente") continue;
-          h += "<div class='row'><div><b>"+rosa[r].n+"</b><br><span class='small'>"+(rosa[r].r||"Giocatore")+"</span></div><div><b>"+(rosa[r].g||0)+" gol</b></div></div>";
-        }
-        list.innerHTML = h;
+    var scBox = document.getElementById('scorers');
+    if(scBox){
+      var ss = (window.players||[]).filter(function(p){ return p.t===nomeVero; });
+      ss = ss.filter(function(p){ return p.r!=="Mister" && p.r!=="Accompagnatore" && p.r!=="Presidente"; });
+      ss.sort(function(a,b){ return (b.g||0)-(a.g||0); });
+      ss = ss.slice(0,10);
+      var hsc = "";
+      for(var sci=0;sci<ss.length;sci++){
+        hsc += "<div class='row'><div>"+ss[sci].n+"<br><span class='small'>"+ss[sci].t+" - "+ss[sci].r+"</span></div><b>"+(ss[sci].g||0)+" gol</b></div>";
       }
+      if(!hsc) hsc = "<p class='small'>Nessun marcatore.</p>";
+      scBox.innerHTML = hsc;
     }
+    var list = document.getElementById('teamList');
   }catch(e){ alert("Non riesco ad aprire la rosa: " + e.message); }
   var a=document.getElementById('stripA'); if(a) a.style.display='none';
   var b=document.getElementById('stripB'); if(b) b.style.display='none';

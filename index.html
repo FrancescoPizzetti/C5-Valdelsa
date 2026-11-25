@@ -8182,33 +8182,31 @@ function closePalmares(){
   if(p) p.remove();
 }
 function _palmaresMettiTasto(){
-  // 1) Pulisci i vecchi box nudi, così non resta la lista vecchia in pagina
+  // Pulisci i vecchi box nudi
   var vecchi = document.querySelectorAll('#palmaresBox');
   for(var v=0;v<vecchi.length;v++){ vecchi[v].remove(); }
-  // 2) Se c'è la griglia delle coppe, metti PALMARES come primo tasto della griglia, come Serie A, Serie B, ecc.
-  var grid = document.getElementById('alboClubGrid');
-  if(grid){
-    if(!document.getElementById('btnPalmares')){
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.id = 'btnPalmares';
-      b.className = 'alboCompBtn';
-      b.innerHTML = '<span>🏆 PALMARES</span><span>›</span>';
-      b.addEventListener('click', function(){ openPalmares(); });
-      grid.insertBefore(b, grid.firstChild);
-    }
-    return;
-  }
-  // 3) Se la griglia ancora non c'è, metti un tasto di riserva in #albo, lo sposterà al giro dopo
+  // Se il tasto era finito dentro la griglia coppe, toglilo da lì
+  var inGrid = document.querySelector('#alboClubGrid #btnPalmares');
+  if(inGrid) inGrid.remove();
   var albo = document.getElementById('albo');
-  if(albo && !document.getElementById('btnPalmares')){
-    var b2 = document.createElement('button');
-    b2.type = 'button';
-    b2.id = 'btnPalmares';
-    b2.className = 'alboCompBtn';
-    b2.innerHTML = '<span>🏆 PALMARES</span><span>›</span>';
-    b2.addEventListener('click', function(){ openPalmares(); });
-    albo.appendChild(b2);
+  if(!albo) return;
+  if(document.getElementById('btnPalmares')) return;
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.id = 'btnPalmares';
+  b.className = 'alboCompBtn';
+  b.style.marginTop = '14px';
+  b.innerHTML = '<span>🏆 PALMARES</span><span>›</span>';
+  b.addEventListener('click', function(){ openPalmares(); });
+  // Subito dopo la prima card di #albo, quella con Albo d'oro + CLUB / INDIVIDUALI
+  // Prima di #alboTeamBox, quindi prima di Serie A, Serie B, ecc.
+  var primaCard = albo.querySelector(':scope > .card');
+  if(primaCard && primaCard.nextSibling){
+    albo.insertBefore(b, primaCard.nextSibling);
+  } else if(primaCard){
+    albo.appendChild(b);
+  } else {
+    albo.insertBefore(b, albo.firstChild);
   }
 }
 (function(){

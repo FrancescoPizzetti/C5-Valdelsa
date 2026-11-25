@@ -7767,8 +7767,9 @@ function ricalcolaDisciplina(){
 }
       </script>
 <script>
-// RESCUE DISP - Funzioni pulite, definite alla fine così esistono sempre
-function tutteLeCard2(){
+// RESCUE DISP V3 - Copia struttura PDF Admin
+function ordG(n){ return n + 'ª'; }
+function tutteLeCard3(){
   var out=[];
   for(var i=0;i<(window.matches||[]).length;i++){
     var m=window.matches[i];
@@ -7777,7 +7778,8 @@ function tutteLeCard2(){
       var c=m.cards[k];
       var lega='Serie A';
       try{ lega=teamLeague(c.team) || 'Serie A'; }catch(e){ lega='Serie A'; }
-      out.push({c:c, comp:'CAMPIONATO', lega:lega, partita:m.casa+' vs '+m.tras});
+      var g=parseInt(m.giornata || 0) || 0;
+      out.push({c:c, comp:'CAMPIONATO', lega:lega, partita:m.casa+' vs '+m.tras, giornata:g, giornataLabel:g>0 ? ordG(g)+' GIORNATA' : 'CAMPIONATO', stato:m.stato||'', data:m.data||''});
     }
   }
   for(var j=0;j<(window.coppaMatches||[]).length;j++){
@@ -7785,14 +7787,14 @@ function tutteLeCard2(){
     if(!mc || !mc.cards) continue;
     for(var k2=0;k2<mc.cards.length;k2++){
       var cc=mc.cards[k2];
-      out.push({c:cc, comp:'COPPA', lega:'Coppa di Lega', partita:mc.coppa+' - '+mc.casa+' vs '+mc.tras});
+      out.push({c:cc, comp:'COPPA', lega:'Coppa di Lega', partita:mc.coppa+' - '+mc.casa+' vs '+mc.tras, giornata:0, giornataLabel:(mc.coppa||'Coppa')+' - '+(mc.fase||''), stato:mc.stato||'', data:mc.data||''});
     }
   }
   return out;
 }
-function contaGialli2(nome, squadra, comp){
+function contaGialli3(nome, squadra, comp){
   var n=0;
-  var all=tutteLeCard2();
+  var all=tutteLeCard3();
   for(var i=0;i<all.length;i++){
     if(all[i].comp!==comp) continue;
     if(all[i].c.n===nome && all[i].c.team===squadra){
@@ -7802,104 +7804,201 @@ function contaGialli2(nome, squadra, comp){
   }
   return n;
 }
-function statoGiocatore2(nome, squadra, comp){
-  var gialli=contaGialli2(nome,squadra,comp);
-  if(gialli<=0) return {gialli:0, diffidato:false, squalGialli:0};
-  if(comp==='COPPA'){
-    var restoCoppa=gialli%2;
-    return {gialli:gialli, diffidato:(restoCoppa===1), squalGialli:(restoCoppa===0)?1:0};
+// Prossima giornata da giocare per una lega: ultima giocata + 1
+function prossimaGiornataLega(lega){
+  var maxG=0;
+  for(var i=0;i<(window.matches||[]).length;i++){
+    var m=window.matches[i];
+    if(!m) continue;
+    var l='';
+    try{ l=teamLeague(m.casa) || ''; }catch(e){ l=''; }
+    if(l!==lega) continue;
+    if(m.stato==='Giocata' || m.stato==='Disputata'){
+      var g=parseInt(m.giornata||0)||0;
+      if(g>maxG) maxG=g;
+    }
   }
-  var resto=gialli%3;
-  return {gialli:gialli, diffidato:(resto===2), squalGialli:(resto===0)?1:0};
+  return maxG+1;
 }
-function mostraDisp2(tipo, lega){
-  var all=tutteLeCard2();
-  var html="<h3>"+tipo+" - "+lega+"</h3>";
-  html+="<table style='width:100%;border-collapse:collapse;font-size:13px;'><tr><th style='text-align:left;'>Giocatore</th><th style='text-align:left;'>Squadra</th><th style='text-align:left;'>Dettaglio</th></tr>";
-  var trovate=0;
-  if(tipo==='AMMONITI'){
-    var mappa={};
-    for(var i=0;i<all.length;i++){
-      if(all[i].lega!==lega) continue;
-      if(all[i].c.tipo!=='giallo' && all[i].c.tipo!=='doppio') continue;
-      var key=all[i].c.n+'|'+all[i].c.team;
-      if(!mappa[key]) mappa[key]={n:all[i].c.n, team:all[i].c.team, gialli:0};
-      if(all[i].c.tipo==='giallo') mappa[key].gialli+=1;
-      if(all[i].c.tipo==='doppio') mappa[key].gialli+=2;
-    }
-    for(var k in mappa){
-      trovate++;
-      html+="<tr><td>"+mappa[k].n+"</td><td>"+mappa[k].team+"</td><td>"+mappa[k].gialli+" gialli</td></tr>";
-    }
+// Quante giornate ha già scontato un giocatore dopo un rosso, contando le partite giocate della sua squadra
+function giornateScontate(team, giornataCard, prossima){
+  var n=0;
+  for(var i=0;i<(window.matches||[]).length;i++){
+    var m=window.matches[i];
+    if(!m) continue;
+    if(m.casa!==team && m.tras!==team) continue;
+    var g=parseInt(m.giornata||0)||0;
+    if(g>giornataCard && g<prossima && (m.stato==='Giocata' || m.stato==='Disputata')) n++;
   }
+  return n;
+}
+function mostraDisp3(tipo, lega){
+  var all=tutteLeCard3();
+  // --- DIFFIDATI: lista unica attuale, come PDF, TESSERATO | SQUADRA ---
   if(tipo==='DIFFIDATI'){
     var visti={};
+    var righe=[];
     for(var j=0;j<all.length;j++){
       if(all[j].lega!==lega) continue;
-      var st=statoGiocatore2(all[j].c.n, all[j].c.team, all[j].comp);
-      var key2=all[j].c.n+'|'+all[j].c.team;
-      if(st.diffidato && !visti[key2]){
-        visti[key2]=1; trovate++;
-        html+="<tr><td>"+all[j].c.n+"</td><td>"+all[j].c.team+"</td><td>Diffidato - "+st.gialli+" gialli - al prossimo giallo 1 giornata</td></tr>";
-      }
+      var key=all[j].c.n+'|'+all[j].c.team+'|'+all[j].comp;
+      if(visti[key]) continue;
+      visti[key]=1;
+      var tot=contaGialli3(all[j].c.n, all[j].c.team, all[j].comp);
+      var diff=false;
+      if(all[j].comp==='COPPA') diff=(tot%2===1);
+      else diff=(tot%3===2);
+      if(diff) righe.push({n:all[j].c.n, team:all[j].c.team, tot:tot});
     }
+    righe.sort(function(a,b){ return a.team<b.team ? -1 : a.team>b.team ? 1 : (a.n<b.n ? -1 : 1); });
+    var html="<h3>LISTA - DIFFIDATI - "+lega+"</h3>";
+    html+="<table style='width:100%;border-collapse:collapse;font-size:13px;'><tr><th style='text-align:left;'>TESSERATO</th><th style='text-align:left;'>SQUADRA</th></tr>";
+    if(!righe.length) html+="<tr><td colspan='2'>Nessuno in questa categoria.</td></tr>";
+    for(var r=0;r<righe.length;r++){ html+="<tr><td>"+righe[r].n+"</td><td>"+righe[r].team+"</td></tr>"; }
+    html+="</table>";
+    return html;
   }
+  // --- SQUALIFICATI: solo per la prossima giornata, come PDF ---
   if(tipo==='SQUALIFICATI'){
+    var prox=prossimaGiornataLega(lega);
+    var html2="<h3>SQUALIFICATI PER LA "+ordG(prox)+" GIORNATA DI "+lega+"</h3>";
+    html2+="<table style='width:100%;border-collapse:collapse;font-size:13px;'><tr><th style='text-align:left;'>TESSERATO</th><th style='text-align:left;'>SQUADRA</th><th style='text-align:left;'>MOTIVO</th></tr>";
+    var trov=0;
+    var aTempo=[];
     for(var s=0;s<all.length;s++){
       if(all[s].lega!==lega) continue;
-      var c=all[s].c;
-      if(c.tipo==='rosso'){
-        trovate++;
-        html+="<tr><td>"+c.n+"</td><td>"+c.team+"</td><td>Rosso - Art. "+(c.motivo||"-")+" - "+(c.giornate||0)+" giornate"+(c.capitano?" - Capitano":"")+(c.motivazione?" - "+c.motivazione:"")+"</td></tr>";
-      }
-      if(c.tipo==='doppio'){
-        trovate++;
-        html+="<tr><td>"+c.n+"</td><td>"+c.team+"</td><td>Doppio giallo - 1 giornata</td></tr>";
+      var cs=all[s].c;
+      if(cs.aTempo){ aTempo.push({n:cs.n, team:cs.team}); continue; }
+      if(cs.tipo==='rosso' || cs.tipo==='doppio'){
+        var gTot=cs.tipo==='doppio' ? 1 : (cs.giornate||0);
+        var scont=giornateScontate(cs.team, all[s].giornata, prox);
+        var rest=gTot-scont;
+        if(rest>0){
+          trov++;
+          html2+="<tr><td>"+cs.n+"</td><td>"+cs.team+"</td><td>"+(cs.tipo==='doppio' ? 'Doppio giallo - 1 giornata' : 'Rosso - Art. '+(cs.motivo||'-')+' - '+gTot+' giornate')+" - ne deve scontare ancora "+rest+"</td></tr>";
+        }
       }
     }
-    var vistiSq={};
-    for(var s2=0;s2<all.length;s2++){
-      if(all[s2].lega!==lega) continue;
-      var st3=statoGiocatore2(all[s2].c.n, all[s2].c.team, all[s2].comp);
-      var key4=all[s2].c.n+'|'+all[s2].c.team;
-      if(st3.squalGialli>0 && !vistiSq[key4]){
-        vistiSq[key4]=1; trovate++;
-        html+="<tr><td>"+all[s2].c.n+"</td><td>"+all[s2].c.team+"</td><td>3° giallo da diffidato - 1 giornata</td></tr>";
+    // Somma gialli: solo chi ha raggiunto la soglia nell'ultima giornata giocata
+    var giocatori={};
+    for(var j2=0;j2<all.length;j2++){
+      if(all[j2].lega!==lega) continue;
+      var k2=all[j2].c.n+'|'+all[j2].c.team+'|'+all[j2].comp;
+      if(!giocatori[k2]) giocatori[k2]={n:all[j2].c.n, team:all[j2].c.team, comp:all[j2].comp, cards:[]};
+      giocatori[k2].cards.push(all[j2]);
+    }
+    for(var k in giocatori){
+      var gg=giocatori[k];
+      gg.cards.sort(function(a,b){ return (a.giornata||0)-(b.giornata||0); });
+      var tot2=0;
+      for(var ci=0;ci<gg.cards.length;ci++){
+        var cc2=gg.cards[ci].c;
+        if(cc2.tipo==='giallo') tot2+=1;
+        if(cc2.tipo==='doppio') tot2+=2;
+        var scatta=false;
+        if(gg.comp==='COPPA') scatta=(tot2>0 && tot2%2===0);
+        else scatta=(tot2>0 && tot2%3===0);
+        if(scatta && gg.cards[ci].giornata===prox-1){
+          trov++;
+          html2+="<tr><td>"+gg.n+"</td><td>"+gg.team+"</td><td>1 giornata per ammonizione sotto diffida</td></tr>";
+        }
       }
+    }
+    if(!trov) html2+="<tr><td colspan='3'>Nessuno in questa categoria.</td></tr>";
+    html2+="</table>";
+    if(aTempo.length){
+      html2+="<h3 style='margin-top:16px;'>SQUALIFICATI A TEMPO</h3>";
+      html2+="<table style='width:100%;border-collapse:collapse;font-size:13px;'><tr><th style='text-align:left;'>TESSERATO</th><th style='text-align:left;'>SQUADRA</th></tr>";
+      for(var at=0;at<aTempo.length;at++){ html2+="<tr><td>"+aTempo[at].n+"</td><td>"+aTempo[at].team+"</td></tr>"; }
+      html2+="</table><p class='small'>Per gli a tempo serve la data di fine, che ora non è salvata nel cartellino. Quando mettiamo la data, qui uscirà (fino al ...).</p>";
+    }
+    return html2;
+  }
+  // --- AMMONITI e PROVVEDIMENTI: divisi per giornata, come PDF ---
+  var gruppi={};
+  function agg(gLabel, n, team, dettaglio){
+    if(!gruppi[gLabel]) gruppi[gLabel]=[];
+    gruppi[gLabel].push({n:n, team:team, dettaglio:dettaglio});
+  }
+  if(tipo==='AMMONITI'){
+    for(var i2=0;i2<all.length;i2++){
+      if(all[i2].lega!==lega) continue;
+      var ca=all[i2].c;
+      if(ca.tipo==='giallo') agg(all[i2].giornataLabel, ca.n, ca.team, '');
+      if(ca.tipo==='doppio') agg(all[i2].giornataLabel, ca.n, ca.team, 'Doppio giallo');
     }
   }
   if(tipo==='PROVVEDIMENTI'){
     for(var p=0;p<all.length;p++){
       if(all[p].lega!==lega) continue;
       var cp=all[p].c;
-      if(cp.tipo==='rosso'){
-        trovate++;
-        html+="<tr><td>"+cp.n+"</td><td>"+cp.team+"</td><td>Art. "+(cp.motivo||"-")+" - "+(cp.giornate||0)+" giornate"+(cp.capitano?" - Art. 6.15 Capitano +1":"")+(cp.motivazione?" - "+cp.motivazione:"")+" - "+all[p].partita+"</td></tr>";
-      }
-      if(cp.tipo==='doppio'){
-        trovate++;
-        html+="<tr><td>"+cp.n+"</td><td>"+cp.team+"</td><td>Doppio giallo - 1 giornata - "+all[p].partita+"</td></tr>";
+      if(cp.tipo==='rosso') agg(all[p].giornataLabel, cp.n, cp.team, (cp.giornate||0)+' giornate di squalifica per infrazione all\'Art.'+(cp.motivo||'-')+(cp.capitano?' - Art. 6.15 Capitano +1':'')+(cp.motivazione?' - '+cp.motivazione:''));
+      if(cp.tipo==='doppio') agg(all[p].giornataLabel, cp.n, cp.team, '1 giornata di squalifica per doppio giallo');
+    }
+    // Somma gialli in provvedimenti
+    var gioc2={};
+    for(var j3=0;j3<all.length;j3++){
+      if(all[j3].lega!==lega) continue;
+      var k3=all[j3].c.n+'|'+all[j3].c.team+'|'+all[j3].comp;
+      if(!gioc2[k3]) gioc2[k3]={n:all[j3].c.n, team:all[j3].c.team, comp:all[j3].comp, cards:[]};
+      gioc2[k3].cards.push(all[j3]);
+    }
+    for(var k4 in gioc2){
+      var g2=gioc2[k4];
+      g2.cards.sort(function(a,b){ return (a.giornata||0)-(b.giornata||0); });
+      var t3=0;
+      for(var ci2=0;ci2<g2.cards.length;ci2++){
+        var cc3=g2.cards[ci2].c;
+        if(cc3.tipo==='giallo') t3+=1;
+        if(cc3.tipo==='doppio') t3+=2;
+        var sc2=false;
+        if(g2.comp==='COPPA') sc2=(t3>0 && t3%2===0);
+        else sc2=(t3>0 && t3%3===0);
+        if(sc2) agg(g2.cards[ci2].giornataLabel, g2.n, g2.team, '1 giornata di squalifica per ammonizione sotto diffida');
       }
     }
   }
-  if(!trovate) html+="<tr><td colspan='3'>Nessuno in questa categoria.</td></tr>";
-  html+="</table>";
-  return html;
+  var titolo=tipo==='AMMONITI' ? 'LISTA AMMONITI '+lega : 'PROVVEDIMENTI DISCIPLINARI - '+lega;
+  var html3="<h3>"+titolo+"</h3>";
+  var chiavi=Object.keys(gruppi);
+  chiavi.sort(function(a,b){
+    var na=parseInt((a.split(' ')[0]||'0')) || 0;
+    var nb=parseInt((b.split(' ')[0]||'0')) || 0;
+    if(a.indexOf('GIORNATA')>=0 && b.indexOf('GIORNATA')>=0) return nb-na;
+    if(a.indexOf('GIORNATA')>=0) return -1;
+    if(b.indexOf('GIORNATA')>=0) return 1;
+    return a<b ? -1 : 1;
+  });
+  if(!chiavi.length){
+    html3+="<p>Nessuno in questa categoria.</p>";
+    return html3;
+  }
+  for(var gi=0;gi<chiavi.length;gi++){
+    var gL=chiavi[gi];
+    html3+="<h4 style='margin:16px 0 6px;background:#facc15;color:#000;padding:6px 10px;border-radius:8px;'>"+gL+"</h4>";
+    if(tipo==='AMMONITI'){
+      for(var ri=0;ri<gruppi[gL].length;ri++){
+        html3+="<div>"+gruppi[gL][ri].n+" ("+gruppi[gL][ri].team+")"+(gruppi[gL][ri].dettaglio ? " - "+gruppi[gL][ri].dettaglio : "")+"</div>";
+      }
+    } else {
+      for(var ri2=0;ri2<gruppi[gL].length;ri2++){
+        html3+="<div style='margin-bottom:8px;'>"+gruppi[gL][ri2].dettaglio+" a "+gruppi[gL][ri2].n+" ("+gruppi[gL][ri2].team+")</div>";
+      }
+    }
+  }
+  return html3;
 }
-// Ora sovrascrivo showDisp con la versione pulita
 window.showDisp = function(tipo, lega){
   if(tipo) window.curDispTipo=tipo;
   if(lega) window.curDispLega=lega;
   var t=window.curDispTipo || 'AMMONITI';
   var l=window.curDispLega || 'Serie A';
   var box=document.getElementById('dispDiscBox');
-  if(box) box.innerHTML=mostraDisp2(t, l);
+  if(box) box.innerHTML=mostraDisp3(t, l);
   var btns=document.querySelectorAll('[data-disp-tipo]');
   for(var i=0;i<btns.length;i++){ btns[i].classList.toggle('on', btns[i].getAttribute('data-disp-tipo')===t); }
   var btns2=document.querySelectorAll('[data-disp-lega]');
   for(var j=0;j<btns2.length;j++){ btns2[j].classList.toggle('on', btns2[j].getAttribute('data-disp-lega')===l); }
 };
-// E lo aggancio a show()
 (function(){
   if(window.__fixDispBox2) return;
   window.__fixDispBox2=true;

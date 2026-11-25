@@ -3831,7 +3831,7 @@ function renderStrips(){
     return teams.filter(function(t){return t.l===league})
     .sort(function(x,y){return x.n.localeCompare(y.n)})
     .map(function(t){
-      return "<div class='teamBox "+(t.n===cur?"on":"")+"' onclick=\"selectTeamStrip('"+t.n.replace(/'/g,"\\'")+"')\">"+logoHtml(t.n)+"<div class='teamBoxName'>"+t.n+"</div></div>";
+      return "<div class='teamBox "+(t.n===cur?"on":"")+"onclick=\"apriRosaSquadra('"+t.n.replace(/'/g,"\\'")+"')"\">"+logoHtml(t.n)+"<div class='teamBoxName'>"+t.n+"</div></div>";
     }).join("");
   }
   a.innerHTML=htmlFor('Serie A');

@@ -3562,6 +3562,7 @@ if(curPT)el('fPlayerTeam').value=curPT;
 if(el('filtroSquadraAdmin') && el('filtroSquadraAdmin').options.length<=1){
 el('filtroSquadraAdmin').innerHTML="<option value=''>Tutte le squadre</option>"+oGrouped;
 }
+if(el('fMatchSelect')){
 var curM=el('fMatchSelect').value;
 var prog2=matches.slice();
 var _filtroLega=el('fLegaMatch')?el('fLegaMatch').value:"";

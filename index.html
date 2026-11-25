@@ -7767,21 +7767,150 @@ function ricalcolaDisciplina(){
 }
       </script>
 <script>
-// FIX DISP - Riempie sempre dispDiscBox quando apri la pagina
+// RESCUE DISP - Funzioni pulite, definite alla fine così esistono sempre
+function tutteLeCard2(){
+  var out=[];
+  for(var i=0;i<(window.matches||[]).length;i++){
+    var m=window.matches[i];
+    if(!m || !m.cards) continue;
+    for(var k=0;k<m.cards.length;k++){
+      var c=m.cards[k];
+      var lega='Serie A';
+      try{ lega=teamLeague(c.team) || 'Serie A'; }catch(e){ lega='Serie A'; }
+      out.push({c:c, comp:'CAMPIONATO', lega:lega, partita:m.casa+' vs '+m.tras});
+    }
+  }
+  for(var j=0;j<(window.coppaMatches||[]).length;j++){
+    var mc=window.coppaMatches[j];
+    if(!mc || !mc.cards) continue;
+    for(var k2=0;k2<mc.cards.length;k2++){
+      var cc=mc.cards[k2];
+      out.push({c:cc, comp:'COPPA', lega:'Coppa di Lega', partita:mc.coppa+' - '+mc.casa+' vs '+mc.tras});
+    }
+  }
+  return out;
+}
+function contaGialli2(nome, squadra, comp){
+  var n=0;
+  var all=tutteLeCard2();
+  for(var i=0;i<all.length;i++){
+    if(all[i].comp!==comp) continue;
+    if(all[i].c.n===nome && all[i].c.team===squadra){
+      if(all[i].c.tipo==='giallo') n+=1;
+      if(all[i].c.tipo==='doppio') n+=2;
+    }
+  }
+  return n;
+}
+function statoGiocatore2(nome, squadra, comp){
+  var gialli=contaGialli2(nome,squadra,comp);
+  if(gialli<=0) return {gialli:0, diffidato:false, squalGialli:0};
+  if(comp==='COPPA'){
+    var restoCoppa=gialli%2;
+    return {gialli:gialli, diffidato:(restoCoppa===1), squalGialli:(restoCoppa===0)?1:0};
+  }
+  var resto=gialli%3;
+  return {gialli:gialli, diffidato:(resto===2), squalGialli:(resto===0)?1:0};
+}
+function mostraDisp2(tipo, lega){
+  var all=tutteLeCard2();
+  var html="<h3>"+tipo+" - "+lega+"</h3>";
+  html+="<table style='width:100%;border-collapse:collapse;font-size:13px;'><tr><th style='text-align:left;'>Giocatore</th><th style='text-align:left;'>Squadra</th><th style='text-align:left;'>Dettaglio</th></tr>";
+  var trovate=0;
+  if(tipo==='AMMONITI'){
+    var mappa={};
+    for(var i=0;i<all.length;i++){
+      if(all[i].lega!==lega) continue;
+      if(all[i].c.tipo!=='giallo' && all[i].c.tipo!=='doppio') continue;
+      var key=all[i].c.n+'|'+all[i].c.team;
+      if(!mappa[key]) mappa[key]={n:all[i].c.n, team:all[i].c.team, gialli:0};
+      if(all[i].c.tipo==='giallo') mappa[key].gialli+=1;
+      if(all[i].c.tipo==='doppio') mappa[key].gialli+=2;
+    }
+    for(var k in mappa){
+      trovate++;
+      html+="<tr><td>"+mappa[k].n+"</td><td>"+mappa[k].team+"</td><td>"+mappa[k].gialli+" gialli</td></tr>";
+    }
+  }
+  if(tipo==='DIFFIDATI'){
+    var visti={};
+    for(var j=0;j<all.length;j++){
+      if(all[j].lega!==lega) continue;
+      var st=statoGiocatore2(all[j].c.n, all[j].c.team, all[j].comp);
+      var key2=all[j].c.n+'|'+all[j].c.team;
+      if(st.diffidato && !visti[key2]){
+        visti[key2]=1; trovate++;
+        html+="<tr><td>"+all[j].c.n+"</td><td>"+all[j].c.team+"</td><td>Diffidato - "+st.gialli+" gialli - al prossimo giallo 1 giornata</td></tr>";
+      }
+    }
+  }
+  if(tipo==='SQUALIFICATI'){
+    for(var s=0;s<all.length;s++){
+      if(all[s].lega!==lega) continue;
+      var c=all[s].c;
+      if(c.tipo==='rosso'){
+        trovate++;
+        html+="<tr><td>"+c.n+"</td><td>"+c.team+"</td><td>Rosso - Art. "+(c.motivo||"-")+" - "+(c.giornate||0)+" giornate"+(c.capitano?" - Capitano":"")+(c.motivazione?" - "+c.motivazione:"")+"</td></tr>";
+      }
+      if(c.tipo==='doppio'){
+        trovate++;
+        html+="<tr><td>"+c.n+"</td><td>"+c.team+"</td><td>Doppio giallo - 1 giornata</td></tr>";
+      }
+    }
+    var vistiSq={};
+    for(var s2=0;s2<all.length;s2++){
+      if(all[s2].lega!==lega) continue;
+      var st3=statoGiocatore2(all[s2].c.n, all[s2].c.team, all[s2].comp);
+      var key4=all[s2].c.n+'|'+all[s2].c.team;
+      if(st3.squalGialli>0 && !vistiSq[key4]){
+        vistiSq[key4]=1; trovate++;
+        html+="<tr><td>"+all[s2].c.n+"</td><td>"+all[s2].c.team+"</td><td>3° giallo da diffidato - 1 giornata</td></tr>";
+      }
+    }
+  }
+  if(tipo==='PROVVEDIMENTI'){
+    for(var p=0;p<all.length;p++){
+      if(all[p].lega!==lega) continue;
+      var cp=all[p].c;
+      if(cp.tipo==='rosso'){
+        trovate++;
+        html+="<tr><td>"+cp.n+"</td><td>"+cp.team+"</td><td>Art. "+(cp.motivo||"-")+" - "+(cp.giornate||0)+" giornate"+(cp.capitano?" - Art. 6.15 Capitano +1":"")+(cp.motivazione?" - "+cp.motivazione:"")+" - "+all[p].partita+"</td></tr>";
+      }
+      if(cp.tipo==='doppio'){
+        trovate++;
+        html+="<tr><td>"+cp.n+"</td><td>"+cp.team+"</td><td>Doppio giallo - 1 giornata - "+all[p].partita+"</td></tr>";
+      }
+    }
+  }
+  if(!trovate) html+="<tr><td colspan='3'>Nessuno in questa categoria.</td></tr>";
+  html+="</table>";
+  return html;
+}
+// Ora sovrascrivo showDisp con la versione pulita
+window.showDisp = function(tipo, lega){
+  if(tipo) window.curDispTipo=tipo;
+  if(lega) window.curDispLega=lega;
+  var t=window.curDispTipo || 'AMMONITI';
+  var l=window.curDispLega || 'Serie A';
+  var box=document.getElementById('dispDiscBox');
+  if(box) box.innerHTML=mostraDisp2(t, l);
+  var btns=document.querySelectorAll('[data-disp-tipo]');
+  for(var i=0;i<btns.length;i++){ btns[i].classList.toggle('on', btns[i].getAttribute('data-disp-tipo')===t); }
+  var btns2=document.querySelectorAll('[data-disp-lega]');
+  for(var j=0;j<btns2.length;j++){ btns2[j].classList.toggle('on', btns2[j].getAttribute('data-disp-lega')===l); }
+};
+// E lo aggancio a show()
 (function(){
-  if(window.__fixDispBox) return;
-  window.__fixDispBox = true;
-  var oldShow = window.show;
-  window.show = function(id){
+  if(window.__fixDispBox2) return;
+  window.__fixDispBox2=true;
+  var oldShow=window.show;
+  window.show=function(id){
     if(oldShow) oldShow(id);
-    if(id === 'dispDisc'){
-      setTimeout(function(){
-        try{ showDisp(curDispTipo || 'AMMONITI', curDispLega || 'Serie A'); }
-        catch(e){
-          var b = document.getElementById('dispDiscBox');
-          if(b) b.innerHTML = '<p>Errore Disposizioni: ' + e.message + '</p>';
-        }
-      }, 100);
+    if(id==='dispDisc'){
+      setTimeout(function(){ try{ window.showDisp(); }catch(e){
+        var b=document.getElementById('dispDiscBox');
+        if(b) b.innerHTML='<p>Errore Disposizioni: '+e.message+'</p>';
+      } }, 100);
     }
   };
 })();

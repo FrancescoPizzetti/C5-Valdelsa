@@ -637,7 +637,7 @@ function showCalTab(t){
 <button class="big" type="button" onclick="addPlayerNew()">+ Aggiungi Giocatore alla Rosa</button>
 </div>
 <div class="label">MOSTRA SOLO SQUADRA</div>
-<select id="filtroSquadraAdmin" onchange="render()"><option value="">Tutte le squadre</option></select>
+<select id="filtroSquadraAdmin" onchange="window.filtroAdminSalvato=this.value;render()"><option value="">Tutte le squadre</option></select>
 <div id="playersList"></div>
 </div>
 <div id="adminSec-contatti" style="display:none">
@@ -3228,7 +3228,7 @@ var list=[];
 if(curCoppa==='Altre'){
 list=coppaMatches.filter(function(m){return m.coppa!=="Coppa di Lega"&&m.coppa!=="Coppa Mitropa"&&m.coppa!=="Coppa Campioni";});
 }else{
-list=coppaMatches.filter(function(m){return m.coppa.indexOf(curCoppa)!==-1;});
+list=coppaMatches.filter(function(m){return m && m.coppa && (m.coppa===curCoppa || m.coppa.indexOf(curCoppa)!==-1 || (curCoppa==="Coppa Mitropa" && m.coppa==="Mitropa Cup"));});
 }
 var fasi=[];
 fasi.push("Sedicesimi di Finale");
@@ -3560,9 +3560,8 @@ el('fPlayerTeam').innerHTML=oGrouped;
 if(curPT)el('fPlayerTeam').value=curPT;
 }
 if(el('filtroSquadraAdmin')){
-var curFA=el('filtroSquadraAdmin').value;
 el('filtroSquadraAdmin').innerHTML="<option value=''>Tutte le squadre</option>"+oGrouped;
-if(curFA)el('filtroSquadraAdmin').value=curFA;
+if(window.filtroAdminSalvato)el('filtroSquadraAdmin').value=window.filtroAdminSalvato;
 }
 if(el('fMatchSelect')){
 var curM=el('fMatchSelect').value;
@@ -3749,7 +3748,7 @@ var hpl="";
 var ordineRuoli={"Mister":0,"Accompagnatore":1,"Giocatore":2,"Giocatori":2,"Portiere":2,"Portieri":2,"Difensore":2,"Difensori":2,"Laterale":2,"Laterali":2,"Attaccante":2,"Attaccanti":2,"Centrocampista":2,"Centrocampisti":2,"Presidente":99};
 players.sort(function(a,b){var da=(ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99),db=(ordineRuoli[b.r]!==undefined?ordineRuoli[b.r]:99);var d=da-db;if(d)return d;var ca=a.n,cb=b.n;return ca.localeCompare(cb);});
 var squadraFiltroAdmin=el('filtroSquadraAdmin')?el('filtroSquadraAdmin').value:"";
-for(var pi=0;pi<players.length;pi++){ if(squadraFiltroAdmin && players[pi].t!==squadraFiltroAdmin){continue;}
+var squadraFiltroAdmin=window.filtroAdminSalvato||"";
 hpl+="<div class='row'><div><b>";
 hpl+=players[pi].n;
 hpl+="</b><br><span class='small'>";
@@ -3762,7 +3761,7 @@ hpl+=" gol</span></div>";
 hpl+="<div><select id='transferSel_";
 hpl+=pi;
 hpl+="'>";
-hpl+=oGrouped;
+hpl+=oGrouped.split("<option>"+players[pi].t+"</option>").join("<option selected>"+players[pi].t+"</option>");
 hpl+="</select>";
 hpl+="<button type='button' onclick='transferPlayer(";
 hpl+=pi;

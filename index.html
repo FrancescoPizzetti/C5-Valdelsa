@@ -725,7 +725,7 @@ function goMenu(id){
 chiudiDrawer();
 show(id);
 }
-var curAdmin='grafica';
+var curAdmin='sistema';
 function showAdmin(which){
 curAdmin=which;
 var secs=[];
@@ -745,7 +745,7 @@ secs.push('contatti');
 secs.push('sistema');
 for(var i=0;i<secs.length;i++){
 var s=el('adminSec-'+secs[i]);
-if(s)s.style.display=(secs[i]===which)?"block":"none";
+if(s)s.style.display=(secs[i]===which||(which==="sistema"&&secs[i]==="grafica"))?"block":"none";
 var b=el('btnAdm-'+secs[i]);
 if(b)b.classList.toggle('on',secs[i]===which);
 }

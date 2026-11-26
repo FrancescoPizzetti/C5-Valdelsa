@@ -7817,10 +7817,21 @@ function dispCompDiPartita(m){
   return "Serie A";
 }
 function dispGiornataEtichetta(m, defGiornata){
-  if(m && m.fase) return m.fase;
   if(m && m.coppa) return (m.fase||m.coppa);
   var g = (m && m.giornata) ? m.giornata : defGiornata;
   return g ? (g + "ª GIORNATA") : "GIORNATA";
+}
+function dispGialliPrima(nome, squadra, comp, giornataNum){
+  var tot = 0;
+  dispRaccogli().forEach(function(e){
+    if(e.nome!==nome) return;
+    if(squadra && e.squadra!==squadra) return;
+    if(e.tipo!=="giallo") return;
+    if(e.comp!==comp) return;
+    if((parseInt(e.giornataNum||0,10)||0) >= (parseInt(giornataNum||0,10)||0)) return;
+    tot++;
+  });
+  return tot;
 }
 function dispRaccogli(){
   var out = [];
@@ -7937,23 +7948,45 @@ function dispRender(){
     if(!aTempo.length) html += "<p class='small'>Nessuno squalificato a tempo.</p>";
     aTempo.forEach(function(t){ html += "<div class='row'><div>"+t+"</div></div>"; });
     var perGiornata = {};
-    ev.forEach(function(e){
-      if(e.aTempo) return;
-      if(e.tipo!=="rosso" && e.tipo!=="doppio") return;
-      var targets = dispTargetGiornate(e);
-      if(!targets.length){
-        (perGiornata["PROSSIMO TURNO"]=perGiornata["PROSSIMO TURNO"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:e.tipo==="doppio"?"doppio giallo":(e.giornate||1)+" giornata/e"});
-        return;
+var vistoDiffida = {};
+ev.forEach(function(e){
+  if(e.aTempo) return;
+  if(e.tipo==="giallo"){
+    var primaG = dispGialliPrima(e.nome, e.squadra, comp, e.giornataNum);
+    if(primaG===2){
+      var kDiff = e.nome+"|"+e.squadra+"|"+e.giornataNum;
+      if(!vistoDiffida[kDiff]){
+        vistoDiffida[kDiff]=1;
+        var kD = (e.giornataNum+1)+"ª GIORNATA";
+        (perGiornata[kD]=perGiornata[kD]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"1 giornata per diffida"});
       }
-      targets.forEach(function(tg){
-        var k = tg+"ª GIORNATA";
-        (perGiornata[k]=perGiornata[k]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:""});
-      });
-      var coppa = dispCoppaProssima(e.squadra);
-      if(coppa){
-        (perGiornata["COPPA"]=perGiornata["COPPA"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"salta anche "+coppa});
-      }
-    });
+    }
+    return;
+  }
+  if(e.tipo!=="rosso" && e.tipo!=="doppio") return;
+  var tot = 1;
+  var dettaglio = "";
+  if(e.tipo==="doppio"){
+    var primaD = dispGialliPrima(e.nome, e.squadra, comp, e.giornataNum);
+    if(primaD>=2){ tot = 2; dettaglio = "1 per diffida + 1 per doppio giallo"; }
+    else { dettaglio = "doppio giallo"; }
+  } else {
+    tot = parseInt(e.giornate||1,10)||1;
+    dettaglio = tot+" giornata/e";
+  }
+  if(!e.giornataNum){
+    (perGiornata["PROSSIMO TURNO"]=perGiornata["PROSSIMO TURNO"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio});
+    return;
+  }
+  for(var i=1;i<=tot;i++){
+    var k = (e.giornataNum+i)+"ª GIORNATA";
+    (perGiornata[k]=perGiornata[k]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio});
+  }
+  var coppa = dispCoppaProssima(e.squadra);
+  if(coppa){
+    (perGiornata["COPPA"]=perGiornata["COPPA"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"salta anche "+coppa});
+  }
+});
     try{
       (window.squalificheDisciplinari||[]).forEach(function(s){
         if(s.aTempo) return;

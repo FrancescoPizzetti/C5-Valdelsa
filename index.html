@@ -655,6 +655,10 @@ function showCalTab(t){
 <div class="label">FINO AL (solo per squalifica a tempo)</div><input id="fDispFinoAlStorico" type="date">
   <div class="label">MOTIVO / ARTICOLO</div><input id="fDispMotivo" placeholder="Es: Art. 6.7">
   <button class="big" type="button" onclick="dispSalvaStorico()">+ AGGIUNGI STORICO</button>
+    <h3 style="margin-top:14px">⏳ Converti un rosso della partita in a tempo</h3>
+  <p class="small">Scegli sopra Squadra e Giocatore, metti la data, poi clicca. Non aggiunge una seconda squalifica, converte quel rosso lì. Punti disciplina invariati.</p>
+  <div class="label">FINO AL (per conversione rosso partita)</div><input id="fConvFinoAl" type="date">
+  <button class="big" type="button" style="background:#f97316" onclick="dispConvertiCardATempo()">⏳ CONVERTI ROSSO IN A TEMPO</button>
   <div id="dispStoricoList"></div>
 </div>
 <div id="adminSec-contatti" style="display:none">
@@ -7843,7 +7847,7 @@ function dispRaccogli(){
     (window.matches||[]).forEach(function(m){
       var comp = dispCompDiPartita(m);
       (m.cards||[]).forEach(function(c){
-        out.push({comp:comp, giornata:dispGiornataEtichetta(m, m.giornata), giornataNum:parseInt(m.giornata||0,10)||0, data:m.data||"", nome:c.n||c.nome||"", squadra:c.team||c.squadra||"", tipo:c.tipo||"giallo", giornate:parseInt(c.giornate||0,10)||0, aTempo:!!c.aTempo, motivo:c.motivo||"", fonte:"partita", ordine:0});
+        out.push({comp:comp, giornata:dispGiornataEtichetta(m, m.giornata), giornataNum:parseInt(m.giornata||0,10)||0, data:m.data||"", nome:c.n||c.nome||"", squadra:c.team||c.squadra||"", tipo:c.tipo||"giallo", giornate:parseInt(c.giornate||0,10)||0, aTempo:!!c.aTempo, finoAl:c.finoAl||"", motivo:c.motivo||"", fonte:"partita", ordine:0});
       });
     });
   }catch(e){}
@@ -7851,13 +7855,13 @@ function dispRaccogli(){
     (window.coppaMatches||[]).forEach(function(m){
       var comp = dispCompDiPartita(m);
       (m.cards||[]).forEach(function(c){
-        out.push({comp:comp, giornata:dispGiornataEtichetta(m, ""), giornataNum:0, data:m.data||"", nome:c.n||c.nome||"", squadra:c.team||c.squadra||"", tipo:c.tipo||"giallo", giornate:parseInt(c.giornate||0,10)||0, aTempo:!!c.aTempo, motivo:c.motivo||"", fonte:"coppa", ordine:1});
+        out.push({comp:comp, giornata:dispGiornataEtichetta(m, ""), giornataNum:0, data:m.data||"", nome:c.n||c.nome||"", squadra:c.team||c.squadra||"", tipo:c.tipo||"giallo", giornate:parseInt(c.giornate||0,10)||0, aTempo:!!c.aTempo, finoAl:c.finoAl||"", motivo:c.motivo||"", fonte:"coppa", ordine:1});
       });
     });
   }catch(e){}
   try{
     (window.dispStorico||[]).forEach(function(s){
-      out.push({comp:dispNorm(s.comp), giornata:s.giornataEt||((s.giornata||"")+"ª GIORNATA"), giornataNum:parseInt(s.giornata||0,10)||0, data:s.data||"", nome:s.n||s.nome||"", squadra:s.squadra||"", tipo:s.tipo||"giallo", giornate:parseInt(s.giornate||0,10)||0, aTempo:!!s.aTempo, motivo:s.motivo||"", fonte:"storico", ordine:2, punti:0});
+      out.push({comp:dispNorm(s.comp), giornata:s.giornataEt||((s.giornata||"")+"ª GIORNATA"), giornataNum:parseInt(s.giornata||0,10)||0, data:s.data||"", nome:s.n||s.nome||"", squadra:s.squadra||"", tipo:s.tipo||"giallo", giornate:parseInt(s.giornate||0,10)||0, aTempo:!!s.aTempo, finoAl:s.finoAl||"", motivo:s.motivo||"", fonte:"storico", ordine:2, punti:0});
     });
   }catch(e){}
   return out;
@@ -7943,57 +7947,84 @@ function dispRender(){
     diffidati.forEach(function(e){ html += "<tr><td><b>"+e.nome+"</b></td><td>"+e.squadra+"</td></tr>"; });
     html += "</table></div></div>";
   }
-  if(tab==="squalificati"){
+    if(tab==="squalificati"){
     html += "<div class='card'><h2>🟥 Squalificati - "+comp+"</h2>";
     html += "<div class='label'>SQUALIFICATI A TEMPO</div>";
     var aTempo = [];
-    try{ (window.squalificheDisciplinari||[]).forEach(function(s){ if(s.aTempo) aTempo.push((s.n||"")+" ("+(s.squadra||"")+")"+(s.finoAl?" - fino al "+s.finoAl:"")+(s.motivo?" - "+s.motivo:"")); }); }catch(e){}
-    ev.forEach(function(e){ if(e.aTempo) aTempo.push(e.nome+" ("+e.squadra+")"+(e.finoAl?" - fino al "+e.finoAl:"")); });
+    var aTempoSet = {};
+    function dispATempoStessaComp(sq){
+      try{
+        var lg = (typeof teamLeague==="function") ? teamLeague(sq) : "";
+        if(!lg) return true;
+        if(comp==="Serie B") return (lg==="Serie B"||lg==="Serie B1"||lg==="Serie B2");
+        return lg===comp;
+      }catch(e){ return true; }
+    }
+    try{
+      (window.squalificheDisciplinari||[]).forEach(function(s){
+        if(!s.aTempo) return;
+        if(!dispATempoStessaComp(s.squadra||"")) return;
+        var k = (s.n||"")+"|"+(s.squadra||"");
+        if(aTempoSet[k]) return;
+        aTempoSet[k]=1;
+        aTempo.push((s.n||"")+" ("+(s.squadra||"")+")"+(s.finoAl?" - fino al "+s.finoAl:"")+(s.motivo?" - "+s.motivo:""));
+      });
+    }catch(e){}
+    ev.forEach(function(e){
+      if(!e.aTempo) return;
+      var k2 = e.nome+"|"+e.squadra;
+      if(aTempoSet[k2]) return;
+      aTempoSet[k2]=1;
+      aTempo.push(e.nome+" ("+e.squadra+")"+(e.finoAl?" - fino al "+e.finoAl:""));
+    });
     if(!aTempo.length) html += "<p class='small'>Nessuno squalificato a tempo.</p>";
     aTempo.forEach(function(t){ html += "<div class='row'><div>"+t+"</div></div>"; });
     var perGiornata = {};
-var vistoDiffida = {};
-ev.forEach(function(e){
-  if(e.aTempo) return;
-  if(e.tipo==="giallo"){
-    var primaG = dispGialliPrima(e.nome, e.squadra, comp, e.giornataNum);
-    if(primaG===2){
-      var kDiff = e.nome+"|"+e.squadra+"|"+e.giornataNum;
-      if(!vistoDiffida[kDiff]){
-        vistoDiffida[kDiff]=1;
-        var kD = (e.giornataNum+1)+"ª GIORNATA";
-        (perGiornata[kD]=perGiornata[kD]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"1 giornata per diffida"});
+    var vistoDiffida = {};
+    ev.forEach(function(e){
+      if(e.aTempo) return;
+      if(aTempoSet[e.nome+"|"+e.squadra]) return;
+      if(e.tipo==="giallo"){
+        var primaG = dispGialliPrima(e.nome, e.squadra, comp, e.giornataNum);
+        if(primaG===2){
+          var kDiff = e.nome+"|"+e.squadra+"|"+e.giornataNum;
+          if(!vistoDiffida[kDiff]){
+            vistoDiffida[kDiff]=1;
+            var kD = (e.giornataNum+1)+"ª GIORNATA";
+            (perGiornata[kD]=perGiornata[kD]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"1 giornata per diffida"});
+          }
+        }
+        return;
       }
-    }
-    return;
-  }
-  if(e.tipo!=="rosso" && e.tipo!=="doppio") return;
-  var tot = 1;
-  var dettaglio = "";
-  if(e.tipo==="doppio"){
-    var primaD = dispGialliPrima(e.nome, e.squadra, comp, e.giornataNum);
-    if(primaD>=2){ tot = 2; dettaglio = "1 per diffida + 1 per doppio giallo"; }
-    else { dettaglio = "doppio giallo"; }
-  } else {
-    tot = parseInt(e.giornate||1,10)||1;
-    dettaglio = tot+" giornata/e";
-  }
-  if(!e.giornataNum){
-    (perGiornata["PROSSIMO TURNO"]=perGiornata["PROSSIMO TURNO"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio});
-    return;
-  }
-  for(var i=1;i<=tot;i++){
-    var k = (e.giornataNum+i)+"ª GIORNATA";
-    (perGiornata[k]=perGiornata[k]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio});
-  }
-  var coppa = dispCoppaProssima(e.squadra);
-  if(coppa){
-    (perGiornata["COPPA"]=perGiornata["COPPA"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"salta anche "+coppa});
-  }
-});
+      if(e.tipo!=="rosso" && e.tipo!=="doppio") return;
+      var tot = 1;
+      var dettaglio = "";
+      if(e.tipo==="doppio"){
+        var primaD = dispGialliPrima(e.nome, e.squadra, comp, e.giornataNum);
+        if(primaD>=2){ tot = 2; dettaglio = "1 per diffida + 1 per doppio giallo"; }
+        else { dettaglio = "doppio giallo"; }
+      } else {
+        tot = parseInt(e.giornate||1,10)||1;
+        dettaglio = tot+" giornata/e";
+      }
+      if(!e.giornataNum){
+        (perGiornata["PROSSIMO TURNO"]=perGiornata["PROSSIMO TURNO"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio});
+        return;
+      }
+      for(var i=1;i<=tot;i++){
+        var k = (e.giornataNum+i)+"ª GIORNATA";
+        (perGiornata[k]=perGiornata[k]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio});
+      }
+      var coppa = dispCoppaProssima(e.squadra);
+      if(coppa){
+        (perGiornata["COPPA"]=perGiornata["COPPA"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"salta anche "+coppa});
+      }
+    });
     try{
       (window.squalificheDisciplinari||[]).forEach(function(s){
         if(s.aTempo) return;
+        if(aTempoSet[(s.n||"")+"|"+(s.squadra||"")]) return;
+        if(!dispATempoStessaComp(s.squadra||"")) return;
         var n = parseInt(s.giornate||1,10)||1;
         var k = "SQUALIFICA DA PROVVEDIMENTO - "+n+" giornata/e";
         (perGiornata[k]=perGiornata[k]||[]).push({nome:s.n||"", squadra:s.squadra||"", dettaglio:(s.motivo?" - "+s.motivo:"")+(s.articolo?" - Art."+s.articolo:"")});
@@ -8009,6 +8040,8 @@ ev.forEach(function(e){
       html += "<div class='giornataTitle'>"+titolo+"</div>";
       perGiornata[k].forEach(function(p){ html += "<div class='row'><div><b>"+p.nome+"</b> ("+p.squadra+")"+(p.dettaglio?" - "+p.dettaglio:"")+"</div></div>"; });
     });
+    html += "</div>";
+    }
     html += "</div>";
   }
   if(tab==="provvedimenti"){
@@ -8091,10 +8124,52 @@ function dispRefreshStoricoList(){
   if(!box) return;
   var h = "";
   (window.dispStorico||[]).forEach(function(s,idx){
-    h += "<div class='row'><div><small>"+s.comp+" - "+(s.giornata||"")+"ª - <b>"+s.n+"</b> ("+s.squadra+") - "+s.tipo+(s.aTempo?" - A TEMPO":"")+(s.finoAl?" - fino al "+s.finoAl:"")+"</small></div><button class='del' type='button' onclick='dispDelStorico("+idx+")'>X</button></div>";
+    h += "<div class='row'><div><small>"+s.comp+" - "+(s.giornata||"")+"ª - <b>"+s.n+"</b> ("+s.squadra+") - "+s.tipo+(s.aTempo?" - A TEMPO":"")+(s.finoAl?" - fino al "+s.finoAl:"")+"</small></div><div style='display:flex;gap:4px'><button type='button' onclick='dispConvertiStoricoATempo("+idx+")'>⏳ A tempo</button><button class='del' type='button' onclick='dispDelStorico("+idx+")'>X</button></div></div>";
   });
   if(!h) h = "<p class='small'>Nessuno storico inserito.</p>";
   box.innerHTML = h;
 }
+function dispConvertiStoricoATempo(idx){
+  var s = (window.dispStorico||[])[idx];
+  if(!s) return;
+  if(s.aTempo){ alert("È già a tempo."); return; }
+  var d = prompt("Fino a quando è squalificato a tempo "+(s.n||"")+"? Formato AAAA-MM-GG, es. 2027-10-31", s.finoAl||"");
+  if(!d) return;
+  s.aTempo = true;
+  s.tipo = "aTempo";
+  s.finoAl = d;
+  s.giornate = 0;
+  if(typeof save==="function") save(); else dispRender();
+  dispRefreshStoricoList();
+  alert("Convertito: ora è a tempo fino al "+d+". Punti disciplina invariati.");
+}
+function dispConvertiCardATempo(){
+  var squadra = document.getElementById("fDispSquadra") ? document.getElementById("fDispSquadra").value : "";
+  var nome = document.getElementById("fDispGiocatore") ? document.getElementById("fDispGiocatore").value : "";
+  var d = document.getElementById("fConvFinoAl") ? document.getElementById("fConvFinoAl").value : "";
+  if(!squadra||!nome){ alert("Scegli squadra e giocatore sopra"); return; }
+  if(!d){ alert("Metti la data FINO AL"); return; }
+  var trovato = null;
+  var liste = [window.matches||[], window.coppaMatches||[]];
+  for(var li=0; li<liste.length; li++){
+    for(var mi=0; mi<liste[li].length; mi++){
+      var m = liste[li][mi];
+      if(!m.cards) continue;
+      for(var ci=0; ci<m.cards.length; ci++){
+        var c = m.cards[ci];
+        if(c.n===nome && c.team===squadra && (c.tipo==="rosso"||c.tipo==="doppio") && !c.aTempo){ trovato = c; break; }
+      }
+      if(trovato) break;
+    }
+    if(trovato) break;
+  }
+  if(!trovato){ alert("Non trovo un rosso / doppio giallo da convertire per "+nome+". Se lo hai messo nello Storico, usa il bottone A tempo sulla riga dello storico."); return; }
+  trovato.aTempo = true;
+  trovato.finoAl = d;
+  trovato.giornate = 0;
+  if(typeof save==="function") save(); else dispRender();
+  dispRefreshStoricoList();
+  alert("Convertito: "+nome+" ora è a tempo fino al "+d+". Punti disciplina invariati.");
+      }
 </script>
 </html>

@@ -450,6 +450,7 @@ div:has(> img){
 <button type="button" id="btnAdm-finali" onclick="showAdmin('finali')">🏁 Fasi Finali</button>
 <button type="button" id="btnAdm-stagione" onclick="showAdmin('stagione')">📚 Chiusura Stagione</button>
 <button type="button" id="btnAdm-cal" onclick="showAdmin('cal')">📅 Calendario</button>
+<button type="button" id="btnAdm-risultati" onclick="showAdmin('risultati')">✏️ Gestione Risultati</button>
 <button type="button" id="btnAdm-coppe" onclick="showAdmin('coppe')">🏆 Gestione Coppe</button>
 <button type="button" id="btnAdm-disc" onclick="showAdmin('disc')">🟨 Disciplina</button>
 <button type="button" id="btnAdm-disp" onclick="showAdmin('disp')">📋 Disposizioni</button>
@@ -550,7 +551,6 @@ div:has(> img){
 <button ... onclick="ripristinaCalendarioBackup()">↩️ RIPRISTINA ULTIMO CALENDARIO SALVATO</button>
 <button ... onclick="svuotaCalendario()">🗑️ ELIMINA TUTTE LE PARTITE DI CAMPIONATO</button>
 </div>
-</div>
 <div id="adminSec-risultati" style="display:none">
 <h3>📋 GESTIONE RISULTATI - Risultato Campionato</h3>
 <div class="label">SCEGLI LA PARTITA</div><select id="fMatchSelect" onchange="refreshScorerPlayers();refreshAdminLists()"></select>
@@ -576,12 +576,6 @@ div:has(> img){
 </div>
 <div id="matchesList"></div>
 </div>
-<script>
-function showCalTab(t){
-  document.getElementById('tabCalCrea').style.display = (t==='crea'?'block':'none');
-  document.getElementById('tabCalRisultati').style.display = (t==='risultati'?'block':'none');
-}
-</script>
 <div id="adminSec-coppe" style="display:none">
 <h3>🏆 CALENDARIO COPPE</h3>
 <div class="label">COPPA</div><select id="fCoppa" onchange="aggiornaAbbinamentiCoppa()"><option>Coppa di Lega</option><option>Coppa Mitropa</option><option>Coppa Campioni</option><option>Conference</option><option>Supercoppa</option><option>Playout Serie A</option><option>Playoff Serie B</option></select>

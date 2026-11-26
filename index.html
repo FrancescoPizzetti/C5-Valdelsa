@@ -549,7 +549,7 @@ div:has(> img){
 </div>
 <div id="tabCalRisultati" style="display:none">
 <h3>📋 PASSO 2 - Risultato Campionato</h3>
-<div class="label">SCEGLI LA PARTITA</div><select id="fMatchSelect" onchange="refreshScorerPlayers()"></select>
+<div class="label">SCEGLI LA PARTITA</div><select id="fMatchSelect" onchange="refreshScorerPlayers();refreshAdminLists()"></select>
 <div style="display:flex;gap:8px"><div style="flex:1"><div class="label">GOL CASA</div><input id="fResGolC" type="number" placeholder="Gol Casa"></div><div style="flex:1"><div class="label">GOL TRASFERTA</div><input id="fResGolT" type="number" placeholder="Gol Trasferta"></div></div>
 <button class="big" type="button" style="background:#22c55e" onclick="saveResultFromCal()">✅ SALVA RISULTATO</button>
 <button class="big" type="button" style="background:#3b82f6;color:#fff" onclick="modificaDataOra()">🕘 MODIFICA DATA / ORA / LUOGO</button>
@@ -2051,7 +2051,42 @@ save();
 if(el('scorersBox'))el('scorersBox').style.display=c.checked?"block":"none";
 }
 function escAttr(s){ return String(s||"").replace(/&/g,"&amp;").replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
-function refreshScorerPlayers(){
+function refreshAdminLists(){
+  var sIdx=findMatchBySelect();
+  if(el('scorersAdminList')){
+    if(sIdx>=0){
+      var sm=matches[sIdx];
+      if(!sm.scorers) sm.scorers=[];
+      var hsa="<p class='small'><b>Marcatori di "+sm.casa+" vs "+sm.tras+"</b></p>";
+      for(var si2=0;si2<sm.scorers.length;si2++){
+        var sc=sm.scorers[si2];
+        hsa+="<div class='row'><div><small>"+sc.team+" - <b>"+sc.n+"</b> - "+sc.gol+" gol</small></div>";
+        hsa+="<button class='del' type='button' onclick='delScorer("+sIdx+","+si2+")'>X</button></div>";
+      }
+      if(!sm.scorers.length) hsa+="<p class='small'>Ancora nessun marcatore.</p>";
+      el('scorersAdminList').innerHTML=hsa;
+    }else{
+      el('scorersAdminList').innerHTML="<p class='small'>Scegli una partita sopra.</p>";
+    }
+  }
+  if(el('cardsAdminList')){
+    if(sIdx>=0){
+      var cm=matches[sIdx];
+      if(!cm.cards) cm.cards=[];
+      var hca="<p class='small'><b>Cartellini di "+cm.casa+" vs "+cm.tras+"</b></p>";
+      for(var ci=0;ci<cm.cards.length;ci++){
+        var cc=cm.cards[ci];
+        hca+="<div class='row'><div><small>"+cc.team+" - <b>"+cc.n+"</b> - "+cardIcons(cc.tipo)+" "+cardLabel(cc.tipo)+"</small></div>";
+        hca+="<button class='del' type='button' onclick='delCard("+sIdx+","+ci+")'>X</button></div>";
+      }
+      if(!cm.cards.length) hca+="<p class='small'>Ancora nessun cartellino.</p>";
+      el('cardsAdminList').innerHTML=hca;
+    }else{
+      el('cardsAdminList').innerHTML="<p class='small'>Scegli una partita sopra.</p>";
+    }
+  }
+  }
+  function refreshScorerPlayers(){
 var idx=findMatchBySelect();
 var teamSel=el('fScorerTeam');
 var playSel=el('fScorerPlayer');

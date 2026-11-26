@@ -531,11 +531,6 @@ div:has(> img){
 <div id="storicoAdminList"></div>
 </div>
 </div><div id="adminSec-cal" style="display:none">
-<div style="display:flex;gap:10px;margin-bottom:15px">
-<button onclick="showCalTab('crea')" id="btnCalCrea" style="flex:1;padding:12px;font-weight:bold;background:#FFD700;color:#000;border-radius:10px">1. CREA / MODIFICA CALENDARIO</button>
-<button onclick="showCalTab('risultati')" id="btnCalRisultati" style="flex:1;padding:12px;font-weight:bold;background:#222;color:#fff;border-radius:10px">2. METTI RISULTATI</button>
-</div>
-<div id="tabCalCrea">
 <h3>📅 PASSO 1 - Calendario Campionato</h3>
 <div class="label">LEGA</div>
 <select id="fLegaMatch" onchange="render()"><option>Serie A</option><option>Serie B</option><option>Serie B1</option><option>Serie B2</option></select>
@@ -549,9 +544,15 @@ div:has(> img){
 <input id="fLuogoAltro" class="hidden" placeholder="Scrivi luogo...">
 <label class="checkBox"><input type="checkbox" id="fSpeculare"><div><b>🔁 Calendario speculare - Serie A</b><br><span class="small">Crea in automatico il ritorno Giornata +13.</span></div></label>
 <button class="big" type="button" onclick="saveMatchCal()">+ Aggiungi Partita al Calendario</button>
+<h3>🗑️ CANCELLA PARTITA</h3>
+<div id="cancellaBoxCal"></div>
+<button ... onclick="salvaOraEVerifica()">💾 SALVA ORA E VERIFICA</button>
+<button ... onclick="ripristinaCalendarioBackup()">↩️ RIPRISTINA ULTIMO CALENDARIO SALVATO</button>
+<button ... onclick="svuotaCalendario()">🗑️ ELIMINA TUTTE LE PARTITE DI CAMPIONATO</button>
 </div>
-<div id="tabCalRisultati" style="display:none">
-<h3>📋 PASSO 2 - Risultato Campionato</h3>
+</div>
+<div id="adminSec-risultati" style="display:none">
+<h3>📋 GESTIONE RISULTATI - Risultato Campionato</h3>
 <div class="label">SCEGLI LA PARTITA</div><select id="fMatchSelect" onchange="refreshScorerPlayers();refreshAdminLists()"></select>
 <div style="display:flex;gap:8px"><div style="flex:1"><div class="label">GOL CASA</div><input id="fResGolC" type="number" placeholder="Gol Casa"></div><div style="flex:1"><div class="label">GOL TRASFERTA</div><input id="fResGolT" type="number" placeholder="Gol Trasferta"></div></div>
 <button class="big" type="button" style="background:#22c55e" onclick="saveResultFromCal()">✅ SALVA RISULTATO</button>
@@ -574,10 +575,6 @@ div:has(> img){
 <div id="cardsAdminList"></div>
 </div>
 <div id="matchesList"></div>
-<button class="big" type="button" style="background:#22c55e;color:#fff" onclick="salvaOraEVerifica()">💾 SALVA ORA E VERIFICA</button>
-<button class="big" type="button" style="background:#f97316;color:#fff" onclick="ripristinaCalendarioBackup()">↩️ RIPRISTINA ULTIMO CALENDARIO SALVATO</button>
-<button class="big" type="button" style="background:#ef4444;color:#fff" onclick="svuotaCalendario()">🗑️ ELIMINA TUTTE LE PARTITE DI CAMPIONATO</button>
-</div>
 </div>
 <script>
 function showCalTab(t){
@@ -736,6 +733,7 @@ secs.push('seconda');
 secs.push('finali');
 secs.push('stagione');
 secs.push('cal');
+secs.push('risultati');
 secs.push('coppe');
 secs.push('disc');
 secs.push('disp');
@@ -5579,7 +5577,7 @@ var ka=k(a),kb=k(b);return ka<kb?-1:ka>kb?1:0;
   window.__v70 = true;
 
   function creaUI(){
-    var list = document.getElementById("matchesList");
+      var list = document.getElementById("cancellaBoxCal");
     if(!list) return false;
     if(document.getElementById("adminFiltroNuovo")) return true;
     var box = document.createElement("div");
@@ -5597,11 +5595,11 @@ var ka=k(a),kb=k(b);return ka<kb?-1:ka>kb?1:0;
       "</select>" +
       "<button type='button' id='adminMostraNuovo'>MOSTRA PARTITE</button>" +
       "<p class='small' style='margin:0'>Metti Lega + Giornata e premi MOSTRA. Solo così vedi la lista, altrimenti resta nascosta. Per cancellare, premi la X rossa.</p>";
-    list.parentNode.insertBefore(box, list);
+        list.appendChild(box);
     var div = document.createElement("div");
     div.id = "adminListaNuova";
     div.innerHTML = "<p class='small'>Usa il filtro sopra per vedere le partite.</p>";
-    list.parentNode.insertBefore(div, list);
+        list.appendChild(div);
     var gsel = document.getElementById("adminGiornataNuova");
     for(var g=1; g<=26; g++){
       var o = document.createElement("option");

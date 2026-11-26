@@ -416,14 +416,14 @@ div:has(> img){
 <div class="card" style="display:none"><h2>🟨 Classifica Disciplina - Tutte partono da 50</h2><div id="discTable"></div></div>
 </div>
 <div id="contatti" class="hidden">
+<div class="card"><h2>📞 Contatti Lega</h2><div id="contactsPublicList"></div></div>
+</div>
 <div id="disp" class="hidden">
   <div class="card"><h2>📋 Disposizioni Disciplinari</h2>
     <div class="label">COMPETIZIONE</div>
     <select id="dispComp" onchange="curDisp=this.value;dispRender()"><option>Serie A</option><option>Serie B</option><option>Serie B1</option><option>Serie B2</option><option>Coppa di Lega</option><option>Coppa Campioni</option><option>Mitropa</option><option>Conference</option><option>Playout</option><option>Playoff</option></select>
   </div>
   <div id="dispBox"></div>
-</div>
-<div class="card"><h2>📞 Contatti Lega</h2><div id="contactsPublicList"></div></div>
 </div>
 <div id="admin" class="hidden">
 <div class="card"><h2>🔒 Admin</h2>
@@ -616,13 +616,24 @@ function showCalTab(t){
 <div class="label">MOTIVO</div><input id="fMotDisc" placeholder="Es: Art. 6.7 offese arbitro">
 <button class="big" type="button" onclick="addSqualificaDisciplinare()">+ AGGIUNGI SQUALIFICA</button>
 <div id="squalificheDiscList"></div>
+</div>
+<div id="discList"></div>
+</div>
+<div id="adminSec-giocatori" style="display:none">
+<h3>👤 Giocatore</h3>
+<div class="card" style="border-color:#facc15">
+<div class="label">NOME GIOCATORE</div><input id="fPlayerNome" placeholder="Es: Milvatti S.">
+<div class="label">RUOLO</div><select id="fPlayerRuolo"><option></option><option>Presidente</option><option>Mister</option><option>Accompagnatore</option><option>Giocatore</option></select>
+<div class="label">GOL FATTI</div><input id="fPlayerGol" type="number" value="0" min="0">
+<div class="label">SQUADRA</div><select id="fPlayerTeam"></select>
+<button class="big" type="button" onclick="addPlayerNew()">+ Aggiungi Giocatore alla Rosa</button>
+</div>
 <div id="adminSec-disp" style="display:none">
   <h3>📋 Disposizioni - Campi provvedimento</h3>
   <div class="label">ARTICOLO (es. 6.7)</div><input id="fDispArticolo" placeholder="Es: 6.7">
   <div class="label">FINO AL</div><input id="fDispFinoAl" type="date">
   <div class="label">MULTA €</div><input id="fDispMulta" type="number" value="0">
   <div class="label">PUNTI IN CLASSIFICA</div><input id="fDispPuntiClass" type="number" value="0">
-
   <h3>✏️ MODIFICA DISPOSIZIONE / STORICO 1ª-7ª GIORNATA</h3>
   <p class="small">Non tocca i punti Disciplina. Conta solo per gialli / diffide / squalifiche.</p>
   <div class="label">COMPETIZIONE</div>
@@ -635,18 +646,6 @@ function showCalTab(t){
   <div class="label">MOTIVO / ARTICOLO</div><input id="fDispMotivo" placeholder="Es: Art. 6.7">
   <button class="big" type="button" onclick="dispSalvaStorico()">+ AGGIUNGI STORICO</button>
   <div id="dispStoricoList"></div>
-</div>
-</div>
-<div id="discList"></div>
-</div>
-<div id="adminSec-giocatori" style="display:none">
-<h3>👤 Giocatore</h3>
-<div class="card" style="border-color:#facc15">
-<div class="label">NOME GIOCATORE</div><input id="fPlayerNome" placeholder="Es: Milvatti S.">
-<div class="label">RUOLO</div><select id="fPlayerRuolo"><option></option><option>Presidente</option><option>Mister</option><option>Accompagnatore</option><option>Giocatore</option></select>
-<div class="label">GOL FATTI</div><input id="fPlayerGol" type="number" value="0" min="0">
-<div class="label">SQUADRA</div><select id="fPlayerTeam"></select>
-<button class="big" type="button" onclick="addPlayerNew()">+ Aggiungi Giocatore alla Rosa</button>
 </div>
 <div id="playersList"></div>
 </div>
@@ -7790,7 +7789,6 @@ function mostraMarcatoriCal(btn){
   setInterval(pulisci, 700);
   setTimeout(pulisci, 700);
 })();
-<script>
 /* ===== DISPOSIZIONI DISCIPLINARI - SOLO LETTURA, NON TOCCA PUNTI ===== */
 var dispCompList = ["Serie A","Serie B","Serie B1","Serie B2","Coppa di Lega","Coppa Campioni","Mitropa","Conference","Playout","Playoff"];
 
@@ -7847,6 +7845,118 @@ function dispGialliInComp(nome, squadra, comp){
   var ev = dispRaccogli();
   var tot = 0;
   ev.forEach(function(e){
-    if(e.nome!==nome)
+    if(e.nome!==nome) return;
+    if(squadra && e.squadra!==squadra) return;
+    if(e.tipo!=="giallo") return;
+    if(e.comp===comp) tot++;
+    else if((comp==="Serie B1"||comp==="Serie B2") && e.comp==="Serie B") tot++;
+  });
+  return tot;
+}
+function dispRender(){
+  var box = document.getElementById("dispBox");
+  if(!box) return;
+  var comp = (window.curDisp||"Serie A");
+  var sel = document.getElementById("dispComp");
+  if(sel && sel.value!==comp) sel.value = comp;
+  var ev = dispRaccogli().filter(function(e){ return e.comp===comp; });
+  var html = "";
+  html += "<div class='card'><h2>🟨 Ammoniti - "+comp+"</h2>";
+  var gruppi = {};
+  ev.forEach(function(e){ if(e.tipo==="giallo"){ (gruppi[e.giornata]=gruppi[e.giornata]||[]).push(e); } });
+  var chiavi = Object.keys(gruppi).sort();
+  if(!chiavi.length) html += "<p class='small'>Nessun ammonito.</p>";
+  chiavi.forEach(function(g){
+    html += "<div class='giornataTitle'>"+g+"</div>";
+    gruppi[g].forEach(function(e){ html += "<div class='row'><div><b>"+e.nome+"</b> ("+e.squadra+")</div></div>"; });
+  });
+  html += "</div>";
+  html += "<div class='card'><h2>⚠️ Diffidati - "+comp+"</h2><div class='tableWrap'><table><tr><th>TESSERATO</th><th>SQUADRA</th></tr>";
+  var visti = {};
+  var diffidati = [];
+  ev.forEach(function(e){
+    var k = e.nome+"|"+e.squadra;
+    if(visti[k]) return;
+    visti[k]=1;
+    if(dispGialliInComp(e.nome, e.squadra, comp)===2) diffidati.push(e);
+  });
+  if(!diffidati.length) html += "<tr><td colspan='2'>Nessun diffidato.</td></tr>";
+  diffidati.forEach(function(e){ html += "<tr><td><b>"+e.nome+"</b></td><td>"+e.squadra+"</td></tr>"; });
+  html += "</table></div></div>";
+  html += "<div class='card'><h2>🟥 Squalificati - "+comp+"</h2>";
+  html += "<div class='label'>SQUALIFICATI PER LA PROSSIMA GIORNATA / TURNO</div>";
+  var sq = [];
+  ev.forEach(function(e){
+    if(e.tipo==="rosso"||e.tipo==="doppio") sq.push(e.nome+" ("+e.squadra+") - "+(e.tipo==="doppio"?"doppio giallo":(e.giornate||1)+" giornata/e"));
+  });
+  try{
+    (window.squalificheDisciplinari||[]).forEach(function(s){
+      if(s.aTempo) return;
+      sq.push((s.n||"")+" ("+(s.squadra||"")+") - "+(s.giornate||1)+" giornata/e"+(s.motivo?" - "+s.motivo:""));
+    });
+  }catch(e){}
+  if(!sq.length) html += "<p class='small'>Nessuno squalificato.</p>";
+  sq.forEach(function(t){ html += "<div class='row'><div>"+t+"</div></div>"; });
+  html += "<div class='label'>SQUALIFICATI A TEMPO</div>";
+  var aTempo = [];
+  try{
+    (window.squalificheDisciplinari||[]).forEach(function(s){
+      if(s.aTempo) aTempo.push((s.n||"")+" ("+(s.squadra||"")+")"+(s.finoAl?" - fino al "+s.finoAl:"")+(s.motivo?" - "+s.motivo:""));
+    });
+  }catch(e){}
+  ev.forEach(function(e){ if(e.aTempo) aTempo.push(e.nome+" ("+e.squadra+")"+(e.finoAl?" - fino al "+e.finoAl:"")); });
+  if(!aTempo.length) html += "<p class='small'>Nessuno squalificato a tempo.</p>";
+  aTempo.forEach(function(t){ html += "<div class='row'><div>"+t+"</div></div>"; });
+  html += "</div>";
+  html += "<div class='card'><h2>📋 Provvedimenti Disciplinari - "+comp+"</h2>";
+  var prov = [];
+  ev.forEach(function(e){
+    if(e.tipo==="rosso"||e.tipo==="doppio"||e.aTempo) prov.push({giornata:e.giornata, testo:(e.giornate||1)+" giornata/e di squalifica a "+e.nome+" ("+e.squadra+")"+(e.motivo?" per "+e.motivo:"")});
+  });
+  try{
+    (window.squalificheDisciplinari||[]).forEach(function(s){
+      var txt = (s.aTempo?"Squalifica a tempo":(s.giornate||1)+" giornata/e di squalifica")+" a "+(s.n||"")+" ("+(s.squadra||"")+")";
+      if(s.articolo) txt += " per infrazione all'Art."+s.articolo;
+      else if(s.motivo) txt += " per "+s.motivo;
+      if(s.multa) txt += " - Multa € "+s.multa;
+      if(s.puntiClassifica) txt += " - "+s.puntiClassifica+" pt in classifica";
+      if(s.finoAl) txt += " - fino al "+s.finoAl;
+      prov.push({giornata:"PROVVEDIMENTO", testo:txt});
+    });
+  }catch(e){}
+  if(!prov.length) html += "<p class='small'>Nessun provvedimento.</p>";
+  prov.forEach(function(p){ html += "<div class='row'><div><span class='small'>"+p.giornata+" - </span>"+p.testo+"</div></div>"; });
+  html += "</div>";
+  box.innerHTML = html;
+}
+function dispSalvaStorico(){
+  var comp = document.getElementById("fDispComp") ? document.getElementById("fDispComp").value : "";
+  var giornata = document.getElementById("fDispGiornata") ? document.getElementById("fDispGiornata").value : "";
+  var squadra = document.getElementById("fDispSquadra") ? document.getElementById("fDispSquadra").value : "";
+  var nome = document.getElementById("fDispGiocatore") ? document.getElementById("fDispGiocatore").value : "";
+  var tipo = document.getElementById("fDispTipo") ? document.getElementById("fDispTipo").value : "giallo";
+  var giornate = parseInt(document.getElementById("fDispGiornate") ? document.getElementById("fDispGiornate").value||0 : 0,10)||0;
+  var motivo = document.getElementById("fDispMotivo") ? document.getElementById("fDispMotivo").value : "";
+  if(!comp||!nome||!squadra){ alert("Scegli competizione, squadra e giocatore"); return; }
+  if(!window.dispStorico) window.dispStorico = [];
+  dispStorico.push({comp:comp, giornata:giornata, giornataEt:(giornata?giornata+"ª GIORNATA":""), squadra:squadra, n:nome, tipo:tipo, giornate:giornate, motivo:motivo, punti:0, aTempo:false});
+  if(typeof save==="function") save(); else dispRender();
+  alert("Storico salvato. Non ho toccato i punti Disciplina.");
+}
+function dispDelStorico(i){
+  if(!confirm("Cancellare questo storico?")) return;
+  dispStorico.splice(i,1);
+  if(typeof save==="function") save(); else dispRender();
+}
+function dispRefreshStoricoList(){
+  var box = document.getElementById("dispStoricoList");
+  if(!box) return;
+  var h = "";
+  (window.dispStorico||[]).forEach(function(s,idx){
+    h += "<div class='row'><div><small>"+s.comp+" - "+(s.giornata||"")+"ª - <b>"+s.n+"</b> ("+s.squadra+") - "+s.tipo+"</small></div><button class='del' type='button' onclick='dispDelStorico("+idx+")'>X</button></div>";
+  });
+  if(!h) h = "<p class='small'>Nessuno storico inserito.</p>";
+  box.innerHTML = h;
+}
 </script>
 </html>

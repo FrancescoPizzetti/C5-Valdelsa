@@ -1177,16 +1177,10 @@ function vincitoreTestaB1(nomeA,nomeB){
 function decideSpareggio(nomeA,nomeB,lega){
   if(lega==="Serie B1"){
     if(Math.abs(discVal(nomeA)-discVal(nomeB))<=10){
-      return {gioca:false, vincitore:vincitoreTestaB1(nomeA,nomeB)};
+      return {gioca:true, vincitore:""};
     }
-    return {gioca:true, vincitore:""};
-  }
-  if(lega==="Serie A"||lega==="Serie B"){
-    if(serveSpareggio(nomeA,nomeB)) return {gioca:true, vincitore:""};
     return {gioca:false, vincitore:discVal(nomeA)>=discVal(nomeB) ? nomeA : nomeB};
   }
-  return {gioca:false, vincitore:discVal(nomeA)>=discVal(nomeB) ? nomeA : nomeB};
-}
 // Art. 4.3 - Se Disciplina = 0, 1 punto di penalità in classifica per ogni punto negativo
 function penalitaClassificaArt43(nm){
   var d=discVal(nm);
@@ -1327,7 +1321,7 @@ coppaMatches=[];
 disciplina={};
 primaFaseB={};
 var ns=teamNames();
-for(var i=0;i<ns.length;i++)disciplina[ns[i]]=baseDisciplina();}
+for(var i=0;i<ns.length;i++)disciplina[ns[i]]=baseDisciplina();
 for(var j=0;j<players.length;j++){players[j].g=0;}
 for(var ti=0;ti<teams.length;ti++){
 if(teams[ti].l==="Serie B1")teams[ti].l="Serie B";

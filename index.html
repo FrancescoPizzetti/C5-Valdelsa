@@ -2050,6 +2050,7 @@ settings.useScorers=c.checked;
 save();
 if(el('scorersBox'))el('scorersBox').style.display=c.checked?"block":"none";
 }
+function escAttr(s){ return String(s||"").replace(/&/g,"&amp;").replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
 function refreshScorerPlayers(){
 var idx=findMatchBySelect();
 var teamSel=el('fScorerTeam');
@@ -2073,7 +2074,7 @@ var list=players.filter(function(p){return p.t===squadra;});
 var curP=playSel.value;
 var html="<option value='AUTOGOL'>AUTOGOL</option>";
 for(var li=0;li<list.length;li++){
-html+="<option value='"+list[li].n+"'>";
+html+="<option value=\""+escAttr(list[li].n)+"\">";
 html+=list[li].n+" ("+list[li].g+" gol)</option>";
 }
 if(!list.length)html+="<option value=''>Nessun giocatore in rosa</option>";
@@ -2193,7 +2194,7 @@ function refreshCardPlayers(){
   var list=players.filter(function(p){return p.t===squadra;});
   var curP=playSel.value;
   var html="";
-  for(var li=0;li<list.length;li++){ html+="<option value='"+list[li].n+"'>"+list[li].n+"</option>"; }
+  for(var li=0;li<list.length;li++){ html+="<option value=\""+escAttr(list[li].n)+"\">"+list[li].n+"</option>"; }
   if(!list.length) html+="<option value=''>Nessun giocatore in rosa</option>";
   playSel.innerHTML=html;
   if(curP) playSel.value=curP;
@@ -2282,7 +2283,7 @@ function refreshSqualificheDisc(){
     var list=players.filter(function(p){return p.t===sq2;});
     var curG=selGi.value;
     var hg="";
-    for(var j=0;j<list.length;j++) hg+="<option value='"+list[j].n+"'>"+list[j].n+"</option>";
+    for(var j=0;j<list.length;j++) hg+="<option value=\""+escAttr(list[j].n)+"\">"+list[j].n+"</option>";
     if(!list.length) hg+="<option value=''>Nessun giocatore in rosa</option>";
     selGi.innerHTML=hg;
     if(curG) selGi.value=curG;
@@ -8115,7 +8116,7 @@ function dispRefreshStoricoSelects(){
     var list = (window.players||[]).filter(function(p){ return p.t===sq2; });
     var curG = selGi.value;
     var hg = "";
-    for(var j=0;j<list.length;j++) hg += "<option value='"+list[j].n+"'>"+list[j].n+"</option>";
+    for(var j=0;j<list.length;j++) hg += "<option value=\""+escAttr(list[j].n)+"\">"+list[j].n+"</option>";
     if(!list.length) hg += "<option value=''>Nessun giocatore in rosa</option>";
     selGi.innerHTML = hg;
     if(curG) selGi.value = curG;

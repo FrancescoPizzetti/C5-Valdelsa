@@ -947,13 +947,14 @@ return {n:nm,l:"Serie A",c:"#facc15",logo:""};
 }
 function teamLeague(nm){return teamObj(nm).l}
 function giornateCampionato(){
-  var mx=0;
-  for(var i=0;i<matches.length;i++){
-    var g=parseInt(matches[i].giornata||0,10);
-    if(g>mx) mx=g;
-  }
-  if(mx>0) return mx;
-  return 26;
+var mx=0;
+for(var i=0;i<matches.length;i++){
+if(matches[i].fase==="Serie B1"||matches[i].fase==="Serie B2") continue;
+var g=parseInt(matches[i].giornata||0,10);
+if(g>mx) mx=g;
+}
+if(mx>0) return mx;
+return 26;
 }
 function baseDisciplina(){
   return giornateCampionato()*2;
@@ -1178,7 +1179,42 @@ function serveSpareggio(nomeA,nomeB){
 }
 // FIX Art. 3.5 Versione A - vincitoreTestaB1 ELIMINATA, contraddiceva la Versione A.
 // Helper: ti dice se lo spareggio si gioca o se decide la classifica
-function decideSpareggio(nomeA,nomeB,lega){
+var spareggi=[];
+var vincitoreSpareggio={};
+function campioneLega(lega,clFiltrata){
+if(vincitoreSpareggio[lega])return vincitoreSpareggio[lega];
+if(clFiltrata&&clFiltrata[0])return clFiltrata[0][0];
+return "";
+}
+function creaSpareggio(lega){
+var cl=calc().filter(function(x){return teamLeague(x[0])===lega;});
+if(cl.length<2){alert("Servono almeno 2 squadre in "+lega);return;}
+if(cl[0][1].pti!==cl[1][1].pti){alert("Niente spareggio: non sono a pari merito in testa.");return;}
+var d=decideSpareggio(cl[0][0],cl[1][0],lega);
+if(!d.gioca){alert("Niente spareggio: vince "+d.vincitore+" per Disciplina.");return;}
+for(var i=0;i<spareggi.length;i++){
+if(spareggi[i].lega===lega&&spareggi[i].stato==="Programmata"){alert("Spareggio già creato per "+lega);return;}
+}
+spareggi.push({lega:lega,casa:cl[0][0],tras:cl[1][0],golC:"",golT:"",stato:"Programmata",vincitore:""});
+save();
+alert("Spareggio creato: "+cl[0][0]+" vs "+cl[1][0]+" ("+lega+")");
+}
+function chiudiSpareggio(idx,golC,golT){
+var s=spareggi[idx];
+if(!s)return;
+golC=parseInt(golC,10);
+golT=parseInt(golT,10);
+if(isNaN(golC)||isNaN(golT)){alert("Metti i gol.");return;}
+if(golC===golT){alert("Pareggio non ammesso nello spareggio.");return;}
+s.golC=golC;
+s.golT=golT;
+s.stato="Giocata";
+s.vincitore=golC>golT?s.casa:s.tras;
+vincitoreSpareggio[s.lega]=s.vincitore;
+save();
+alert("Spareggio vinto da "+s.vincitore);
+}
+  function decideSpareggio(nomeA,nomeB,lega){
   if(lega==="Serie B1"){
     if(Math.abs(discVal(nomeA)-discVal(nomeB))<=10){
       return {gioca:true, vincitore:""};
@@ -1272,10 +1308,10 @@ if(teamTitles[i].team===squadra&&teamTitles[i].trofeo===trofeo&&teamTitles[i].an
 }
 if(!esiste)teamTitles.push({team:squadra,trofeo:trofeo,anno:annoTitolo});
 }
-if(clA[0])assegnaAuto(clA[0][0],"Serie A");
-if(clB1.length)assegnaAuto(clB1[0][0],"Serie B1");
-else if(clB[0])assegnaAuto(clB[0][0],"Serie B");
-if(clB2.length)assegnaAuto(clB2[0][0],"Serie B2");
+if(campA)assegnaAuto(campA,"Serie A");
+if(clB1.length)assegnaAuto(campB,"Serie B1");
+else if(clB[0])assegnaAuto(campB,"Serie B");
+if(clB2.length)assegnaAuto(campioneLega("Serie B2",clB2),"Serie B2");
 var vm=coppaWinners("Coppa Mitropa","Finale")[0]||"";
 var vc=coppaWinners("Coppa Campioni","Finale")[0]||"";
 // SUPERCOPPA: non si assegna qui. E' gia' stata assegnata a settembre, quando e' stata giocata.
@@ -1289,16 +1325,15 @@ var capAName="";
 if(capA)capAName=capA.n+" ("+golCampionato(capA)+" gol)";
 var capBName="";
 if(capB)capBName=capB.n+" ("+golCampionato(capB)+" gol)";
-var campA="";
-if(clA[0])campA=clA[0][0];
+var campA=campioneLega("Serie A",clA);
 var campB="";
-if(clB1.length)campB=clB1[0][0];
-else if(clB[0])campB=clB[0][0];
+if(clB1.length)campB=campioneLega("Serie B1",clB1);
+else if(clB[0])campB=campioneLega("Serie B",clB);
 var classAList=clA.map(function(x){return {n:x[0],pti:x[1].pti};});
 var classBList=clB.map(function(x){return {n:x[0],pti:x[1].pti};});
 var nuovoStorico={};
 nuovoStorico.stagione=stag;
-nuovoStorico.data="2026-11-15";
+nuovoStorico.data=new Date().toISOString().slice(0,10);
 nuovoStorico.campioneA=campA;
 nuovoStorico.campioneB=campB;
 nuovoStorico.classA=classAList;
@@ -2361,6 +2396,8 @@ if(d.disciplina[di]&&d.disciplina[di].n!==undefined)disciplina[d.disciplina[di].
 if(d.primaFaseB)primaFaseB=d.primaFaseB;
 if(d.bonusB1)bonusB1=d.bonusB1;
 if(d.bonusB2)bonusB2=d.bonusB2;
+if(d.spareggi)spareggi=d.spareggi;
+if(d.vincitoreSpareggio)vincitoreSpareggio=d.vincitoreSpareggio;
 if(d.settings)settings=Object.assign(settings,d.settings);
 if(d.storico)storico=d.storico;
 if(d.squalificheDisciplinari) squalificheDisciplinari=d.squalificheDisciplinari;
@@ -2427,6 +2464,8 @@ payload.disciplina=discSalva;
 payload.primaFaseB=primaFaseB;
 payload.bonusB1=bonusB1;
 payload.bonusB2=bonusB2;
+payload.spareggi=spareggi;
+payload.vincitoreSpareggio=vincitoreSpareggio;
 payload.settings=settings;
 payload.storico=storico;
 payload.squalificheDisciplinari=squalificheDisciplinari;
@@ -3723,8 +3762,9 @@ el('playersList').innerHTML=hpl;
 }
 if(el('discList')){
 var hdl="";
-for(var dl2=0;dl2<names.length;dl2++){
-var nn2=names[dl2];
+var nomiDisc=names.slice().sort(sortDisciplina);
+for(var dl2=0;dl2<nomiDisc.length;dl2++){
+var nn2=nomiDisc[dl2];
 hdl+="<div class='row'><div>";
 hdl+=nn2;
 hdl+=" <span class='small'>";

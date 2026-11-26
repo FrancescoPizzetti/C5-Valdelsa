@@ -231,6 +231,7 @@ div:has(> img){
 <button typr="button" onclick="goMenu('chiSiamo')">ℹ️ Chi Siamo</button>
 <button type="button" onclick="goMenu('team')">👥 Squadre e Rose</button>
 <button type="button" onclick="goMenu('albo')">👑 Albo d'oro</button>
+<button type="button" onclick="goMenu('disp')">⚖️ Disposizioni Disciplinari</button>
 <button type="button" onclick="goMenu('contatti')">📞 Contatti</button>
 <button type="button" onclick="goMenu('admin')">🔒 Admin</button>
 <p class="small" style="text-align:center;margin-top:14px;opacity:0.6">Versione 1.5 • by FCAM</p>
@@ -415,6 +416,13 @@ div:has(> img){
 <div class="card" style="display:none"><h2>🟨 Classifica Disciplina - Tutte partono da 50</h2><div id="discTable"></div></div>
 </div>
 <div id="contatti" class="hidden">
+<div id="disp" class="hidden">
+  <div class="card"><h2>📋 Disposizioni Disciplinari</h2>
+    <div class="label">COMPETIZIONE</div>
+    <select id="dispComp" onchange="curDisp=this.value;dispRender()"><option>Serie A</option><option>Serie B</option><option>Serie B1</option><option>Serie B2</option><option>Coppa di Lega</option><option>Coppa Campioni</option><option>Mitropa</option><option>Conference</option><option>Playout</option><option>Playoff</option></select>
+  </div>
+  <div id="dispBox"></div>
+</div>
 <div class="card"><h2>📞 Contatti Lega</h2><div id="contactsPublicList"></div></div>
 </div>
 <div id="admin" class="hidden">
@@ -435,6 +443,7 @@ div:has(> img){
 <button type="button" id="btnAdm-cal" onclick="showAdmin('cal')">📅 Calendario</button>
 <button type="button" id="btnAdm-coppe" onclick="showAdmin('coppe')">🏆 Gestione Coppe</button>
 <button type="button" id="btnAdm-disc" onclick="showAdmin('disc')">🟨 Disciplina</button>
+<button type="button" id="btnAdm-disp" onclick="showAdmin('disp')">📋 Disposizioni</button>
 <button type="button" id="btnAdm-giocatori" onclick="showAdmin('giocatori')">👤 Giocatori</button>
 <button type="button" id="btnAdm-contatti" onclick="showAdmin('contatti')">📞 Contatti</button>
 <button type="button" id="btnAdm-sistema" onclick="showAdmin('sistema')">🔑 Sistema</button>
@@ -607,6 +616,26 @@ function showCalTab(t){
 <div class="label">MOTIVO</div><input id="fMotDisc" placeholder="Es: Art. 6.7 offese arbitro">
 <button class="big" type="button" onclick="addSqualificaDisciplinare()">+ AGGIUNGI SQUALIFICA</button>
 <div id="squalificheDiscList"></div>
+<div id="adminSec-disp" style="display:none">
+  <h3>📋 Disposizioni - Campi provvedimento</h3>
+  <div class="label">ARTICOLO (es. 6.7)</div><input id="fDispArticolo" placeholder="Es: 6.7">
+  <div class="label">FINO AL</div><input id="fDispFinoAl" type="date">
+  <div class="label">MULTA €</div><input id="fDispMulta" type="number" value="0">
+  <div class="label">PUNTI IN CLASSIFICA</div><input id="fDispPuntiClass" type="number" value="0">
+
+  <h3>✏️ MODIFICA DISPOSIZIONE / STORICO 1ª-7ª GIORNATA</h3>
+  <p class="small">Non tocca i punti Disciplina. Conta solo per gialli / diffide / squalifiche.</p>
+  <div class="label">COMPETIZIONE</div>
+  <select id="fDispComp"><option>Serie A</option><option>Serie B</option><option>Serie B1</option><option>Serie B2</option><option>Coppa di Lega</option><option>Coppa Campioni</option><option>Mitropa</option><option>Conference</option><option>Playout</option><option>Playoff</option></select>
+  <div class="label">GIORNATA</div><input id="fDispGiornata" type="number" value="1">
+  <div class="label">SQUADRA</div><select id="fDispSquadra"></select>
+  <div class="label">GIOCATORE</div><select id="fDispGiocatore"></select>
+  <div class="label">TIPO</div><select id="fDispTipo"><option value="giallo">🟨 Giallo</option><option value="doppio">🟨🟨🟥 Doppio giallo</option><option value="rosso">🟥 Rosso diretto</option></select>
+  <div class="label">GIORNATE DI SQUALIFICA (solo per rosso)</div><input id="fDispGiornate" type="number" value="0">
+  <div class="label">MOTIVO / ARTICOLO</div><input id="fDispMotivo" placeholder="Es: Art. 6.7">
+  <button class="big" type="button" onclick="dispSalvaStorico()">+ AGGIUNGI STORICO</button>
+  <div id="dispStoricoList"></div>
+</div>
 </div>
 <div id="discList"></div>
 </div>
@@ -664,6 +693,7 @@ ids.push('class');
 ids.push('coppe');
 ids.push('team');
 ids.push('albo');
+ids.push('disp');
 ids.push('contatti');
 ids.push('chiSiamo');
 ids.push('admin');
@@ -694,6 +724,7 @@ secs.push('stagione');
 secs.push('cal');
 secs.push('coppe');
 secs.push('disc');
+secs.push('disp');
 secs.push('giocatori');
 secs.push('contatti');
 secs.push('sistema');
@@ -920,6 +951,8 @@ comps.push("Coppa Mitropa");
 comps.push("Conference");
 var disciplina={};
 var squalificheDisciplinari=[];
+var dispStorico=[];
+var curDisp='Serie A';
 var primaFaseB={};
 var bonusB1={team:"",pti:0};
 var bonusB2={team:"",pti:0};
@@ -2401,6 +2434,7 @@ if(d.vincitoreSpareggio)vincitoreSpareggio=d.vincitoreSpareggio;
 if(d.settings)settings=Object.assign(settings,d.settings);
 if(d.storico)storico=d.storico;
 if(d.squalificheDisciplinari) squalificheDisciplinari=d.squalificheDisciplinari;
+if(d.dispStorico) dispStorico=d.dispStorico;
 }
 }catch(e){}
 try{
@@ -2469,6 +2503,7 @@ payload.vincitoreSpareggio=vincitoreSpareggio;
 payload.settings=settings;
 payload.storico=storico;
 payload.squalificheDisciplinari=squalificheDisciplinari;
+payload.dispStorico=dispStorico;
 var res=await fetch(DB,{method:"PUT",body:JSON.stringify(payload)});
 if(!res.ok){alert("Firebase errore "+res.status);}
 if(el('sync'))el('sync').textContent="● LIVE";
@@ -3023,6 +3058,8 @@ fixTeams();
 applySettings();
 showDiscCurrent();
 try{ refreshSqualificheDisc(); }catch(e){}
+try{ dispRender(); }catch(e){}
+try{ dispRefreshStoricoList(); }catch(e){}
 showPromoCurrent();
 fillYears();
 var prog=matches.filter(function(m){return m.stato==="Programmata";});
@@ -7753,5 +7790,63 @@ function mostraMarcatoriCal(btn){
   setInterval(pulisci, 700);
   setTimeout(pulisci, 700);
 })();
+<script>
+/* ===== DISPOSIZIONI DISCIPLINARI - SOLO LETTURA, NON TOCCA PUNTI ===== */
+var dispCompList = ["Serie A","Serie B","Serie B1","Serie B2","Coppa di Lega","Coppa Campioni","Mitropa","Conference","Playout","Playoff"];
+
+function dispNorm(s){ return String(s||"").trim(); }
+function dispCompDiCoppa(c){
+  c = dispNorm(c);
+  if(c==="Coppa Mitropa"||c==="Mitropa Cup") return "Mitropa";
+  if(c==="Coppa Campioni") return "Coppa Campioni";
+  if(c==="Coppa di Lega") return "Coppa di Lega";
+  if(c==="Conference"||c==="Coppa Conference") return "Conference";
+  if(c==="Playoff"||c==="Playoff Serie B"||c==="Playoff B") return "Playoff";
+  if(c==="Playout"||c==="Playout Serie A"||c==="Playout A") return "Playout";
+  if(c==="Supercoppa") return "Supercoppa";
+  return c;
+}
+function dispCompDiPartita(m){
+  if(!m) return "Serie A";
+  if(m.coppa) return dispCompDiCoppa(m.coppa);
+  if(m.fase) return dispNorm(m.fase);
+  return "Serie A";
+}
+function dispGiornataEtichetta(m, defGiornata){
+  if(m && m.fase) return m.fase;
+  if(m && m.coppa) return (m.fase||m.coppa);
+  var g = (m && m.giornata) ? m.giornata : defGiornata;
+  return g ? (g + "ª GIORNATA") : "GIORNATA";
+}
+function dispRaccogli(){
+  var out = [];
+  try{
+    (window.matches||[]).forEach(function(m){
+      var comp = dispCompDiPartita(m);
+      (m.cards||[]).forEach(function(c){
+        out.push({comp:comp, giornata:dispGiornataEtichetta(m, m.giornata), giornataNum:parseInt(m.giornata||0,10)||0, data:m.data||"", nome:c.n||c.nome||"", squadra:c.team||c.squadra||"", tipo:c.tipo||"giallo", giornate:parseInt(c.giornate||0,10)||0, aTempo:!!c.aTempo, motivo:c.motivo||"", fonte:"partita", ordine:0});
+      });
+    });
+  }catch(e){}
+  try{
+    (window.coppaMatches||[]).forEach(function(m){
+      var comp = dispCompDiPartita(m);
+      (m.cards||[]).forEach(function(c){
+        out.push({comp:comp, giornata:dispGiornataEtichetta(m, ""), giornataNum:0, data:m.data||"", nome:c.n||c.nome||"", squadra:c.team||c.squadra||"", tipo:c.tipo||"giallo", giornate:parseInt(c.giornate||0,10)||0, aTempo:!!c.aTempo, motivo:c.motivo||"", fonte:"coppa", ordine:1});
+      });
+    });
+  }catch(e){}
+  try{
+    (window.dispStorico||[]).forEach(function(s){
+      out.push({comp:dispNorm(s.comp), giornata:s.giornataEt||((s.giornata||"")+"ª GIORNATA"), giornataNum:parseInt(s.giornata||0,10)||0, data:s.data||"", nome:s.n||s.nome||"", squadra:s.squadra||"", tipo:s.tipo||"giallo", giornate:parseInt(s.giornate||0,10)||0, aTempo:!!s.aTempo, motivo:s.motivo||"", fonte:"storico", ordine:2, punti:0});
+    });
+  }catch(e){}
+  return out;
+}
+function dispGialliInComp(nome, squadra, comp){
+  var ev = dispRaccogli();
+  var tot = 0;
+  ev.forEach(function(e){
+    if(e.nome!==nome)
 </script>
 </html>

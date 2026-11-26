@@ -423,10 +423,10 @@ div:has(> img){
     <div class="label">COMPETIZIONE</div>
     <select id="dispComp" onchange="curDisp=this.value;dispRender()"><option>Serie A</option><option>Serie B</option><option>Serie B1</option><option>Serie B2</option><option>Coppa di Lega</option><option>Coppa Campioni</option><option>Mitropa</option><option>Conference</option><option>Playout</option><option>Playoff</option></select>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-  <button type="button" id="tabDisp-ammoniti" onclick="curDispTab='ammoniti';dispRender()" style="flex:1;background:#facc15;color:#000;font-weight:900;border:0;padding:10px;border-radius:10px;cursor:pointer">🟨 Ammoniti</button>
-  <button type="button" id="tabDisp-diffidati" onclick="curDispTab='diffidati';dispRender()" style="flex:1;background:#222;color:#fff;font-weight:900;border:0;padding:10px;border-radius:10px;cursor:pointer">⚠️ Diffidati</button>
-  <button type="button" id="tabDisp-squalificati" onclick="curDispTab='squalificati';dispRender()" style="flex:1;background:#222;color:#fff;font-weight:900;border:0;padding:10px;border-radius:10px;cursor:pointer">🟥 Squalificati</button>
-  <button type="button" id="tabDisp-provvedimenti" onclick="curDispTab='provvedimenti';dispRender()" style="flex:1;background:#222;color:#fff;font-weight:900;border:0;padding:10px;border-radius:10px;cursor:pointer">📋 Provvedimenti</button>
+    <button type="button" id="tabDisp-ammoniti" onclick="dispSetTab('ammoniti')" style="flex:1;background:#facc15;color:#000;font-weight:900;border:0;padding:10px;border-radius:10px;cursor:pointer">🟨 Ammoniti</button>
+  <button type="button" id="tabDisp-diffidati" onclick="dispSetTab('diffidati')" style="flex:1;background:#222;color:#fff;font-weight:900;border:0;padding:10px;border-radius:10px;cursor:pointer">⚠️ Diffidati</button>
+  <button type="button" id="tabDisp-squalificati" onclick="dispSetTab('squalificati')" style="flex:1;background:#222;color:#fff;font-weight:900;border:0;padding:10px;border-radius:10px;cursor:pointer">🟥 Squalificati</button>
+  <button type="button" id="tabDisp-provvedimenti" onclick="dispSetTab('provvedimenti')" style="flex:1;background:#222;color:#fff;font-weight:900;border:0;padding:10px;border-radius:10px;cursor:pointer">📋 Provvedimenti</button>
   </div>
   </div>
   <div id="dispBox"></div>
@@ -7879,6 +7879,11 @@ function dispGialliInComp(nome, squadra, comp){
   return tot;
 }
 var curDispTab = 'ammoniti';
+function dispSetTab(t){
+  window.curDispTab = t;
+  curDispTab = t;
+  try{ dispRender(); }catch(e){ alert("Errore tab: "+e.message); }
+}
 function dispTargetGiornate(e){
   var g = parseInt(e.giornataNum||0,10)||0;
   var n = parseInt(e.giornate||0,10)||0;
@@ -7909,7 +7914,8 @@ function dispRender(){
   var box = document.getElementById("dispBox");
   if(!box) return;
   var comp = (window.curDisp||"Serie A");
-  var tab = window.curDispTab||'ammoniti';
+    var tab = window.curDispTab||curDispTab||'ammoniti';
+  if(["ammoniti","diffidati","squalificati","provvedimenti"].indexOf(tab)<0) tab = 'ammoniti';
   var sel = document.getElementById("dispComp");
   if(sel && sel.value!==comp) sel.value = comp;
   ["ammoniti","diffidati","squalificati","provvedimenti"].forEach(function(t){

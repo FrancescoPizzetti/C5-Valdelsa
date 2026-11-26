@@ -349,6 +349,10 @@ div:has(> img){
 <button type="button" id="btnAlboStorico" onclick="showAlbo('storico')">STORICO</button>
 </div>
 </div>
+<div class="card" style="text-align:center">
+  <button type="button" class="big" onclick="apriPalmares()">🏆 PALMARES - Top 5 Club</button>
+  <p class="small">I 5 club più titolati, aggiornato a ogni titolo assegnato.</p>
+</div>
 <div id="alboTeamBox">
 <div class="card"><h2>🏆 Club più titolati - Top 5</h2><div id="alboTeams"></div></div>
 <div class="card"><h2>📅 Vincitori per Anno</h2>
@@ -1148,10 +1152,6 @@ var t=teamTitles[i].team;
 if(!counts[t])counts[t]=[];
 counts[t].push(teamTitles[i]);
 }
-// BONUS SOLO PER LA 1a DI B1 E LA 1a DI B2
-if(bonusB1 && bonusB1.team && t[bonusB1.team]) t[bonusB1.team].pti+=bonusB1.pti;
-if(bonusB2 && bonusB2.team && t[bonusB2.team]) t[bonusB2.team].pti+=bonusB2.pti;
-var arr=[];
 var arr=[];
 for(var k in counts){
 counts[k].sort(function(a,b){return b.anno-a.anno});
@@ -1355,7 +1355,7 @@ if(!esiste)teamTitles.push({team:squadra,trofeo:trofeo,anno:annoTitolo});
 if(campA)assegnaAuto(campA,"Serie A");
 if(clB1.length)assegnaAuto(campB,"Serie B1");
 else if(clB[0])assegnaAuto(campB,"Serie B");
-if(clB2.length)assegnaAuto(campioneLega("Serie B2",clB2),"Serie B2");
+// B2: niente trofeo. Solo la B1 vale come trofeo Serie B.
 var vm=coppaWinners("Coppa Mitropa","Finale")[0]||"";
 var vc=coppaWinners("Coppa Campioni","Finale")[0]||"";
 // SUPERCOPPA: non si assegna qui. E' gia' stata assegnata a settembre, quando e' stata giocata.
@@ -1899,7 +1899,7 @@ function assegnaTitoliStagioneCorrente(){
   var clB2=cl.filter(function(x){return teamLeague(x[0])==="Serie B2";});
   if(clA[0]) assegnaAuto(clA[0][0],"Serie A");
   if(clB1[0]) assegnaAuto(clB1[0][0],"Serie B1");
-  if(clB2[0]) assegnaAuto(clB2[0][0],"Serie B2");
+  // B2: niente trofeo. Solo la B1 vale come trofeo Serie B.
   var vLega=coppaWinners("Coppa di Lega","Finale")[0]||"";
   var vMit=coppaWinners("Coppa Mitropa","Finale")[0]||"";
   var vCamp=coppaWinners("Coppa Campioni","Finale")[0]||"";
@@ -7128,7 +7128,7 @@ if(window.players){
 
   var COMPS = [
     { nome:"Serie A", img:"logo-serie-a.png", chiavi:["Serie A"] },
-    { nome:"Serie B", img:"logo-serie-b.png", chiavi:["Serie B","Serie B1","Serie B2"] },
+    { nome:"Serie B", img:"logo-serie-b.png", chiavi:["Serie B","Serie B1"] },
     { nome:"Coppa di Lega", img:"coppa-di-lega.png", chiavi:["Coppa di Lega"] },
     { nome:"Coppa Campioni", img:"coppa-campioni.png", chiavi:["Coppa Campioni"] },
     { nome:"Coppa Mitropa", img:"coppa-mitropa.png", chiavi:["Coppa Mitropa","Mitropa Cup","Mitropa"] },
@@ -8210,5 +8210,95 @@ function dispConvertiCardATempo(){
   dispRefreshStoricoList();
   alert("Convertito: "+nome+" ora è a tempo fino al "+d+". Punti disciplina invariati.");
       }
+</script>
+<script>
+// PALMARES - Top 5, calcolato sempre da teamTitles
+(function(){
+  if(window.__palmares) return;
+  window.__palmares = true;
+
+  var LOGHI_TROFEO = {
+    "Serie A": "logo-serie-a.png",
+    "Serie B": "logo-serie-b.png",
+    "Coppa di Lega": "coppa-di-lega.png",
+    "Coppa Campioni": "coppa-campioni.png",
+    "Coppa Mitropa": "coppa-mitropa.png",
+    "Conference": "conference-cup.png",
+    "Supercoppa": "supercoppa.png"
+  };
+
+  function normalizzaTrofeo(t){
+    if(t === "Serie B1") return "Serie B";
+    if(t === "Serie B2") return "";
+    if(t === "Mitropa Cup") return "Coppa Mitropa";
+    if(t === "Mitropa") return "Coppa Mitropa";
+    return t;
+  }
+
+  function conta(titolo, team){
+    var n = 0;
+    (window.teamTitles || []).forEach(function(x){
+      if(x.team === team && normalizzaTrofeo(x.trofeo) === titolo) n++;
+    });
+    return n;
+  }
+
+  window.apriPalmares = function(){
+    var vecchia = document.getElementById("paginaPalmares");
+    if(vecchia) vecchia.remove();
+
+    var perTeam = {};
+    (window.teamTitles || []).forEach(function(x){
+      var trofeo = normalizzaTrofeo(x.trofeo);
+      if(!trofeo) return;
+      if(!perTeam[x.team]) perTeam[x.team] = {};
+      perTeam[x.team][trofeo] = (perTeam[x.team][trofeo] || 0) + 1;
+    });
+
+    var arr = [];
+    for(var team in perTeam){
+      var totale = 0;
+      for(var k in perTeam[team]) totale += perTeam[team][k];
+      arr.push({ team: team, dett: perTeam[team], tot: totale });
+    }
+
+    arr.sort(function(a, b){
+      if(b.tot !== a.tot) return b.tot - a.tot;
+      if(conta("Serie A", b.team) !== conta("Serie A", a.team)) return conta("Serie A", b.team) - conta("Serie A", a.team);
+      if(conta("Coppa Campioni", b.team) !== conta("Coppa Campioni", a.team)) return conta("Coppa Campioni", b.team) - conta("Coppa Campioni", a.team);
+      return a.team < b.team ? -1 : 1;
+    });
+
+    var top = arr.slice(0, 5);
+    var html = "<div class='contAlbo'>"
+      + "<button type='button' class='chiudiAlbo' onclick=\"document.getElementById('paginaPalmares').remove()\">← Torna indietro</button>"
+      + "<div class='titoloAlbo'>🏆 PALMARES</div>"
+      + "<div class='sottoAlbo'>I 5 club più titolati • Albo d'oro</div>";
+
+    if(!top.length){
+      html += "<div class='vuotoAlbo'>Ancora nessun titolo assegnato.</div>";
+    } else {
+      top.forEach(function(r, i){
+        html += "<div class='rigaAlbo' style='display:block'><div style='display:flex;justify-content:space-between;align-items:center'>"
+          + "<div class='nomeAlbo'>" + (i + 1) + ". " + r.team + "</div>"
+          + "<div class='annoAlbo'>" + r.tot + " titoli</div></div>";
+        for(var trofeo in r.dett){
+          html += "<div style='display:flex;align-items:center;gap:10px;margin-top:10px'>"
+            + "<img src='" + (LOGHI_TROFEO[trofeo] || "") + "' style='width:34px;height:34px;object-fit:contain'>"
+            + "<span style='color:#fff;font-weight:800'>" + trofeo + "</span>"
+            + "<span style='color:#E8C86A;font-weight:900;margin-left:auto'>x" + r.dett[trofeo] + "</span></div>";
+        }
+        html += "</div>";
+      });
+    }
+    html += "</div>";
+
+    var pag = document.createElement("div");
+    pag.id = "paginaPalmares";
+    pag.style.cssText = "position:fixed!important;inset:0!important;z-index:999999!important;overflow-y:auto!important;padding:20px 16px 40px!important;background:#000;";
+    pag.innerHTML = html;
+    document.body.appendChild(pag);
+  };
+})();
 </script>
 </html>

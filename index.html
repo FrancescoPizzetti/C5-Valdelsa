@@ -5941,7 +5941,12 @@ var ka=k(a),kb=k(b);return ka<kb?-1:ka>kb?1:0;
       "<p class='small' style='margin:6px 0 0;color:#aaa'>Da lunedì " + lunS + " a domenica " + domS + " • Serie A, Serie B e Coppe</p>";
 
     if(!filt.length){
-      h += "<p style='margin-top:20px;color:#fff'>Nessuna partita in programma questa settimana.</
+      h += "<p style='margin-top:20px;color:#fff'>Nessuna partita in programma questa settimana.</p>";
+    }
+    var sc = document.getElementById('mostraAltroScreen'); if(sc) sc.innerHTML = h;
+  };
+})();
+</script>
 <script>
 // V7.4 - Loghi pillole Home + Scudetti SOLO Classifica Top 5
 (function(){

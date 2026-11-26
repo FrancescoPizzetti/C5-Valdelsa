@@ -1161,18 +1161,7 @@ function sortAvulsa(x,y,lega){
 function serveSpareggio(nomeA,nomeB){
   return Math.abs(discVal(nomeA)-discVal(nomeB))<=15;
 }
-// Art. 3.5 - Serie B1: spareggio solo se diff <= 10 E chi è meglio in Prima Fase resta davanti.
-// Se diff <= 10, NIENTE spareggio: passa chi era meglio in Prima Fase.
-// Se diff > 10, vince chi ha più punti Disciplina.
-function vincitoreTestaB1(nomeA,nomeB){
-  var diff=Math.abs(discVal(nomeA)-discVal(nomeB));
-  if(diff<=10){
-    var pA=primaFaseB[nomeA]||99;
-    var pB=primaFaseB[nomeB]||99;
-    return pA<=pB ? nomeA : nomeB;
-  }
-  return discVal(nomeA)>=discVal(nomeB) ? nomeA : nomeB;
-}
+// FIX Art. 3.5 Versione A - vincitoreTestaB1 ELIMINATA, contraddiceva la Versione A.
 // Helper: ti dice se lo spareggio si gioca o se decide la classifica
 function decideSpareggio(nomeA,nomeB,lega){
   if(lega==="Serie B1"){
@@ -1227,6 +1216,7 @@ lastBackup.disciplina=JSON.parse(JSON.stringify(disciplina));
 lastBackup.players=JSON.parse(JSON.stringify(players));
 lastBackup.teams=JSON.parse(JSON.stringify(teams));
 lastBackup.primaFaseB=JSON.parse(JSON.stringify(primaFaseB));
+lastBackup.squalificheDisciplinari=JSON.parse(JSON.stringify(squalificheDisciplinari));
 var cl=calc();
 var clA=cl.filter(function(x){return teamLeague(x[0])==="Serie A";});
 var clB=cl.filter(function(x){return teamLeague(x[0])==="Serie B";});
@@ -1322,12 +1312,32 @@ if(retrocessi.indexOf(nm)!==-1 && teams[ti2].l==="Serie A"){teams[ti2].l="Serie 
 if(promossi.indexOf(nm)!==-1 && (teams[ti2].l==="Serie B"||teams[ti2].l==="Serie B1"||teams[ti2].l==="Serie B2")){teams[ti2].l="Serie A";}
 }
 if(retrocessi.length||promossi.length){alert("Playout / Playoff: Retrocesse: "+retrocessi.join(", ")+" - Promosse: "+promossi.join(", "));}
+// FIX Art. 4.5 - calcola decurtazione ANNO DOPO prima di azzerare
+var decurtazione45={};
+var nomi45=teamNames();
+for(var i45=0;i45<nomi45.length;i45++){
+  var sq45=nomi45[i45];
+  var base45=baseDisciplina();
+  var finale45=discVal(sq45);
+  var perso45=base45-finale45;
+  var perc45=base45>0 ? (perso45/base45*100) : 0;
+  var dec45=0;
+  if(perc45>=70 && perc45<=75) dec45=0.25;
+  else if(perc45>75 && perc45<=80) dec45=0.30;
+  else if(perc45>80 && perc45<=85) dec45=0.35;
+  else if(perc45>85 && perc45<=90) dec45=0.40;
+  else if(perc45>90 && perc45<=95) dec45=0.45;
+  else if(perc45>95 && perc45<=100) dec45=0.50;
+  else if(perc45>100) dec45=0.65;
+  decurtazione45[sq45]=dec45;
+}
 matches=[];
 coppaMatches=[];
 disciplina={};
 primaFaseB={};
+squalificheDisciplinari=[];
 var ns=teamNames();
-for(var i=0;i<ns.length;i++)disciplina[ns[i]]=baseDisciplina();
+for(var i=0;i<ns.length;i++){ var b45=baseDisciplina(); var d45=decurtazione45[ns[i]]||0; disciplina[ns[i]]=Math.round(b45*(1-d45)); }
 for(var j=0;j<players.length;j++){players[j].g=0;}
 for(var ti=0;ti<teams.length;ti++){
 if(teams[ti].l==="Serie B1")teams[ti].l="Serie B";
@@ -1354,6 +1364,7 @@ if(!confirm("Ripristinare tutto?"))return;
 matches=lastBackup.matches;
 coppaMatches=lastBackup.coppaMatches;
 disciplina=lastBackup.disciplina;
+if(lastBackup.squalificheDisciplinari) squalificheDisciplinari=lastBackup.squalificheDisciplinari;
 players=lastBackup.players;
 teams=lastBackup.teams;
 primaFaseB=lastBackup.primaFaseB||{};
@@ -2093,11 +2104,15 @@ function refreshCardPlayers(){
   playSel.innerHTML=html;
   if(curP) playSel.value=curP;
 }
-function contaGialliGiocatore(nome,squadra){
+// FIX Art. 12.1 - conta separato: isCoppa=false Campionato, true Coppa
+function contaGialliGiocatore(nome,squadra,isCoppa){
   var c=0;
   for(var i=0;i<matches.length;i++){
     var m=matches[i];
     if(!m.cards) continue;
+    var coppaM=false;
+    try{ coppaM=!!(m.coppa||m.fase==="Coppa"||(m.fase||"").indexOf("Coppa")===0); }catch(e){ coppaM=false; }
+    if(!!isCoppa!==coppaM) continue;
     for(var k=0;k<m.cards.length;k++){
       var cd=m.cards[k];
       if(cd.n===nome && cd.team===squadra && cd.tipo==="giallo") c++;
@@ -2105,6 +2120,87 @@ function contaGialliGiocatore(nome,squadra){
   }
   return c;
 }
+// FIX Art. 4.4 - tie-break classifica Coppa Disciplina
+function contaCarteSquadra(squadra){
+  var gialli=0, doppi=0, rossi=0;
+  for(var i=0;i<matches.length;i++){
+    var m=matches[i];
+    if(!m.cards) continue;
+    for(var k=0;k<m.cards.length;k++){
+      var cd=m.cards[k];
+      if(cd.team!==squadra) continue;
+      if(cd.tipo==="giallo") gialli++;
+      if(cd.tipo==="doppio") doppi++;
+      if(cd.tipo==="rosso") rossi++;
+    }
+  }
+  return {gialli:gialli, doppi:doppi, rossi:rossi};
+}
+function sortDisciplina(a,b){
+  if(discVal(b)!==discVal(a)) return discVal(b)-discVal(a);
+  var ca=contaCarteSquadra(a);
+  var cb=contaCarteSquadra(b);
+  if(ca.rossi!==cb.rossi) return ca.rossi-cb.rossi;
+  if(ca.doppi!==cb.doppi) return ca.doppi-cb.doppi;
+  return ca.gialli-cb.gialli;
+}
+// FIX NUOVO - Squalifica manuale da disposizioni disciplinari, senza partita
+function addSqualificaDisciplinare(){
+  var squadra=el('fSqDisc')?el('fSqDisc').value:"";
+  var nome=el('fGiocDisc')?el('fGiocDisc').value:"";
+  var giornate=parseInt(el('fGiorDisc')?el('fGiorDisc').value||0:0,10)||0;
+  var motivo=el('fMotDisc')?el('fMotDisc').value||"":"";
+  var aTempo=el('fTempoDisc') && el('fTempoDisc').checked;
+  if(!squadra||!nome){ alert("Scegli squadra e giocatore"); return; }
+  var punti=0;
+  if(aTempo) punti=15;
+  else { punti=giornate*3; if(punti>15) punti=15; if(punti<0) punti=0; }
+  squalificheDisciplinari.push({squadra:squadra, n:nome, giornate:giornate, aTempo:aTempo, motivo:motivo, punti:punti});
+  if(disciplina[squadra]===undefined||disciplina[squadra]===null) disciplina[squadra]=baseDisciplina();
+  disciplina[squadra]-=punti;
+  save();
+  alert(nome+" squalificato, "+punti+" punti tolti a "+squadra);
+}
+function delSqualificaDisciplinare(idx){
+  var s=squalificheDisciplinari[idx];
+  if(!s) return;
+  if(!confirm("Cancellare questa squalifica?")) return;
+  if(disciplina[s.squadra]!==undefined && disciplina[s.squadra]!==null) disciplina[s.squadra]+=s.punti;
+  squalificheDisciplinari.splice(idx,1);
+  save();
+}
+function refreshSqualificheDisc(){
+  var selSq=el('fSqDisc');
+  var selGi=el('fGiocDisc');
+  var box=el('squalificheDiscList');
+  if(selSq){
+    var curSq=selSq.value;
+    var ns=teamNames();
+    var h="";
+    for(var i=0;i<ns.length;i++) h+="<option value='"+ns[i]+"'>"+ns[i]+"</option>";
+    selSq.innerHTML=h;
+    if(curSq) selSq.value=curSq;
+  }
+  if(selGi){
+    var sq2=(el('fSqDisc')?el('fSqDisc').value:"")||(teamNames()[0]||"");
+    var list=players.filter(function(p){return p.t===sq2;});
+    var curG=selGi.value;
+    var hg="";
+    for(var j=0;j<list.length;j++) hg+="<option value='"+list[j].n+"'>"+list[j].n+"</option>";
+    if(!list.length) hg+="<option value=''>Nessun giocatore in rosa</option>";
+    selGi.innerHTML=hg;
+    if(curG) selGi.value=curG;
+  }
+  if(box){
+    var hb="";
+    for(var k=0;k<squalificheDisciplinari.length;k++){
+      var s=squalificheDisciplinari[k];
+      hb+="<div class='row'><div><small>"+s.squadra+" - <b>"+s.n+"</b> - "+(s.aTempo?"A tempo":s.giornate+" giornate")+" - "+s.punti+" pt - "+(s.motivo||"")+"</small></div><button class='del' type='button' onclick='delSqualificaDisciplinare("+k+")'>X</button></div>";
+    }
+    if(!squalificheDisciplinari.length) hb+="<p class='small'>Nessuna squalifica disciplinare.</p>";
+    box.innerHTML=hb;
+  }
+  }
 function addCard(){
   var idx=findMatchBySelect();
   if(idx<0){alert("Scegli prima la partita!");return;}
@@ -2138,11 +2234,16 @@ function addCard(){
   }
   // Art. 4.2 - 3 ammonizioni: 1 punto per lo squalificato + 3 punti per la giornata = +4
   if(tipo==="giallo" && !isCoppa){
-    var tot=contaGialliGiocatore(nome,squadra);
+        var tot=contaGialliGiocatore(nome,squadra,false);
     if(tot>0 && tot%3===0){
       if(disciplina[squadra]===undefined||disciplina[squadra]===null) disciplina[squadra]=baseDisciplina();
       disciplina[squadra]-=4;
     }
+  }
+    // FIX Art. 12.1 - in Coppa 2 giallo = 1 giornata solo per la Coppa
+  if(tipo==="giallo" && isCoppa){
+    var totC=contaGialliGiocatore(nome,squadra,true);
+    if(totC>0 && totC%2===0) alert("2 giallo in Coppa: 1 giornata di squalifica solo per la Coppa.");
   }
   save();
   alert("Cartellino aggiunto! Punti tolti: "+punti);

@@ -935,10 +935,23 @@ for(var i=0;i<teams.length;i++){if(teams[i].n===nm)return teams[i];}
 return {n:nm,l:"Serie A",c:"#facc15",logo:""};
 }
 function teamLeague(nm){return teamObj(nm).l}
+function giornateCampionato(){
+  var mx=0;
+  for(var i=0;i<matches.length;i++){
+    var g=parseInt(matches[i].giornata||0,10);
+    if(g>mx) mx=g;
+  }
+  if(mx>0) return mx;
+  return 26;
+}
+function baseDisciplina(){
+  return giornateCampionato()*2;
+}
 function discVal(nm){
-if(disciplina[nm]===undefined)return 50;
-if(disciplina[nm]===null)return 50;
-return disciplina[nm];
+  if(disciplina[nm]===undefined||disciplina[nm]===null){
+    disciplina[nm]=baseDisciplina();
+  }
+  return disciplina[nm];
 }
 function logoHtml(nm){
 var t=teamObj(nm);
@@ -1014,7 +1027,7 @@ function resetAllDisc(){
 if(!confirm("Rimettere TUTTE a 50?"))return;
 disciplina={};
 var ns=teamNames();
-for(var i=0;i<ns.length;i++){disciplina[ns[i]]=50;}
+for(var i=0;i<ns.length;i++)disciplina[ns[i]]=baseDisciplina();
 save();
 showDiscCurrent();
 alert("Fatto! Tutte a 50.");
@@ -1118,37 +1131,73 @@ else{pA+=1;pB+=1;}
 return {pA:pA,pB:pB,gfA:gfA,gfB:gfB};
 }
 function sortAvulsa(x,y,lega){
-var A=x[1];
-var B=y[1];
-var nomeA=x[0];
-var nomeB=y[0];
-if(B.pti!==A.pti)return B.pti-A.pti;
-var discA=discVal(nomeA);
-var discB=discVal(nomeB);
-var diffDisc=Math.abs(discA-discB);
-if(lega==="Serie A"||lega==="Serie B"){
-if(diffDisc>=15)return discB-discA;
+  var A=x[1];
+  var B=y[1];
+  var nomeA=x[0];
+  var nomeB=y[0];
+  if(B.pti!==A.pti) return B.pti-A.pti;
+  // Art. 3.2 - Ordine: Coppa Disciplina, Prima Fase (solo Serie B),
+  // Scontri Diretti, Differenza Reti, Vittorie, Gol Fatti.
+  // La Disciplina è SEMPRE prima, anche se la differenza è 1 punto.
+  var discA=discVal(nomeA);
+  var discB=discVal(nomeB);
+  if(discB!==discA) return discB-discA;
+  // Art. 3.2 + 3.6 - Solo Serie B: Prima Fase dopo la Disciplina
+  if(lega==="Serie B"||lega==="Serie B1"||lega==="Serie B2"){
+    var posA=primaFaseB[nomeA]||99;
+    var posB=primaFaseB[nomeB]||99;
+    if(posA!==posB) return posA-posB;
+  }
+  var sd=scontroDiretto(nomeA,nomeB,lega);
+  if(sd.pA!==sd.pB) return sd.pB-sd.pA;
+  if((sd.gfA-sd.gfB)!==0) return sd.gfB-sd.gfA;
+  var diffA=A.gf-A.gs;
+  var diffB=B.gf-B.gs;
+  if(diffA!==diffB) return diffB-diffA;
+  if(B.v!==A.v) return B.v-A.v;
+  return B.gf-A.gf;
 }
-if(lega==="Serie B1"){
-if(diffDisc>10)return discB-discA;
-var posA=primaFaseB[nomeA]||99;
-var posB=primaFaseB[nomeB]||99;
-if(posA!==posB)return posA-posB;
+// Art. 3.4 - Serie A e B: spareggio solo se diff Disciplina <= 15
+function serveSpareggio(nomeA,nomeB){
+  return Math.abs(discVal(nomeA)-discVal(nomeB))<=15;
 }
-if(lega==="Serie B2"){
-if(discA!==discB)return discB-discA;
-var posA2=primaFaseB[nomeA]||99;
-var posB2=primaFaseB[nomeB]||99;
-if(posA2!==posB2)return posA2-posB2;
+// Art. 3.5 - Serie B1: spareggio solo se diff <= 10 E chi è meglio in Prima Fase resta davanti.
+// Se diff <= 10, NIENTE spareggio: passa chi era meglio in Prima Fase.
+// Se diff > 10, vince chi ha più punti Disciplina.
+function vincitoreTestaB1(nomeA,nomeB){
+  var diff=Math.abs(discVal(nomeA)-discVal(nomeB));
+  if(diff<=10){
+    var pA=primaFaseB[nomeA]||99;
+    var pB=primaFaseB[nomeB]||99;
+    return pA<=pB ? nomeA : nomeB;
+  }
+  return discVal(nomeA)>=discVal(nomeB) ? nomeA : nomeB;
 }
-var sd=scontroDiretto(nomeA,nomeB,lega);
-if(sd.pA!==sd.pB)return sd.pB-sd.pA;
-if((sd.gfA-sd.gfB)!==0)return (sd.gfB-sd.gfA)-(sd.gfA-sd.gfB);
-var diffA=A.gf-A.gs;
-var diffB=B.gf-B.gs;
-if(diffA!==diffB)return diffB-diffA;
-if(B.v!==A.v)return B.v-A.v;
-return B.gf-A.gf;
+// Helper: ti dice se lo spareggio si gioca o se decide la classifica
+function decideSpareggio(nomeA,nomeB,lega){
+  if(lega==="Serie B1"){
+    if(Math.abs(discVal(nomeA)-discVal(nomeB))<=10){
+      return {gioca:false, vincitore:vincitoreTestaB1(nomeA,nomeB)};
+    }
+    return {gioca:true, vincitore:""};
+  }
+  if(lega==="Serie A"||lega==="Serie B"){
+    if(serveSpareggio(nomeA,nomeB)) return {gioca:true, vincitore:""};
+    return {gioca:false, vincitore:discVal(nomeA)>=discVal(nomeB) ? nomeA : nomeB};
+  }
+  return {gioca:false, vincitore:discVal(nomeA)>=discVal(nomeB) ? nomeA : nomeB};
+}
+// Art. 4.3 - Se Disciplina = 0, 1 punto di penalità in classifica per ogni punto negativo
+function penalitaClassificaArt43(nm){
+  var d=discVal(nm);
+  if(d<0) return -d;
+  return 0;
+}
+// Art. 4.2 - Danni intenzionali struttura: -10 punti
+function sottraiDanniStruttura(squadra){
+  if(disciplina[squadra]===undefined||disciplina[squadra]===null) disciplina[squadra]=baseDisciplina();
+  disciplina[squadra]-=10;
+  save();
 }
 // PEZZO 9 - Playout automatico 11 vs 14, 12 vs 13
 function creaPlayoutAuto(){
@@ -1278,7 +1327,7 @@ coppaMatches=[];
 disciplina={};
 primaFaseB={};
 var ns=teamNames();
-for(var i=0;i<ns.length;i++){disciplina[ns[i]]=50;}
+for(var i=0;i<ns.length;i++)disciplina[ns[i]]=baseDisciplina();}
 for(var j=0;j<players.length;j++){players[j].g=0;}
 for(var ti=0;ti<teams.length;ti++){
 if(teams[ti].l==="Serie B1")teams[ti].l="Serie B";
@@ -1988,10 +2037,41 @@ function cardLabel(tipo){
   if(tipo==="rosso") return "Rosso Diretto";
   return "Giallo";
 }
-// Punti Coppa Disciplina - LI IMPOSTIAMO DOPO, ora solo struttura
-function cardPuntiDisciplina(tipo){
-  if(tipo==="doppio") return 0;
-  if(tipo==="rosso") return 0;
+// Art. 4.2 + 4.2.1 - Punti Coppa Disciplina
+// Giallo = 1. Doppio = 2 gialli + 1 giornata squalifica = 2 + 3 = 5.
+// Rosso = giornate x 3, max 15. A tempo = 15. In Coppa solo se > 9.
+function cardPuntiDisciplina(card, isCoppa){
+  var tipo="";
+  var giornate=0;
+  var aTempo=false;
+  if(typeof card==="string"){
+    tipo=card;
+  } else if(card){
+    tipo=card.tipo||"giallo";
+    giornate=parseInt(card.giornate||0,10)||0;
+    aTempo=!!card.aTempo;
+  } else {
+    return 0;
+  }
+  if(tipo==="giallo"){
+    if(isCoppa) return 0;
+    return 1;
+  }
+  if(tipo==="doppio"){
+    if(isCoppa) return 0;
+    return 5;
+  }
+  if(tipo==="rosso"){
+    var p=0;
+    if(aTempo) p=15;
+    else if(giornate<=0) p=15;
+    else {
+      p=giornate*3;
+      if(p>15) p=15;
+    }
+    if(isCoppa && p<=9) return 0;
+    return p;
+  }
   return 0;
 }
 function refreshCardPlayers(){
@@ -2013,6 +2093,18 @@ function refreshCardPlayers(){
   playSel.innerHTML=html;
   if(curP) playSel.value=curP;
 }
+function contaGialliGiocatore(nome,squadra){
+  var c=0;
+  for(var i=0;i<matches.length;i++){
+    var m=matches[i];
+    if(!m.cards) continue;
+    for(var k=0;k<m.cards.length;k++){
+      var cd=m.cards[k];
+      if(cd.n===nome && cd.team===squadra && cd.tipo==="giallo") c++;
+    }
+  }
+  return c;
+}
 function addCard(){
   var idx=findMatchBySelect();
   if(idx<0){alert("Scegli prima la partita!");return;}
@@ -2022,15 +2114,52 @@ function addCard(){
   var nome=el('fCardPlayer').value;
   var tipo=el('fCardTipo').value||"giallo";
   if(!squadra||!nome){alert("Scegli squadra e giocatore!");return;}
-  m.cards.push({n:nome,team:squadra,tipo:tipo});
+  // Art. 4.2.1 - In Coppa contano solo le espulsioni con penalità > 9
+  var isCoppa=false;
+  try{ isCoppa=!!(m.coppa||m.fase==="Coppa"||(m.fase||"").indexOf("Coppa")===0); }catch(e){ isCoppa=false; }
+  var card={n:nome,team:squadra,tipo:tipo};
+  // Se è rosso, chiedi giornate. Se non le metti, vale 15 come da Art. 4.2.
+  if(tipo==="rosso"){
+    var g=prompt("Giornate di squalifica per questo rosso? (0 = a tempo, vale 15 punti)","1");
+    if(g!==null){
+      var gg=parseInt(g,10);
+      if(isNaN(gg)) gg=1;
+      if(gg<=0){ card.aTempo=true; card.giornate=0; }
+      else { card.giornate=gg; }
+    } else {
+      card.giornate=1;
+    }
+  }
+  var punti=cardPuntiDisciplina(card,isCoppa);
+  m.cards.push(card);
+  if(punti>0){
+    if(disciplina[squadra]===undefined||disciplina[squadra]===null) disciplina[squadra]=baseDisciplina();
+    disciplina[squadra]-=punti;
+  }
+  // Art. 4.2 - 3 ammonizioni: 1 punto per lo squalificato + 3 punti per la giornata = +4
+  if(tipo==="giallo" && !isCoppa){
+    var tot=contaGialliGiocatore(nome,squadra);
+    if(tot>0 && tot%3===0){
+      if(disciplina[squadra]===undefined||disciplina[squadra]===null) disciplina[squadra]=baseDisciplina();
+      disciplina[squadra]-=4;
+    }
+  }
   save();
-  alert("Cartellino aggiunto!");
+  alert("Cartellino aggiunto! Punti tolti: "+punti);
 }
 function delCard(matchIdx,cardIdx){
   var m=matches[matchIdx];
   if(!m||!m.cards) return;
   if(!confirm("Cancellare questo cartellino?")) return;
+  var card=m.cards[cardIdx];
+  var isCoppa=false;
+  try{ isCoppa=!!(m.coppa||m.fase==="Coppa"||(m.fase||"").indexOf("Coppa")===0); }catch(e){ isCoppa=false; }
+  var punti=cardPuntiDisciplina(card,isCoppa);
   m.cards.splice(cardIdx,1);
+  if(punti>0 && card && card.team){
+    if(disciplina[card.team]===undefined||disciplina[card.team]===null) disciplina[card.team]=baseDisciplina();
+    disciplina[card.team]+=punti;
+  }
   save();
 }
 function scorersHtml(m){
@@ -2132,7 +2261,7 @@ if(hLocal)settings.adminHash=parseInt(hLocal);
 if(!disciplina||Object.keys(disciplina).length===0){
 var nn=teamNames();
 for(var i=0;i<nn.length;i++){
-if(disciplina[nn[i]]===undefined)disciplina[nn[i]]=50;
+if(disciplina[nn[i]]===undefined)disciplina[nn[i]]=baseDisciplina();
 }
 }
 fillYears();
@@ -2404,7 +2533,7 @@ nt.l=el('fLeague').value;
 nt.c="#facc15";
 nt.logo=el('fTeamLogo').value||"";
 teams.push(nt);
-disciplina[n]=50;
+disciplina[n]=baseDisciplina();
 el('fTeam').value="";
 el('fTeamLogo').value="";
 save();

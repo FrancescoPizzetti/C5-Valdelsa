@@ -1181,6 +1181,12 @@ function decideSpareggio(nomeA,nomeB,lega){
     }
     return {gioca:false, vincitore:discVal(nomeA)>=discVal(nomeB) ? nomeA : nomeB};
   }
+  if(lega==="Serie A"||lega==="Serie B"){
+    if(serveSpareggio(nomeA,nomeB)) return {gioca:true, vincitore:""};
+    return {gioca:false, vincitore:discVal(nomeA)>=discVal(nomeB) ? nomeA : nomeB};
+  }
+  return {gioca:false, vincitore:discVal(nomeA)>=discVal(nomeB) ? nomeA : nomeB};
+}
 // Art. 4.3 - Se Disciplina = 0, 1 punto di penalità in classifica per ogni punto negativo
 function penalitaClassificaArt43(nm){
   var d=discVal(nm);

@@ -598,6 +598,16 @@ function showCalTab(t){
 <div style="display:flex;gap:8px"><button class="big" type="button" style="background:#22c55e" onclick="addDiscVal(1)">➕ AGGIUNGI PUNTI</button><button class="big" type="button" style="background:#ef4444" onclick="addDiscVal(-1)">➖ TOGLI PUNTI</button></div>
 <div style="display:flex;gap:8px"><button class="big" type="button" style="background:#3b82f6" onclick="setDiscTo(50)">🔄 Rimetti a 50</button><button class="big" type="button" style="background:#f97316" onclick="setDiscCustom()">✏️ Imposta valore esatto</button></div>
 <button class="big" type="button" style="background:#ef4444" onclick="resetAllDisc()">⚠️ Rimetti TUTTE a 50</button>
+<div class="card" style="border-color:#ef4444">
+<h3>Squalifica da disposizioni disciplinari</h3>
+<div class="label">SQUADRA</div><select id="fSqDisc" onchange="refreshSqualificheDisc()"></select>
+<div class="label">GIOCATORE</div><select id="fGiocDisc"></select>
+<div class="label">GIORNATE</div><input id="fGiorDisc" type="number" value="1">
+<label><input type="checkbox" id="fTempoDisc"> A tempo, 15 punti</label>
+<div class="label">MOTIVO</div><input id="fMotDisc" placeholder="Es: Art. 6.7 offese arbitro">
+<button class="big" type="button" onclick="addSqualificaDisciplinare()">+ AGGIUNGI SQUALIFICA</button>
+<div id="squalificheDiscList"></div>
+</div>
 <div id="discList"></div>
 </div>
 <div id="adminSec-giocatori" style="display:none">
@@ -909,6 +919,7 @@ comps.push("Coppa di Lega");
 comps.push("Coppa Mitropa");
 comps.push("Conference");
 var disciplina={};
+var squalificheDisciplinari=[];
 var primaFaseB={};
 var bonusB1={team:"",pti:0};
 var bonusB2={team:"",pti:0};
@@ -1147,6 +1158,10 @@ function sortAvulsa(x,y,lega){
     var posA=primaFaseB[nomeA]||99;
     var posB=primaFaseB[nomeB]||99;
     if(posA!==posB) return posA-posB;
+  }
+  // FIX Art. 3.6 - B1/B2 si fermano a Disciplina + Prima Fase, poi sorteggio
+  if(lega==="Serie B1"||lega==="Serie B2"){
+    return 0;
   }
   var sd=scontroDiretto(nomeA,nomeB,lega);
   if(sd.pA!==sd.pB) return sd.pB-sd.pA;

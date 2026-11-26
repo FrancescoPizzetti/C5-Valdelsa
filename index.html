@@ -619,6 +619,7 @@ function showCalTab(t){
 <div class="label">GIOCATORE</div><select id="fGiocDisc"></select>
 <div class="label">GIORNATE</div><input id="fGiorDisc" type="number" value="1">
 <label><input type="checkbox" id="fTempoDisc"> A tempo, 15 punti</label>
+<div class="label">FINO AL (solo se A tempo)</div><input id="fTempoFinoAl" type="date">
 <div class="label">MOTIVO</div><input id="fMotDisc" placeholder="Es: Art. 6.7 offese arbitro">
 <button class="big" type="button" onclick="addSqualificaDisciplinare()">+ AGGIUNGI SQUALIFICA</button>
 <div id="squalificheDiscList"></div>
@@ -647,10 +648,11 @@ function showCalTab(t){
   <div class="label">COMPETIZIONE</div>
   <select id="fDispComp"><option>Serie A</option><option>Serie B</option><option>Serie B1</option><option>Serie B2</option><option>Coppa di Lega</option><option>Coppa Campioni</option><option>Mitropa</option><option>Conference</option><option>Playout</option><option>Playoff</option></select>
   <div class="label">GIORNATA</div><input id="fDispGiornata" type="number" value="1">
-  <div class="label">SQUADRA</div><select id="fDispSquadra"></select>
-  <div class="label">GIOCATORE</div><select id="fDispGiocatore"></select>
-  <div class="label">TIPO</div><select id="fDispTipo"><option value="giallo">🟨 Giallo</option><option value="doppio">🟨🟨🟥 Doppio giallo</option><option value="rosso">🟥 Rosso diretto</option></select>
-  <div class="label">GIORNATE DI SQUALIFICA (solo per rosso)</div><input id="fDispGiornate" type="number" value="0">
+<div class="label">SQUADRA</div><select id="fDispSquadra" onchange="dispRefreshStoricoSelects()"></select>
+<div class="label">GIOCATORE</div><select id="fDispGiocatore"></select>
+<div class="label">TIPO</div><select id="fDispTipo"><option value="giallo">🟨 Giallo</option><option value="doppio">🟨🟨🟥 Doppio giallo</option><option value="rosso">🟥 Rosso diretto</option><option value="aTempo">⏳ Squalifica a tempo</option></select>
+<div class="label">GIORNATE DI SQUALIFICA (solo per rosso)</div><input id="fDispGiornate" type="number" value="0">
+<div class="label">FINO AL (solo per squalifica a tempo)</div><input id="fDispFinoAlStorico" type="date">
   <div class="label">MOTIVO / ARTICOLO</div><input id="fDispMotivo" placeholder="Es: Art. 6.7">
   <button class="big" type="button" onclick="dispSalvaStorico()">+ AGGIUNGI STORICO</button>
   <div id="dispStoricoList"></div>
@@ -2239,11 +2241,13 @@ function addSqualificaDisciplinare(){
   var giornate=parseInt(el('fGiorDisc')?el('fGiorDisc').value||0:0,10)||0;
   var motivo=el('fMotDisc')?el('fMotDisc').value||"":"";
   var aTempo=el('fTempoDisc') && el('fTempoDisc').checked;
+  var finoAl=el('fTempoFinoAl')?el('fTempoFinoAl').value:"";
   if(!squadra||!nome){ alert("Scegli squadra e giocatore"); return; }
+  if(aTempo && !finoAl){ alert("Metti la data FINO AL per la squalifica a tempo"); return; }
   var punti=0;
   if(aTempo) punti=15;
   else { punti=giornate*3; if(punti>15) punti=15; if(punti<0) punti=0; }
-  squalificheDisciplinari.push({squadra:squadra, n:nome, giornate:giornate, aTempo:aTempo, motivo:motivo, punti:punti});
+  squalificheDisciplinari.push({squadra:squadra, n:nome, giornate:giornate, aTempo:aTempo, finoAl:finoAl, motivo:motivo, punti:punti});
   if(disciplina[squadra]===undefined||disciplina[squadra]===null) disciplina[squadra]=baseDisciplina();
   disciplina[squadra]-=punti;
   save();
@@ -2279,15 +2283,15 @@ function refreshSqualificheDisc(){
     selGi.innerHTML=hg;
     if(curG) selGi.value=curG;
   }
-  if(box){
+    if(box){
     var hb="";
     for(var k=0;k<squalificheDisciplinari.length;k++){
       var s=squalificheDisciplinari[k];
-      hb+="<div class='row'><div><small>"+s.squadra+" - <b>"+s.n+"</b> - "+(s.aTempo?"A tempo":s.giornate+" giornate")+" - "+s.punti+" pt - "+(s.motivo||"")+"</small></div><button class='del' type='button' onclick='delSqualificaDisciplinare("+k+")'>X</button></div>";
+      hb+="<div class='row'><div><small>"+s.squadra+" - <b>"+s.n+"</b> - "+(s.aTempo?"A tempo":""+s.giornate+" giornate")+(s.finoAl?" - fino al "+s.finoAl:"")+" - "+s.punti+" pt - "+(s.motivo||"")+"</small></div><button class='del' type='button' onclick='delSqualificaDisciplinare("+k+")'>X</button></div>";
     }
     if(!squalificheDisciplinari.length) hb+="<p class='small'>Nessuna squalifica disciplinare.</p>";
     box.innerHTML=hb;
-  }
+    }
   }
 function addCard(){
   var idx=findMatchBySelect();
@@ -8045,10 +8049,13 @@ function dispSalvaStorico(){
   var tipo = document.getElementById("fDispTipo") ? document.getElementById("fDispTipo").value : "giallo";
   var giornate = parseInt(document.getElementById("fDispGiornate") ? document.getElementById("fDispGiornate").value||0 : 0,10)||0;
   var motivo = document.getElementById("fDispMotivo") ? document.getElementById("fDispMotivo").value : "";
+  var finoAl = document.getElementById("fDispFinoAlStorico") ? document.getElementById("fDispFinoAlStorico").value : "";
   if(!comp||!nome||!squadra){ alert("Scegli competizione, squadra e giocatore"); return; }
+  if(tipo==="aTempo" && !finoAl){ alert("Metti la data FINO AL per la squalifica a tempo"); return; }
   if(!window.dispStorico) window.dispStorico = [];
-  dispStorico.push({comp:comp, giornata:giornata, giornataEt:(giornata?giornata+"ª GIORNATA":""), squadra:squadra, n:nome, tipo:tipo, giornate:giornate, motivo:motivo, punti:0, aTempo:false});
+  dispStorico.push({comp:comp, giornata:giornata, giornataEt:(giornata?giornata+"ª GIORNATA":""), squadra:squadra, n:nome, tipo:tipo, giornate:giornate, motivo:motivo, punti:0, aTempo:(tipo==="aTempo"), finoAl:finoAl});
   if(typeof save==="function") save(); else dispRender();
+  dispRefreshStoricoList();
   alert("Storico salvato. Non ho toccato i punti Disciplina.");
 }
 function dispDelStorico(i){
@@ -8056,12 +8063,35 @@ function dispDelStorico(i){
   dispStorico.splice(i,1);
   if(typeof save==="function") save(); else dispRender();
 }
+function dispRefreshStoricoSelects(){
+  var selSq = document.getElementById("fDispSquadra");
+  var selGi = document.getElementById("fDispGiocatore");
+  if(selSq){
+    var curSq = selSq.value;
+    var ns = (typeof teamNames==="function" ? teamNames() : []);
+    var h = "";
+    for(var i=0;i<ns.length;i++) h += "<option value='"+ns[i]+"'>"+ns[i]+"</option>";
+    selSq.innerHTML = h;
+    if(curSq) selSq.value = curSq;
+  }
+  if(selGi){
+    var sq2 = selSq ? selSq.value : "";
+    var list = (window.players||[]).filter(function(p){ return p.t===sq2; });
+    var curG = selGi.value;
+    var hg = "";
+    for(var j=0;j<list.length;j++) hg += "<option value='"+list[j].n+"'>"+list[j].n+"</option>";
+    if(!list.length) hg += "<option value=''>Nessun giocatore in rosa</option>";
+    selGi.innerHTML = hg;
+    if(curG) selGi.value = curG;
+  }
+}
 function dispRefreshStoricoList(){
+  dispRefreshStoricoSelects();
   var box = document.getElementById("dispStoricoList");
   if(!box) return;
   var h = "";
   (window.dispStorico||[]).forEach(function(s,idx){
-    h += "<div class='row'><div><small>"+s.comp+" - "+(s.giornata||"")+"ª - <b>"+s.n+"</b> ("+s.squadra+") - "+s.tipo+"</small></div><button class='del' type='button' onclick='dispDelStorico("+idx+")'>X</button></div>";
+    h += "<div class='row'><div><small>"+s.comp+" - "+(s.giornata||"")+"ª - <b>"+s.n+"</b> ("+s.squadra+") - "+s.tipo+(s.aTempo?" - A TEMPO":"")+(s.finoAl?" - fino al "+s.finoAl:"")+"</small></div><button class='del' type='button' onclick='dispDelStorico("+idx+")'>X</button></div>";
   });
   if(!h) h = "<p class='small'>Nessuno storico inserito.</p>";
   box.innerHTML = h;

@@ -2155,10 +2155,16 @@ function delCard(matchIdx,cardIdx){
   var isCoppa=false;
   try{ isCoppa=!!(m.coppa||m.fase==="Coppa"||(m.fase||"").indexOf("Coppa")===0); }catch(e){ isCoppa=false; }
   var punti=cardPuntiDisciplina(card,isCoppa);
+  // FIX delCard 3 giallo - se era il 3, 6, 9 giallo, ridai anche i +4 della squalifica
+  var extraDel=0;
+  if(card && card.tipo==="giallo" && !isCoppa){
+    var totPrimaDel=contaGialliGiocatore(card.n,card.team,false);
+    if(totPrimaDel>0 && totPrimaDel%3===0) extraDel=4;
+  }
   m.cards.splice(cardIdx,1);
-  if(punti>0 && card && card.team){
+  if(card && card.team){
     if(disciplina[card.team]===undefined||disciplina[card.team]===null) disciplina[card.team]=baseDisciplina();
-    disciplina[card.team]+=punti;
+    disciplina[card.team]+=punti+extraDel;
   }
   save();
 }
@@ -2241,6 +2247,7 @@ if(d.bonusB1)bonusB1=d.bonusB1;
 if(d.bonusB2)bonusB2=d.bonusB2;
 if(d.settings)settings=Object.assign(settings,d.settings);
 if(d.storico)storico=d.storico;
+if(d.squalificheDisciplinari) squalificheDisciplinari=d.squalificheDisciplinari;
 }
 }catch(e){}
 try{
@@ -2306,6 +2313,7 @@ payload.bonusB1=bonusB1;
 payload.bonusB2=bonusB2;
 payload.settings=settings;
 payload.storico=storico;
+payload.squalificheDisciplinari=squalificheDisciplinari;
 var res=await fetch(DB,{method:"PUT",body:JSON.stringify(payload)});
 if(!res.ok){alert("Firebase errore "+res.status);}
 if(el('sync'))el('sync').textContent="● LIVE";
@@ -2838,6 +2846,8 @@ if(a>b){t[m.casa].pti+=3;t[m.casa].v++;t[m.tras].p++;}
 else if(b>a){t[m.tras].pti+=3;t[m.tras].v++;t[m.casa].p++;}
 else{t[m.casa].pti++;t[m.tras].pti++;t[m.casa].n++;t[m.tras].n++;}
 }
+// FIX Art. 4.3 - Disciplina negativa = punti tolti in classifica
+for(var key43 in t){ var pen43=penalitaClassificaArt43(key43); if(pen43>0) t[key43].pti-=pen43; }
 var arr=[];
 for(var key in t){arr.push([key,t[key]]);}
 arr.sort(function(x,y){
@@ -2857,6 +2867,7 @@ fixTeams();
   renderStrips();
 applySettings();
 showDiscCurrent();
+try{ refreshSqualificheDisc(); }catch(e){}
 showPromoCurrent();
 fillYears();
 var prog=matches.filter(function(m){return m.stato==="Programmata";});

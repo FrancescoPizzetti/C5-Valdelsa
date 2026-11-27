@@ -2169,13 +2169,15 @@ function cardPuntiDisciplina(card, isCoppa){
     return 1;
   }
   if(tipo==="doppio"){
+    if(card && card.gestito===false) return 0;
     if(isCoppa) return 0;
-    return 5;
+    return 3;
   }
   if(tipo==="rosso"){
+    if(card && card.gestito===false) return 0;
     var p=0;
     if(aTempo) p=15;
-    else if(giornate<=0) p=15;
+    else if(giornate<=0 && card && card.gestito!==true) p=0;
     else {
       p=giornate*3;
       if(p>15) p=15;
@@ -2183,8 +2185,6 @@ function cardPuntiDisciplina(card, isCoppa){
     if(isCoppa && p<=9) return 0;
     return p;
   }
-  return 0;
-}
 function refreshCardPlayers(){
   var idx=findMatchBySelect();
   var teamSel=el('fCardTeam');
@@ -2315,19 +2315,8 @@ function addCard(){
   // Art. 4.2.1 - In Coppa contano solo le espulsioni con penalità > 9
   var isCoppa=false;
   try{ isCoppa=!!(m.coppa||m.fase==="Coppa"||(m.fase||"").indexOf("Coppa")===0); }catch(e){ isCoppa=false; }
-  var card={n:nome,team:squadra,tipo:tipo};
-  // Se è rosso, chiedi giornate. Se non le metti, vale 15 come da Art. 4.2.
-  if(tipo==="rosso"){
-    var g=prompt("Giornate di squalifica per questo rosso? (0 = a tempo, vale 15 punti)","1");
-    if(g!==null){
-      var gg=parseInt(g,10);
-      if(isNaN(gg)) gg=1;
-      if(gg<=0){ card.aTempo=true; card.giornate=0; }
-      else { card.giornate=gg; }
-    } else {
-      card.giornate=1;
-    }
-  }
+    var card={n:nome,team:squadra,tipo:tipo};
+  if(tipo==="rosso"||tipo==="doppio"){ card.gestito=false; card.giornate=0; card.aTempo=false; card.finoAl=""; card.motivo=""; card.puntiGestiti=0; }
   var punti=cardPuntiDisciplina(card,isCoppa);
   m.cards.push(card);
   if(punti>0){
@@ -2357,7 +2346,10 @@ function delCard(matchIdx,cardIdx){
   var card=m.cards[cardIdx];
   var isCoppa=false;
   try{ isCoppa=!!(m.coppa||m.fase==="Coppa"||(m.fase||"").indexOf("Coppa")===0); }catch(e){ isCoppa=false; }
-  var punti=cardPuntiDisciplina(card,isCoppa);
+    var punti=0;
+  if(card && card.gestito===true) punti=card.puntiGestiti||cardPuntiDisciplina(card,isCoppa);
+  else if(card && card.tipo==="giallo") punti=cardPuntiDisciplina(card,isCoppa);
+  else punti=0;
   // FIX delCard 3 giallo - se era il 3, 6, 9 giallo, ridai anche i +4 della squalifica
   var extraDel=0;
   if(card && card.tipo==="giallo" && !isCoppa){

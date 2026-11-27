@@ -3504,13 +3504,6 @@ rp.sort(function(a,b){var da=(ordineRuoli[a.r]!==undefined?ordineRuoli[a.r]:99),
 var htl="";
 for(var rpI=0;rpI<rp.length;rpI++){
 var totGolP=(rp[rpI].g||0);
-for(var mi=0;mi<matches.length;mi++){
-  var mm=matches[mi];
-  if(!mm.scorers) continue;
-  for(var si=0;si<mm.scorers.length;si++){
-    if(mm.scorers[si].n===rp[rpI].n && mm.scorers[si].team===rp[rpI].t) totGolP+=(mm.scorers[si].gol||0);
-  }
-}
 htl+=((rp[rpI].r==="Presidente")?"":"<div class='row'><div><b>"+rp[rpI].n+"</b><br><span class='small'>"+((rp[rpI].r=="Portiere"||rp[rpI].r=="Portieri"||rp[rpI].r=="Difensore"||rp[rpI].r=="Difensori"||rp[rpI].r=="Laterale"||rp[rpI].r=="Laterali"||rp[rpI].r=="Attaccante"||rp[rpI].r=="Attaccanti"||rp[rpI].r=="Centrocampista"||rp[rpI].r=="Centrocampisti")?"Giocatore":rp[rpI].r)+"</span></div>"+((rp[rpI].r==="Mister"||rp[rpI].r==="Accompagnatore")?"":"<span class='badge'>"+totGolP+" gol</span>")+"</div>");
 }
 if(!htl)htl="<p class='small'>Nessun giocatore in rosa.</p>";

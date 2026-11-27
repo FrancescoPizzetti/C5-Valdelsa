@@ -7883,8 +7883,13 @@ try{
   html += "<div class='row'><div>"+_t+"</div></div>";
 });
       delete _prov[_gB+"|Serie B"];
-    } else if(_compK==="Serie B"){
-      if(_prov[k]){ }
+        } else if(_compK==="Serie B"){
+      html += "<div class='giornataTitle'>"+_gA+"ª GIORNATA "+_compK+"</div>";
+      _prov[k].forEach(function(e){
+        var _tB = e.aTempo ? ("Squalifica a tempo fino al "+(e.finoAl||"")+" a "+e.nome+" ("+e.squadra+")") : ((e.tipo==="doppio"?"1 giornata di squalifica":(e.giornate||1)+" giornata/e di squalifica")+" a "+e.nome+" ("+e.squadra+")");
+        if(e.motivo) _tB += " per "+e.motivo;
+        html += "<div class='row'><div>"+_tB+"</div></div>";
+      });
     } else {
       html += "<div class='giornataTitle'>"+_gA+"ª GIORNATA "+_compK+"</div>";
       _prov[k].forEach(function(e){

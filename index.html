@@ -7825,7 +7825,7 @@ try{
     chiaviSq.forEach(function(k){
       var titolo = (k==="PROSSIMO TURNO") ? "SQUALIFICATI PER IL PROSSIMO TURNO DI "+comp : (k==="COPPA" ? "SALTA ANCHE LA COPPA" : "SQUALIFICATI PER LA "+k+" DI "+comp);
       html += "<div class='giornataTitle'>"+titolo+"</div>";
-      perGiornata[k].forEach(function(p){ html += "<div class='row'><div><b>"+p.nome+"</b> ("+p.squadra+")"+(p.dettaglio?" - "+p.dettaglio:"")+"</div></div>"; });
+      perGiornata[k].forEach(function(p){ html += "<div class='row'><div><b>"+p.nome+"</b> ("+p.squadra+")</div></div>"; });
     });
     html += "</div>";
     }

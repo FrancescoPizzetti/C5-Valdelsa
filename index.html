@@ -7642,6 +7642,67 @@ function dispCoppaProssima(squadra){
   }catch(err){}
   return "";
 }
+function dispParseData(s){
+  if(!s) return null;
+  var m = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return new Date(parseInt(m[3],10), parseInt(m[2],10)-1, parseInt(m[1],10));
+  var d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+function dispDataGiornata(compC, giornataNum){
+  var best = null;
+  (window.matches||[]).forEach(function(m){
+    if(!m) return;
+    if(dispCompDiPartita(m)!==compC) return;
+    if(parseInt(m.giornata||0,10)!==parseInt(giornataNum||0,10)) return;
+    var d = dispParseData(m.data||"");
+    if(d && (!best || d<best)) best = d;
+  });
+  return best;
+}
+function dispGiornataVicina(compC, dataRef, fallback){
+  if(!dataRef) return fallback;
+  var bestG = fallback, bestDiff = 9999999;
+  var visti = {};
+  (window.matches||[]).forEach(function(m){
+    if(!m) return;
+    if(dispCompDiPartita(m)!==compC) return;
+    var g = parseInt(m.giornata||0,10)||0;
+    if(!g || visti[g]) return;
+    visti[g]=1;
+    var d = dispParseData(m.data||"");
+    if(!d) return;
+    var diff = Math.abs(d.getTime()-dataRef.getTime());
+    if(diff<bestDiff){ bestDiff=diff; bestG=g; }
+  });
+  return bestG;
+}
+function dispProssimePartiteSquadra(squadra, quante){
+  var tutte = [];
+  (window.matches||[]).forEach(function(m){
+    if(!m) return;
+    if(m.stato==="Giocata" || m.stato==="Disputata") return;
+    if(m.casa!==squadra && m.tras!==squadra) return;
+    tutte.push({data:dispParseData(m.data||"")||new Date(9999,0,1), giornata:parseInt(m.giornata||0,10)||0, coppa:"", fase:""});
+  });
+  (window.coppaMatches||[]).forEach(function(m){
+    if(!m) return;
+    if(m.stato==="Giocata" || m.stato==="Disputata") return;
+    var casa = m.casa||m.squadraCasa||"";
+    var trasf = m.trasferta||m.squadraTrasferta||"";
+    if(casa!==squadra && trasf!==squadra) return;
+    tutte.push({data:dispParseData(m.data||"")||new Date(9999,0,1), giornata:0, coppa:m.coppa||"", fase:m.fase||""});
+  });
+  tutte.sort(function(a,b){ return a.data.getTime()-b.data.getTime(); });
+  return tutte.slice(0, parseInt(quante||1,10)||1);
+}
+function dispProssimePartiteSquadraFinoAl(squadra, finoAl){
+  if(!finoAl) return [];
+  var lim = dispParseData(finoAl);
+  if(!lim) return [];
+  var tutte = dispProssimePartiteSquadra(squadra, 999);
+  return tutte.filter(function(p){ return p.data && p.data.getTime()<=lim.getTime(); });
+}
 function dispRender(){
   var box = document.getElementById("dispBox");
   if(!box) return;
@@ -7709,55 +7770,74 @@ function dispRender(){
       });
     }catch(e){}
     ev.forEach(function(e){
-      if(!e.aTempo) return;
-      var k2 = e.nome+"|"+e.squadra;
-      if(aTempoSet[k2]) return;
-      aTempoSet[k2]=1;
-      aTempo.push(e.nome+" ("+e.squadra+")"+(e.finoAl?" - fino al "+e.finoAl:""));
-    });
+  if(!e.aTempo) return;
+  try{ if(!dispATempoStessaComp(e.squadra||"")) return; }catch(e2){}
+  var k2 = e.nome+"|"+e.squadra;
+  if(aTempoSet[k2]) return;
+  aTempoSet[k2]=1;
+  aTempo.push(e.nome+" ("+e.squadra+")"+(e.finoAl?" - fino al "+e.finoAl:""));
+});
     if(!aTempo.length) html += "<p class='small'>Nessuno squalificato a tempo.</p>";
     aTempo.forEach(function(t){ html += "<div class='row'><div>"+t+"</div></div>"; });
     var perGiornata = {};
-    var vistoDiffida = {};
-    ev.forEach(function(e){
-      if(e.aTempo) return;
-      if(aTempoSet[e.nome+"|"+e.squadra]) return;
-      if(e.tipo==="giallo"){
-        var primaG = dispGialliPrima(e.nome, e.squadra, comp, e.giornataNum);
-        if(primaG===2){
-          var kDiff = e.nome+"|"+e.squadra+"|"+e.giornataNum;
-          if(!vistoDiffida[kDiff]){
-            vistoDiffida[kDiff]=1;
-            var kD = (e.giornataNum+1)+"ª GIORNATA";
-            (perGiornata[kD]=perGiornata[kD]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"1 giornata per diffida"});
-          }
-        }
-        return;
+var vistoDiffida = {};
+ev.forEach(function(e){
+  if(e.aTempo) return;
+  if(aTempoSet[e.nome+"|"+e.squadra]) return;
+  if(e.tipo==="giallo"){
+    var primaG = dispGialliPrima(e.nome, e.squadra, comp, e.giornataNum);
+    if(primaG===2){
+      var kDiff = e.nome+"|"+e.squadra+"|"+e.giornataNum;
+      if(!vistoDiffida[kDiff]){
+        vistoDiffida[kDiff]=1;
+        var kD = (e.giornataNum+1)+"ª GIORNATA";
+        (perGiornata[kD]=perGiornata[kD]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"1 giornata per diffida"});
       }
-      if(e.tipo!=="rosso" && e.tipo!=="doppio") return;
-      var tot = 1;
-      var dettaglio = "";
-      if(e.tipo==="doppio"){
-        var primaD = dispGialliPrima(e.nome, e.squadra, comp, e.giornataNum);
-        if(primaD>=2){ tot = 2; dettaglio = "1 per diffida + 1 per doppio giallo"; }
-        else { dettaglio = "doppio giallo"; }
-      } else {
-        tot = parseInt(e.giornate||1,10)||1;
-        dettaglio = tot+" giornata/e";
-      }
-      if(!e.giornataNum){
-        (perGiornata["PROSSIMO TURNO"]=perGiornata["PROSSIMO TURNO"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio});
-        return;
-      }
-      for(var i=1;i<=tot;i++){
-        var k = (e.giornataNum+i)+"ª GIORNATA";
-        (perGiornata[k]=perGiornata[k]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio});
-      }
-      var coppa = dispCoppaProssima(e.squadra);
-      if(coppa){
-        (perGiornata["COPPA"]=perGiornata["COPPA"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"salta anche "+coppa});
-      }
-    });
+    }
+    return;
+  }
+  if(e.tipo!=="rosso" && e.tipo!=="doppio") return;
+  var tot = 1;
+  var dettaglio = "";
+  if(e.tipo==="doppio"){
+    var primaD = dispGialliPrima(e.nome, e.squadra, comp, e.giornataNum);
+    if(primaD>=2){ tot = 2; dettaglio = "1 per diffida + 1 per doppio giallo"; }
+    else { dettaglio = "doppio giallo"; }
+  } else {
+    tot = parseInt(e.giornate||1,10)||1;
+    dettaglio = tot+" giornata/e";
+  }
+  var prossime = dispProssimePartiteSquadra(e.squadra, tot);
+  if(!prossime.length){
+    if(!e.giornataNum){ (perGiornata["PROSSIMO TURNO"]=perGiornata["PROSSIMO TURNO"]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio}); }
+    else { for(var i=1;i<=tot;i++){ var k2 = (e.giornataNum+i)+"ª GIORNATA"; (perGiornata[k2]=perGiornata[k2]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio}); } }
+    return;
+  }
+  prossime.forEach(function(p){
+    var kk = "";
+    var tt = "";
+    if(p.coppa){ kk = "COPPA - "+p.coppa+" - "+(p.fase||""); tt = "SQUALIFICATI PER "+kk; }
+    else { kk = (p.giornata||"")+"ª GIORNATA"; tt = "SQUALIFICATI PER LA "+kk+" DI "+comp; }
+    (perGiornata[kk]=perGiornata[kk]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:dettaglio+" - salta "+(p.coppa?("Coppa "+p.coppa+" "+(p.fase||"")):("giornata "+p.giornata))});
+  });
+});
+try{
+  (window.squalificheDisciplinari||[]).forEach(function(s){
+    if(s.aTempo){
+      var prossimeAT = dispProssimePartiteSquadraFinoAl(s.squadra||"", s.finoAl||"");
+      prossimeAT.forEach(function(p){
+        var kkA = p.coppa ? ("COPPA - "+p.coppa+" - "+(p.fase||"")) : ((p.giornata||"")+"ª GIORNATA");
+        (perGiornata[kkA]=perGiornata[kkA]||[]).push({nome:s.n||"", squadra:s.squadra||"", dettaglio:"a tempo fino al "+(s.finoAl||"")});
+      });
+      return;
+    }
+    if(aTempoSet[(s.n||"")+"|"+(s.squadra||"")]) return;
+    if(!dispATempoStessaComp(s.squadra||"")) return;
+    var n = parseInt(s.giornate||1,10)||1;
+    var k = "SQUALIFICA DA PROVVEDIMENTO - "+n+" giornata/e";
+    (perGiornata[k]=perGiornata[k]||[]).push({nome:s.n||"", squadra:s.squadra||"", dettaglio:(s.motivo?" - "+s.motivo:"")+(s.articolo?" - Art."+s.articolo:"")});
+  });
+}catch(e){}
     try{
       (window.squalificheDisciplinari||[]).forEach(function(s){
         if(s.aTempo) return;
@@ -7781,32 +7861,60 @@ function dispRender(){
     html += "</div>";
     }
   if(tab==="provvedimenti"){
-    html += "<div class='card'><h2>📋 Provvedimenti Disciplinari - "+comp+"</h2>";
-    var gruppiP = {};
-    ev.forEach(function(e){
-      if(e.tipo==="rosso"||e.tipo==="doppio"||e.aTempo){
-        var testo = (e.tipo==="doppio"?"1 giornata di squalifica":(e.giornate||1)+" giornata/e di squalifica")+" a "+e.nome+" ("+e.squadra+")"+(e.motivo?" per "+e.motivo:"");
-        (gruppiP[e.giornata]=gruppiP[e.giornata]||[]).push(testo);
-      }
+  try{ var _selC=document.getElementById("dispComp"); if(_selC) _selC.style.display="none"; }catch(e){}
+  html += "<div class='card'><h2>📋 Provvedimenti Disciplinari</h2><p class='small'>Pagina isolata, senza filtro Serie A / Serie B. Le giornate sono accoppiate per data, non con +1 fisso.</p>";
+  var _evTutti = dispRaccogli();
+  var _prov = {};
+  _evTutti.forEach(function(e){
+    if(e.tipo!=="rosso" && e.tipo!=="doppio" && !e.aTempo) return;
+    var _k = (e.giornataNum||0)+"|"+(e.comp||"");
+    (_prov[_k]=_prov[_k]||[]).push(e);
+  });
+  try{
+    (window.squalificheDisciplinari||[]).forEach(function(s){
+      var _txt2 = (s.aTempo?"Squalifica a tempo":(s.giornate||1)+" giornata/e di squalifica")+" a "+(s.n||"")+" ("+(s.squadra||"")+")";
+      if(s.articolo) _txt2 += " per infrazione all'Art."+s.articolo;
+      else if(s.motivo) _txt2 += " per "+s.motivo;
+      if(s.multa) _txt2 += " - Multa € "+s.multa;
+      if(s.finoAl) _txt2 += " - fino al "+s.finoAl;
+      (_prov["PROV|"]=(_prov["PROV|"]||[])).push({testo:_txt2});
     });
-    try{
-      (window.squalificheDisciplinari||[]).forEach(function(s){
-        var txt = (s.aTempo?"Squalifica a tempo":(s.giornate||1)+" giornata/e di squalifica")+" a "+(s.n||"")+" ("+(s.squadra||"")+")";
-        if(s.articolo) txt += " per infrazione all'Art."+s.articolo;
-        else if(s.motivo) txt += " per "+s.motivo;
-        if(s.multa) txt += " - Multa € "+s.multa;
-        if(s.puntiClassifica) txt += " - "+s.puntiClassifica+" pt in classifica";
-        if(s.finoAl) txt += " - fino al "+s.finoAl;
-        (gruppiP["PROVVEDIMENTO"]=gruppiP["PROVVEDIMENTO"]||[]).push(txt);
+  }catch(e){}
+  var _chiaviP = Object.keys(_prov).sort(function(a,b){ return (parseInt(a,10)||9999)-(parseInt(b,10)||9999); });
+  if(!_chiaviP.length) html += "<p class='small'>Nessun provvedimento.</p>";
+  _chiaviP.forEach(function(k){
+    if(k==="PROV|"){
+      html += "<div class='giornataTitle'>PROVVEDIMENTI DISCIPLINARI</div>";
+      _prov[k].forEach(function(t){ html += "<div class='row'><div>"+t.testo+"</div></div>"; });
+      return;
+    }
+    var _parti = k.split("|");
+    var _gA = parseInt(_parti[0],10)||0;
+    var _compK = _parti[1]||"";
+    var _titolo = "";
+    if(_compK==="Serie A"){
+      var _dataA = dispDataGiornata("Serie A", _gA);
+      var _gB = dispGiornataVicina("Serie B", _dataA, _gA);
+      _titolo = _gA+"ª GIORNATA SERIE A - "+_gB+"ª GIORNATA SERIE B";
+      var _lista = _prov[k].concat(_prov[_gB+"|Serie B"]||[]);
+      html += "<div class='giornataTitle'>"+_titolo+"</div>";
+      _lista.forEach(function(e){
+        var _t = (e.tipo==="doppio"?"1 giornata di squalifica":(e.giornate||1)+" giornata/e di squalifica")+" a "+e.nome+" ("+e.squadra+")"+(e.motivo?" per "+e.motivo:"");
+        if(e.aTempo && e.finoAl) _t += " - fino al "+e.finoAl;
+        html += "<div class='row'><div>"+_t+"</div></div>";
       });
-    }catch(e){}
-    var chiaviP = Object.keys(gruppiP).sort(function(a,b){ return (parseInt(a,10)||9999)-(parseInt(b,10)||9999); });
-    if(!chiaviP.length) html += "<p class='small'>Nessun provvedimento.</p>";
-    chiaviP.forEach(function(g){
-      html += "<div class='giornataTitle'>"+g+"</div>";
-      gruppiP[g].forEach(function(t){ html += "<div class='row'><div>"+t+"</div></div>"; });
-    });
-    html += "</div>";
+      delete _prov[_gB+"|Serie B"];
+    } else if(_compK==="Serie B"){
+      if(_prov[k]){ }
+    } else {
+      html += "<div class='giornataTitle'>"+_gA+"ª GIORNATA "+_compK+"</div>";
+      _prov[k].forEach(function(e){
+        var _t2 = (e.tipo==="doppio"?"1 giornata di squalifica":(e.giornate||1)+" giornata/e di squalifica")+" a "+e.nome+" ("+e.squadra+")"+(e.motivo?" per "+e.motivo:"");
+        html += "<div class='row'><div>"+_t2+"</div></div>";
+      });
+    }
+  });
+  html += "</div>";
   }
   box.innerHTML = html;
 }

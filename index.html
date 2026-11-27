@@ -980,8 +980,9 @@ return h;
 }
 function teamNames(){return teams.map(function(x){return x.n})}
 function teamObj(nm){
-for(var i=0;i<teams.length;i++){if(teams[i].n===nm)return teams[i];}
-return {n:nm,l:"Serie A",c:"#facc15",logo:""};
+  var chiave = String(nm||"").trim().toLowerCase();
+  for(var i=0;i<teams.length;i++){ if(String(teams[i].n||"").trim().toLowerCase()===chiave) return teams[i]; }
+  return {n:nm,l:"Serie A",c:"#facc15",logo:""};
 }
 function teamLeague(nm){return teamObj(nm).l}
 function giornateCampionato(){
@@ -7751,12 +7752,14 @@ function dispRender(){
     var aTempo = [];
     var aTempoSet = {};
     function dispATempoStessaComp(sq){
-      try{
-        var lg = (typeof teamLeague==="function") ? teamLeague(sq) : "";
-        if(!lg) return true;
-        if(comp==="Serie B") return (lg==="Serie B"||lg==="Serie B1"||lg==="Serie B2");
-        return lg===comp;
-      }catch(e){ return true; }
+  try{
+    var lg = (typeof teamLeague==="function") ? teamLeague(sq) : "";
+    if(!lg) return true;
+    var gruppoB = ["Serie B","Serie B1","Serie B2"];
+    if(gruppoB.indexOf(comp)>=0) return (gruppoB.indexOf(lg)>=0);
+    if(comp==="Serie A") return (lg==="Serie A");
+    return lg===comp;
+  }catch(e){ return true; }
     }
     try{
       (window.squalificheDisciplinari||[]).forEach(function(s){
@@ -7780,11 +7783,12 @@ function dispRender(){
 var vistoDiffida = {};
 ev.forEach(function(e){
   if(e.aTempo){
-    var prossimeAT = dispProssimePartiteSquadraFinoAl(e.squadra, e.finoAl||"");
-    prossimeAT.forEach(function(p){
-      var kkA = p.coppa ? ("COPPA - "+p.coppa+" - "+(p.fase||"")) : ((p.giornata||"")+"ª GIORNATA");
+    var prossimeAT = dispProssimePartiteSquadra(e.squadra, 1);
+    if(prossimeAT.length && dispParseData(e.finoAl||"") && prossimeAT[0].data.getTime() <= dispParseData(e.finoAl||"").getTime()){
+      var p0b = prossimeAT[0];
+      var kkA = p0b.coppa ? ("COPPA - "+p0b.coppa+" - "+(p0b.fase||"")) : ((p0b.giornata||"")+"ª GIORNATA");
       (perGiornata[kkA]=perGiornata[kkA]||[]).push({nome:e.nome, squadra:e.squadra, dettaglio:"a tempo fino al "+(e.finoAl||"")});
-    });
+    }
     return;
   }
   if(e.tipo==="giallo"){
@@ -7826,11 +7830,12 @@ ev.forEach(function(e){
 try{
   (window.squalificheDisciplinari||[]).forEach(function(s){
     if(s.aTempo){
-      var prossimeAT = dispProssimePartiteSquadraFinoAl(s.squadra||"", s.finoAl||"");
-      prossimeAT.forEach(function(p){
-        var kkA = p.coppa ? ("COPPA - "+p.coppa+" - "+(p.fase||"")) : ((p.giornata||"")+"ª GIORNATA");
+      var prossimeAT = dispProssimePartiteSquadra(s.squadra||"", 1);
+      if(prossimeAT.length && dispParseData(s.finoAl||"") && prossimeAT[0].data.getTime() <= dispParseData(s.finoAl||"").getTime()){
+        var p0 = prossimeAT[0];
+        var kkA = p0.coppa ? ("COPPA - "+p0.coppa+" - "+(p0.fase||"")) : ((p0.giornata||"")+"ª GIORNATA");
         (perGiornata[kkA]=perGiornata[kkA]||[]).push({nome:s.n||"", squadra:s.squadra||"", dettaglio:"a tempo fino al "+(s.finoAl||"")});
-      });
+      }
       return;
     }
     if(aTempoSet[(s.n||"")+"|"+(s.squadra||"")]) return;

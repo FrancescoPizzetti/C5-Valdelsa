@@ -253,7 +253,6 @@ div:has(> img){
 <div class="card"><div class="p3-title"><h2>PROSSIME PARTITE</h2><button class="p3-btn" type="button" onclick="show('cal')">MOSTRA ALTRO</button></div><p class="small">Primo giorno utile - in ordine di orario</p><div id="nextMatch" style="display:none">Caricamento...</div><div id="upcomingMatches"></div><div style="text-align:center;margin-top:10px"><button class="p3-btn" type="button" onclick="show('cal')">MOSTRA ALTRO</button></div></div>
 <div class="card"><h2>ULTIMI RISULTATI</h2><div id="pastMatches"></div></div>
 <div class="card"><div class="p3-title"><h2>CLASSIFICA HOME - TOP 5</h2><button class="p3-btn-ghost" type="button" onclick="show('class')">VEDI CLASSIFICA INTEGRALE</button></div><div class="p3-tabs"><button id="p3tabA" class="on" type="button" onclick="p3home('A')">SERIE A</button><button id="p3tabB" type="button" onclick="p3home('B')">SERIE B</button></div><div id="p3boxA"><div id="top5"></div></div><div id="p3boxB" style="display:none"><div id="top5B"></div></div></div>
-<div class="card" style="display:none"><h2>📚 Storico Stagioni</h2>📚 Storico Stagioni</h2><div id="storicoHome"></div></div>
 <div class="versionFooter">Versione 1.5 • by FCAM</div>
 </div>
 <div id="chiSiamo" class="hidden"><div class="card"><h2>ℹ️ Chi Siamo</h2><img id="chiSiamoImg" style="width:100%;max-height:320px;object-fit:cover;border-radius:14px;display:none"><div id="chiSiamoText" style="white-space:pre-wrap;margin-top:12px;line-height:1.6"></div></div></div>
@@ -5528,19 +5527,6 @@ var ka=k(a),kb=k(b);return ka<kb?-1:ka>kb?1:0;
   setTimeout(renderCalFix, 600);
 })();
 </script>
-<script>
-// V6.2 - Salva Partita di Coppa: se non esiste, LA CREA. Se esiste, aggiorna data/ora/luogo.
-(function(){
-  if(window.__v62) return;
-  window.__v62 = true;
-  window.saveCoppaMatch = function(){
-    var coppa = document.getElementById("fCoppa") ? document.getElementById("fCoppa").value : "";
-    var casa = document.getElementById("fCoppaCasa") ? document.getElementById("fCoppaCasa").value : "";
-    var tras = document.getElementById("fCoppaTras") ? document.getElementById("fCoppaTras").value : "";
-    var data = document.getElementById("fCoppaData") ? document.getElementById("fCoppaData").value : "";
-    var ora = document.getElementById("fCoppaOra") ? document.getElementById("fCoppaOra").value : "";
-  </script>
-  <style>
 /* V7.0 - Filtro Admin da zero */
 #unicoFiltroCalendario{ display:none!important; }
 #matchesList{ display:none!important; }
